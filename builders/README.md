@@ -1,0 +1,37 @@
+# Docker builders for Coffeecutie
+ - alpine/
+    - Builds for Linux against Alpine's uClibc
+    - Does not work due to bug in Alpine Linux STL
+ - android/
+    - Android builder with SDK and NDK
+    - Builds for Android against ARM v7a/v8a and x86
+    - Not fully automated (does not yet use Preload)
+    - Has Ninja generator
+ - apple-ios/
+    - Apple/iOS builder, presumably uses iPhone/iPad SDK
+    - Does not work at all, may be too old
+ - doc-generator/
+    - For generating only documentation
+    - Quite lightweight
+    - Architecture-independent, could run on ARM with same results
+ - osvr/
+    - Only used to compile OSVR libraries
+    - Uses some system dependencies
+    - Uses Make, quite slow
+ - steam/
+    - Builds for Linux against Steam Runtime
+    - Mostly independent of underlying platform
+    - Based on Steam Runtime chroot setup (but better)
+    - Not fully automated yet
+    - Generates standard binaries, can also generate AppImage (support incoming)
+    - Has Ninja generator
+ - steam32/
+    - Builds for Linux against 32-bit Steam Runtime
+    - Same properties as above
+ - ubuntu/
+    - Builds for Linux against standard Ubuntu libraries
+    - Uses system dependencies
+    - Has Ninja generator
+ - ubuntu32/
+    - Cross-compiles for Linux against standard 32-bit Ubuntu libraries
+    - Same properties as above
