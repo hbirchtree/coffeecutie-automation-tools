@@ -8,6 +8,10 @@
    1. Ensure that all plugins are installed properly in Jenkins
    2. Ensure that the slave hosts are connected and filtered correctly
 
+3. ???
+
+4. Profit (unless builds fail left and right)
+
 
 # Configuration of slaves
 Non-Windows hosts will default to using the Ninja generator (unless modified).
