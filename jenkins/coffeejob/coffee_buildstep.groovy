@@ -1,4 +1,4 @@
-def REPO_BRANCH = 'master'
+def REPO_BRANCH = 'testing'
 def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
 
 def NUM_PLATFORMS = 4
@@ -15,6 +15,12 @@ def PLATFORM_STRING  = ['Linux', 'Windows', 'Android', 'OS X']
 def HAS_DEPENDENCIES = [false,   false,     true,      false]
 def PLATFORM_FLAG    = [0,       3,         1,         2]
 def PLATFORM_LABELS  = ['ubuntu && x64', 'windows && x64', 'android', 'macintosh && x64']
+def PLATFORM_PRELOAD = [
+    'x86_64-linux-generic.cmake',
+    'x86_64-windows-generic.cmake',
+    'armeabi_v7a-kitkat-linux-bionic.cmake',
+    'x86_64-osx-generic.cmake'
+    ]
 
 
 def RELEASE_TYPES = ['Debug', 'Release']
