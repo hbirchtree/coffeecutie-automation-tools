@@ -1,14 +1,26 @@
 #
-# This Dockerfile is designed for cross-compiling to linux-armeabihf targets
+# This Dockerfile is designed for cross-compiling to Raspberry Pi targets
 #
 
 FROM ubuntu:xenial
 MAINTAINER H. Birch Tree
 
+RUN dpkg --add-architecture i386
+
 RUN apt-get -qy update && apt-get -qy install \
-        g++-multilib-arm-linux-gnueabihf \
-	cmake ninja-build \
-	git mercurial
+        cmake ninja-build \
+        git mercurial \
+        curl bc automake \
+        flex \
+        libstdc++6:i386 \
+        libz1:i386 \
+        ncurses-dev \
+        runit
+
+WORKDIR /cross-rpi
+RUN git clone https://github.com/raspberrypi/tools.git /cross-rpi
+RUN mkdir -p /usr/local/bin
+RUN ln -s /cross-rpi/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/bin/* /usr/local/bin/
 
 #Create user directory + group
 RUN groupadd coffeeusers -g 1000
