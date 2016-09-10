@@ -1,0 +1,3 @@
+raspi-builder:
+    build: raspberry/
+    hostname: raspi-builder
