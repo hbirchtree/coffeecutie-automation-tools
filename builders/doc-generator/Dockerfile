@@ -6,6 +6,17 @@
 FROM ubuntu:xenial
 MAINTAINER H. Birch Tree
 
+ENV USER coffee
+ENV USER_ID 1000
+
+ENV PROJECT_VOLUME "/home/${USER}/project"
+ENV BUILD_VOLUME "/home/${USER}/build"
+
+ENV PRELOAD_SPEC none_docs-none-none
+
+ENV TOOLCHAIN_FILE ${PROJECT_VOLUME}/cmake/Toolchains/native-linux-generic.toolchain.cmake
+ENV PRELOAD_FILE ${PROJECT_VOLUME}/cmake/Preload/${PRELOAD_SPEC}.cmake
+
 RUN apt-get -qy update && apt-get -qy install \
         cmake build-essential \
 	doxygen graphviz
@@ -14,13 +25,10 @@ RUN apt-get -qy update && apt-get -qy install \
 RUN groupadd coffeeusers -g 1000
 RUN useradd coffee -m -u 1000
 
-WORKDIR /home/coffee
 USER coffee
+RUN mkdir -p ${PROJECT_VOLUME} ${BUILD_VOLUME} ${BUILD_VOLUME}/out
 
-RUN mkdir -p project bridge build/bin build/lib build/out
+WORKDIR ${BUILD_VOLUME}
 
-VOLUME ["/home/coffee/project","/home/coffee/build","/home/coffee/build/out"]
-
-WORKDIR /home/coffee/build
-
-CMD ["/bin/bash","-c","cmake -C /home/coffee/project/cmake/Preload/none_docs-none-none.cmake /home/coffee/project && cmake --build . --target install"]
+VOLUME ["${PROJECT_VOLUME}","${BUILD_VOLUME}","${BUILD_VOLUME}/out"]
+CMD ["/bin/bash","-c","cmake -C${PRELOAD_FILE} ${PROJECT_VOLUME} && cmake --build . --target install"]

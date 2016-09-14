@@ -1,0 +1,6 @@
+raspberry-builder-64:
+    build:
+        context: ./
+        args:
+            RASPBERRY_TOOLCHAIN: gcc-linaro-arm-linux-gnueabihf-raspbian-x64
+            TOOLCHAIN_NAME: aarch64-raspberry

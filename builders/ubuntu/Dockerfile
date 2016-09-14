@@ -6,8 +6,30 @@
 FROM ubuntu:xenial
 MAINTAINER H. Birch Tree
 
+ENV USER coffee
+ENV USER_ID 1000
+
+ENV PROJECT_VOLUME "/home/${USER}/project"
+ENV BUILD_VOLUME "/home/${USER}/build"
+
+ENV PRELOAD_SPEC x86_64-linux-generic
+
+ENV TOOLCHAIN_FILE ${PROJECT_VOLUME}/cmake/Toolchains/native-linux-generic.toolchain.cmake
+ENV PRELOAD_FILE ${PROJECT_VOLUME}/cmake/Preload/${PRELOAD_SPEC}.cmake
+
+ENV CC /usr/bin/clang-3.8
+ENV CXX /usr/bin/clang++-3.8
+
+# For the cases when you need something extra, eg.:
+# - qt5-default
+# - libpcl-dev
+ENV EXTRA_PACKAGES ""
+
+RUN apt-get -qy update && apt-get -qy install software-properties-common
+
+RUN add-apt-repository ppa:alexlarsson/flatpak
+
 RUN apt-get -qy update && apt-get -qy install \
-	git nano wget \
 	cmake ninja-build build-essential \
 	clang-3.8 \
 	doxygen swig3.0 \
@@ -15,15 +37,18 @@ RUN apt-get -qy update && apt-get -qy install \
 	libavcodec-dev libavdevice-dev \
 	libavformat-dev libswresample-dev \
 	libswscale-dev \
-	qt5-default
+        flatpak snapcraft ${EXTRA_PACKAGES}
 
 #Create user directory + group
-RUN groupadd coffeeusers -g 1000
-RUN useradd coffee -m -u 1000
+RUN groupadd buildusers -g ${USER_ID}
+RUN useradd ${USER} -m -u ${USER_ID}
 
-WORKDIR /home/coffee
-USER coffee
+WORKDIR /home/${USER}
+USER ${USER}
+RUN mkdir -p    ${PROJECT_VOLUME} \
+                ${BUILD_VOLUME}/out
 
-RUN mkdir -p project bridge build/bin build/lib
+VOLUME ["${PROJECT_VOLUME}", "${BUILD_VOLUME}", "${BUILD_VOLUME}/out"]
 
-VOLUME ["/home/coffee/project","/home/coffee/bridge","/home/coffee/build/bin","/home/coffee/build/lib"]
+WORKDIR ${BUILD_VOLUME}
+CMD ["sh","-c","/usr/bin/cmake -C${PRELOAD_FILE} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ${PROJECT_VOLUME} -GNinja && cmake --build . --target install"]
