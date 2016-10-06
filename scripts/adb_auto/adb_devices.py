@@ -25,7 +25,7 @@ class device:
 
 
     def install_apk(self,file):
-        out = adb_dev_exec(self.dev,["install",file]);
+        out = adb_dev_exec(self.dev,["install","-r",file]);
         self.conditional_print(out)
 
 
