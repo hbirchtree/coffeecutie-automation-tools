@@ -5,7 +5,3 @@ Invoke-WebRequest "https://download.docker.com/components/engine/windows-server/
 Expand-Archive -Path "$env:TEMP\docker.zip" -DestinationPath $env:ProgramFiles
 
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\Docker", [EnvironmentVariableTarget]::Machine)
-
-dockerd.exe --register-service
-
-Start-Service docker
