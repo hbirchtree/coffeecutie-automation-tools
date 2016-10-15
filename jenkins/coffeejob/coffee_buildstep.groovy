@@ -86,7 +86,7 @@ void GetSourceStep(descriptor, sourceDir, job)
     }
 }
 
-void GetCMakeSteps(descriptor, job, variant, level)
+void GetCMakeSteps(descriptor, job, variant, level, source_dir)
 {
     cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
     cmake_args += descriptor.cmake_options
@@ -112,7 +112,7 @@ void GetCMakeSteps(descriptor, job, variant, level)
                 generator("${descriptor.cmake_generator}")
                 args(cmake_args)
                 preloadScript(descriptor.cmake_preload)
-                sourceDir('src')
+                sourceDir(source_dir)
                 buildDir("build_${variant}")
                 buildType(variant)
                 
@@ -182,7 +182,7 @@ void GetJobQuirks(descriptor, compile, testing, workspace)
 for(t in Targets) {
     pipelineName = "${t.platformName}_${t.platformArch}"
     workspaceDir = "/tmp/${pipelineName}"
-    sourceDir = "src"
+    sourceDir = "${workspaceDir}/src"
 
     t.cmake_preload = "${sourceDir}/cmake/Preload/${t.cmake_preload}"
     t.cmake_toolchain = "${sourceDir}/cmake/Toolchains/${t.cmake_toolchain}"
