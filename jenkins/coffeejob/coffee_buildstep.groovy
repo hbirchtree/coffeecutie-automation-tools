@@ -61,7 +61,7 @@ class BuildTarget
 void GetSourceStep(descriptor, sourceDir, job)
 {
     def REPO_BRANCH = 'testing'
-        def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
+    def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
 
     job.with {
         label(descriptor.label)
@@ -94,7 +94,7 @@ void GetCMakeSteps(descriptor, job, variant, level)
     job.with {
         steps {
             cmake {
-                generator(descriptor.cmake_generator)
+                generator("${descriptor.cmake_generator}")
                 args(cmake_args)
                 preloadScript(descriptor.cmake_preload)
                 sourceDir('src')
@@ -206,7 +206,7 @@ for(t in Targets) {
     sourceDir = "src"
 
     t.cmake_preload = "${sourceDir}/cmake/Preload/${t.cmake_preload}"
-    t.cmake_toolchain = "${sourceDir}/cmake/Toolchain/${t.cmake_toolchain}"
+    t.cmake_toolchain = "${sourceDir}/cmake/Toolchains/${t.cmake_toolchain}"
 
     /* Create a pipeline per build target */
     pip = deliveryPipelineView("${pipelineName}")
