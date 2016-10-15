@@ -15,12 +15,12 @@ def Targets = [
     new BuildTarget("Windows", "x86-64", "windows && vcpp && x64",
                    "x86_64-windows-generic.cmake",
                    "x86_64-windows-win32.toolchain.cmake",
-                   "Visual Studio 14 2015 64", ""),
+                   "Visual Studio 14 2015 Win64", ""),
     /* Windows UWP produces AppX directories for containment */
     new BuildTarget("Windows UWP", "x86-64", "windows && win10sdk && x64",
                    "x86_64-windows-uwp.cmake",
                    "x86_64-windows-uwp.toolchain.cmake",
-                   "Visual Studio 14 2015 64", ""),
+                   "Visual Studio 14 2015 Win64", ""),
     /* Good old OS X .app directories with some spice,
      * self-contained resources.
      */
