@@ -58,7 +58,7 @@ class BuildTarget
 /* Setting up Git SCM
  * One function to change them all
  */
-void GetSourceStep(descriptor, job)
+void GetSourceStep(descriptor, sourceDir, job)
 {
     def REPO_BRANCH = 'testing'
         def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
@@ -73,7 +73,7 @@ void GetSourceStep(descriptor, job)
                 }
                 branch(REPO_BRANCH)
                 extensions {
-                    relativeTargetDirectory('src')
+                    relativeTargetDirectory(sourceDir)
                     submoduleOptions {
                         recursive(true)
                     }
@@ -192,7 +192,7 @@ void GetJobQuirks(descriptor, compile, testing, workspace)
             steps {
                 shell(
                   """
-                                        cd "${workspace}/src/desktop/osx/"
+                    cd "${workspace}/src/desktop/osx/"
                     bash "gen_icons.sh"
                   """)
             }
@@ -203,6 +203,10 @@ void GetJobQuirks(descriptor, compile, testing, workspace)
 for(t in Targets) {
     pipelineName = "${t.platformName}_${t.platformArch}"
     workspaceDir = "/tmp/${pipelineName}"
+    sourceDir = "src"
+
+    t.cmake_preload = "${sourceDir}/cmake/Preload/${t.cmake_preload}"
+    t.cmake_toolchain = "${sourceDir}/cmake/Toolchain/${t.cmake_toolchain}"
 
     /* Create a pipeline per build target */
     pip = deliveryPipelineView("${pipelineName}")
@@ -210,7 +214,7 @@ for(t in Targets) {
     /* Acquiring the source code is step 0 */
     source_step = job("0.0_${pipelineName}_Setup")
     /* One function to insert the SCM data */
-    GetSourceStep(t, source_step)
+    GetSourceStep(t, sourceDir, source_step)
 
     source_step.with {
         customWorkspace(workspaceDir)
