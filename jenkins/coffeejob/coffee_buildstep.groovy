@@ -1,5 +1,5 @@
 def RELEASE_TYPES = ['Debug', 'Release']
-def LINUX_PACKAGING_OPTS = "-DCOFFEE_GENERATE_APPIMAGE=ON -DCOFFEE_GENERATE_SNAPPY=ON -DCOFFEE_GENERATE_FLATPAK=ON"
+def LINUX_PACKAGING_OPTS = "-DCOFFEE_GENERATE_SNAPPY=ON"
 def Targets = [
     /* Creates Ubuntu binaries linked against the system
      * Also outputs AppImage, Snappy and Flatpak packages
@@ -110,7 +110,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir)
         steps {
             cmake {
                 generator("${descriptor.cmake_generator}")
-                args(cmake_args)
+                args("-DCMAKE_INSTALL_PREFIX=out ${cmake_args}")
                 preloadScript(descriptor.cmake_preload)
                 sourceDir(source_dir)
                 buildDir("build_${variant}")
