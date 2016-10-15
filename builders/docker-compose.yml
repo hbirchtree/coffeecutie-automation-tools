@@ -1,31 +1,21 @@
 ubuntu-builder:
   build: ubuntu/
   hostname: ubuntu-builder
-  ports:
-   - "50000:50000"
 
 steamos-builder:
   build: steam/
   hostname: steamos-builder
-  ports:
-   - "50000:50000"
 
 android-builder:
   build: android/
   hostname: android-builder
-  ports:
-   - "50000:50000"
 
 raspberry-builder:
   build: raspberry
   hostname raspberry-builder
-  ports:
-   - "50000:50000"
 
 doc-builder:
   build: doc-generator/
   hostname: doc-builder
-  ports:
-   - "50000:50000"
   volumes:
    - /var/www:/doc-out

@@ -25,7 +25,7 @@ ENV CXX /usr/bin/clang++-3.8
 # - libpcl-dev
 ENV EXTRA_PACKAGES ""
 
-RUN apt-get -qy update && apt-get -qy install software-properties-common
+RUN apt-get -qy update && apt-get -qy install software-properties-common openssh-server
 
 RUN add-apt-repository ppa:alexlarsson/flatpak
 

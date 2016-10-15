@@ -19,7 +19,7 @@ ENV TOOLCHAIN_FILE ${PROJECT_VOLUME}/cmake/Toolchains/native-linux-generic.toolc
 ENV PRELOAD_FILE ${PROJECT_VOLUME}/cmake/Preload/${PRELOAD_SPEC}.cmake
 
 # We need newer CMake, 3.1+
-RUN apt-get -qy update && apt-get -qy install software-properties-common
+RUN apt-get -qy update && apt-get -qy install software-properties-common openssh-server
 RUN add-apt-repository ppa:george-edison55/cmake-3.x
 
 # Steam beta repository

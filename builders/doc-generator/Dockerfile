@@ -19,7 +19,7 @@ ENV PRELOAD_FILE ${PROJECT_VOLUME}/cmake/Preload/${PRELOAD_SPEC}.cmake
 
 RUN apt-get -qy update && apt-get -qy install \
         cmake build-essential \
-	doxygen graphviz
+	doxygen graphviz openssh-server
 
 #Create user directory + group
 RUN groupadd coffeeusers -g 1000
