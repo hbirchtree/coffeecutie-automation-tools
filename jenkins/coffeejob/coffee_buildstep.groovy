@@ -17,21 +17,21 @@ def Targets = [
                    "x86_64-windows-win32.toolchain.cmake",
                    "Visual Studio 14 2015 Win64", ""),
     /* Windows UWP produces AppX directories for containment */
-    new BuildTarget("Windows UWP", "x86-64", "windows && win10sdk && x64",
+    new BuildTarget("Windows-UWP", "x86-64", "windows && win10sdk && x64",
                    "x86_64-windows-uwp.cmake",
                    "x86_64-windows-uwp.toolchain.cmake",
                    "Visual Studio 14 2015 Win64", ""),
     /* Good old OS X .app directories with some spice,
      * self-contained resources.
      */
-    new BuildTarget("Mac OS X", "x86-64", "macintosh && clang && x64",
+    new BuildTarget("Mac-OS-X", "x86-64", "macintosh && clang && x64",
                    "x86_64-osx-generic.cmake",
                    "native-macintosh-generic.toolchain.cmake",
                    "Ninja", ""),
     /* Raspberry Pi, using a Docker container running SSH
      * Will require a special docker-compose for simplicity
      */
-    new BuildTarget("Raspberry Pi", "ARMv7A", "raspi && bcm_gcc && armv7a",
+    new BuildTarget("Raspberry-Pi", "ARMv7A", "raspi && bcm_gcc && armv7a",
                   "raspberry.cmake",
                   "gnueabihf-arm-raspberry.toolchain.cmake",
                   "Ninja", ""),
