@@ -90,6 +90,21 @@ void GetCMakeSteps(descriptor, job, variant, level)
 {
     cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
     cmake_args += descriptor.cmake_options
+    
+    cmake_target = "install"
+    
+    if(level == 1)
+    {
+        if(descriptor.platformName == "Windows"
+           || descriptor.platformName == "Windows UWP")
+        {
+            /* Runs MSBuild testing? */
+            cmake_target = "RUN_TESTS"
+        }else{
+            /* Runs CTest */
+            cmake_target = "test"
+        }
+    }
 
     job.with {
         steps {
@@ -100,6 +115,11 @@ void GetCMakeSteps(descriptor, job, variant, level)
                 sourceDir('src')
                 buildDir("build_${variant}")
                 buildType(variant)
+                
+                buildToolStep {
+                    useCmake(true)
+                    args("--target ${cmake_target}")
+                }
             }
         }
         /* Fixes some issues on Mac OS X with finding Brew */
@@ -111,49 +131,8 @@ void GetCMakeSteps(descriptor, job, variant, level)
         }
     }
 
-    if(level == 0)
+    if(level == 1)
     {
-        job.with {
-            steps {
-                cmake {
-                    buildToolStep {
-                        useCmake(true)
-                        args("--target install")
-                    }
-                }
-            }
-        }
-    }else if(level == 1)
-    {
-        if(descriptor.platformName != "Windows"
-           && descriptor.platformName != "Windows UWP")
-        {
-            /* Run CTest */
-            job.with {
-                steps {
-                    cmake {
-                        buildToolStep {
-                            useCmake(true)
-                            args("--target test")
-                        }
-                    }
-                }
-            }
-        }else{
-            /* Visual Studio names the tests differently */
-            job.with {
-                /* Run tests */
-                steps {
-                    cmake {
-                        buildToolStep {
-                            useCmake(true)
-                            args("--target RUN_TESTS")
-                        }
-                    }
-                }
-            }
-        }
-
         /* Add artifact step, archiving the binaries */
         job.with {
             publishers {
