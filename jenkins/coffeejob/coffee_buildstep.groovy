@@ -238,7 +238,7 @@ for(t in Targets) {
         last_step = testing.name
 
         GetJobQuirks(t, compile, testing, workspaceDir)
-        GetCMakeSteps(t, compile, rel, 0)
-        GetCMakeSteps(t, testing, rel, 1)
+        GetCMakeSteps(t, compile, rel, 0, sourceDir)
+        GetCMakeSteps(t, testing, rel, 1, sourceDir)
     }
 }
