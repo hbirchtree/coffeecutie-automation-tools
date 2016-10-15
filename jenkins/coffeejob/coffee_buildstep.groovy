@@ -5,29 +5,42 @@ def Targets = [
      * Also outputs AppImage, Snappy and Flatpak packages
      * for better cross-compatibility.
      */
-    new BuildTarget("Linux", "x86-64", "ubuntu && amd64",
+    new BuildTarget("Linux", "x86-64", "ubuntu && gcc && amd64",
                    "x86_64-linux-generic.cmake",
                    "native-linux-generic.toolchain.cmake",
                    "Ninja", LINUX_PACKAGING_OPTS),
     /* Creates Win32 applications, bog standard,
      * self-contained resources.
      */
-    new BuildTarget("Windows", "x86-64", "windows && x64",
+    new BuildTarget("Windows", "x86-64", "windows && vcpp && x64",
                    "x86_64-windows-generic.cmake",
                    "x86_64-windows-win32.toolchain.cmake",
                    "Visual Studio 14 2015", ""),
     /* Windows UWP produces AppX directories for containment */
-    new BuildTarget("Windows UWP", "x86-64", "windows && x64",
+    new BuildTarget("Windows UWP", "x86-64", "windows && win10sdk && x64",
                    "x86_64-windows-uwp.cmake",
                    "x86_64-windows-uwp.toolchain.cmake",
                    "Visual Studio 14 2015", ""),
     /* Good old OS X .app directories with some spice,
      * self-contained resources.
      */
-    new BuildTarget("Mac OS X", "x86-64", "macintosh && x64",
+    new BuildTarget("Mac OS X", "x86-64", "macintosh && clang && x64",
                    "x86_64-osx-generic.cmake",
                    "native-macintosh-generic.toolchain.cmake",
-                   "Ninja", "")
+                   "Ninja", ""),
+    /* Raspberry Pi, using a Docker container running SSH
+     * Will require a special docker-compose for simplicity
+     */
+    new BuildTarget("Raspberry Pi", "ARMv7A", "raspi && bcm_gcc && armv7a",
+                  "raspberry.cmake",
+                  "gnueabihf-arm-raspberry.toolchain.cmake",
+                  "Ninja", ""),
+    /* Android on a Docker container running SSH
+     */
+    new BuildTarget("Android", "Universal", "android && android_sdk && android_ndk",
+                   "raspberry.cmake",
+                   "all-android.toolchain.cmake",
+                   "Ninja", ""),
 ]
 
 class BuildTarget
