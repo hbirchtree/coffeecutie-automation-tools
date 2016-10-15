@@ -48,7 +48,7 @@ for(s in SeedJobs)
         }
         steps {
             dsl {
-                external("groovy/${s.seedFile}")
+                external("scripts/${s.seedFile}")
                 removeAction("DELETE")
                 removeViewAction("DELETE")
                 ignoreExisting(false)
