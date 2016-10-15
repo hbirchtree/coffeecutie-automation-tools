@@ -162,6 +162,7 @@ void GetJobQuirks(descriptor, compile, testing, workspace)
                     mkdir build_Release
                     mklink /J build_Debug\\libs libs
                     mklink /J build_Release\\libs libs
+                    exit 0
                   """)
             }
         }
