@@ -109,7 +109,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir)
     if(level == 1)
     {
         if(descriptor.platformName == "Windows"
-           || descriptor.platformName == "Windows UWP")
+           || descriptor.platformName == "Windows-UWP")
         {
             /* Runs MSBuild testing? */
             cmake_target = "RUN_TESTS"
@@ -164,7 +164,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir)
 void GetJobQuirks(descriptor, compile, testing, workspace)
 {
     if(descriptor.platformName == "Windows"
-       || descriptor.platformName == "Windows UWP")
+       || descriptor.platformName == "Windows-UWP")
     {
         /* Linking library directories */
         compile.with {
