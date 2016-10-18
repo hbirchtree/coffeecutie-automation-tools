@@ -25,8 +25,7 @@ RUN apt-get -qy update && apt-get -qy install \
         cmake ninja-build \
         git swig3.0 \
         libstdc++6:i386 \
-        libz1:i386 \
-        openssh-server
+        libz1:i386
 
 # Set up toolchain files
 # We only fetch the relevant toolchain
