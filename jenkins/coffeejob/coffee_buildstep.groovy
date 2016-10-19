@@ -149,7 +149,6 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir)
             buildInDocker {
                 dockerfile(docker_dir, docker_file)
                 verbose()
-                command()
                 volume(sourceDir, sourceDir)
                 volume(buildDir, buildDir)
             }
