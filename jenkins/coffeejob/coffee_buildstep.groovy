@@ -121,7 +121,7 @@ void GetSourceStep(descriptor, sourceDir, job)
 
 String GetAutomationDir(sourceDir)
 {
-    return "${sourceDir}/tools/automation"
+    return "${sourceDir}/tools/automation/"
 }
 
 String GetDockerBuilder(variant)
