@@ -1,46 +1,65 @@
 def RELEASE_TYPES = ['Debug', 'Release']
+
+LIN_UBNTU = "Ubuntu"
+LIN_STMOS = "SteamOS"
+LIN_RASPI = "Raspberry-Pi"
+MAC_MCOSX = "Mac-OS-X"
+WIN_WIN32 = "Windows"
+WIN_MSUWP = "Windows-UWP"
+LIN_ANDRD = "Android"
+
+final String A_X64 = "x86-64"
+final String A_ARMV8A = "ARMv8A"
+final String A_ARMV7A = "ARMv7A"
+final String A_UNI = "Universal"
+
 def LINUX_PACKAGING_OPTS = "-DCOFFEE_GENERATE_SNAPPY=ON"
 def Targets = [
     /* Creates Ubuntu binaries linked against the system
      * Also outputs AppImage, Snappy and Flatpak packages
      * for better cross-compatibility.
      */
-    new BuildTarget("Linux", "x86-64", "ubuntu && gcc && amd64",
+    new BuildTarget(LIN_UBNTU, A_X64, "linux && docker && ubuntu && gcc && amd64",
                    "x86_64-linux-generic.cmake",
                    "native-linux-generic.toolchain.cmake",
                    "Ninja", LINUX_PACKAGING_OPTS),
+    /* SteamOS builds, use a special Docker environment */
+    new BuildTarget(LIN_STMOS, A_X64, "linux && docker && steamos && gcc && amd64",
+                   "x86_64-linux-generic.cmake",
+                   "native-linux-generic.toolchain.cmake",
+                   "Ninja", ""),
     /* Creates Win32 applications, bog standard,
      * self-contained resources.
      */
-    new BuildTarget("Windows", "x86-64", "windows && vcpp && x64",
+    new BuildTarget(WIN_WIN32, A_X64, "windows && vcpp && x64",
                    "x86_64-windows-generic.cmake",
                    "x86_64-windows-win32.toolchain.cmake",
                    "Visual Studio 14 2015 Win64", ""),
     /* Windows UWP produces AppX directories for containment */
-    new BuildTarget("Windows-UWP", "x86-64", "windows && win10sdk && x64",
+    new BuildTarget(WIN_MSUWP, A_X64, "windows && win10sdk && x64",
                    "x86_64-windows-uwp.cmake",
                    "x86_64-windows-uwp.toolchain.cmake",
                    "Visual Studio 14 2015 Win64", ""),
     /* Good old OS X .app directories with some spice,
      * self-contained resources.
      */
-    new BuildTarget("Mac-OS-X", "x86-64", "macintosh && clang && x64",
+    new BuildTarget(MAC_MCOSX, A_X64, "macintosh && clang && x64",
                    "x86_64-osx-generic.cmake",
                    "native-macintosh-generic.toolchain.cmake",
                    "Ninja", ""),
-    /* Raspberry Pi, using a Docker container running SSH
-     * Will require a special docker-compose for simplicity
+    /* Raspberry Pi, using a Docker container
+     * Will require a special docker-compose for simplicity with volumes
      */
-    new BuildTarget("Raspberry-Pi", "ARMv7A", "raspi && bcm_gcc && armv7a",
+    new BuildTarget(LIN_RASPI, A_UNI, "linux && docker && raspi && bcm_gcc && armv7a",
                   "raspberry.cmake",
                   "gnueabihf-arm-raspberry.toolchain.cmake",
-                  "Ninja", ""),
-    /* Android on a Docker container running SSH
+		  		  "Ninja", "-DRASPBERRY_SDK=/raspi-sdk"),
+    /* Android on a Docker container, composite project
      */
-    new BuildTarget("Android", "Universal", "android && android_sdk && android_ndk",
-                   "raspberry.cmake",
+    new BuildTarget(LIN_ANDRD, A_UNI, "linux && docker && android && android_sdk && android_ndk",
+                   "android.cmake",
                    "all-android.toolchain.cmake",
-                   "Ninja", ""),
+		   		   "Ninja", "")
 ]
 
 class BuildTarget
@@ -99,17 +118,68 @@ void GetSourceStep(descriptor, sourceDir, job)
     }
 }
 
+String GetDockerBuilder(variant)
+{
+    return "builders/${variant}"
+}
+
+void GetDockerDataLinux(descriptor, job, sourceDir, buildDir)
+{
+    def docker_dir = 'ubuntu';
+    def docker_file = "Dockerfile";
+
+    /* Typical Linux build environments */
+    if(descriptor.platformName == LIN_UBNTU)
+    {}
+    else if(descriptor.platformName == LIN_STMOS)
+        docker_dir = "steam"
+    else
+        return;
+
+    docker_dir = GetDockerBuilder(docker_dir)
+
+    job.with {
+        wrappers {
+            buildInDocker {
+                dockerfile(docker_dir, docker_file)
+                verbose()
+                command()
+                volume(sourceDir, sourceDir)
+                volume(buildDir, buildDir)
+            }
+        }
+    }
+}
+
+void GetDockerDataRaspberry(descriptor, job)
+{
+    if(job.platformName == LIN_RASPI)
+    {
+        job.with {
+            wrappers {
+                buildInDocker {
+                    dockerfile(docker_dir, docker_file)
+                    verbose()
+                    volume(sourceDir, sourceDir)
+                    volume(buildDir, buildDir)
+                }
+            }
+        }
+    }else
+        return;
+}
+
 void GetCMakeSteps(descriptor, job, variant, level, source_dir)
 {
     cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
     cmake_args += descriptor.cmake_options
-    
+
     cmake_target = "install"
-    
+
     if(level == 1)
     {
-        if(descriptor.platformName == "Windows"
-           || descriptor.platformName == "Windows-UWP")
+        if(descriptor.platformName == WIN_WIN32
+           || descriptor.platformName == WIN_MSUWP)
         {
             /* Runs MSBuild testing? */
             cmake_target = "RUN_TESTS"
@@ -128,7 +198,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir)
                 sourceDir(source_dir)
                 buildDir("build_${variant}")
                 buildType(variant)
-                
+
                 buildToolStep {
                     useCmake(true)
                     args("--target ${cmake_target}")
@@ -163,8 +233,8 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir)
  */
 void GetJobQuirks(descriptor, compile, testing, workspace)
 {
-    if(descriptor.platformName == "Windows"
-       || descriptor.platformName == "Windows-UWP")
+    if(descriptor.platformName == WIN_WIN32
+       || descriptor.platformName == WIN_MSUWP)
     {
         /* Linking library directories */
         compile.with {
@@ -179,7 +249,7 @@ void GetJobQuirks(descriptor, compile, testing, workspace)
                   """)
             }
         }
-    }else if(descriptor.platformName == "Mac OS X")
+    }else if(descriptor.platformName == MAC_MCOSX)
     {
         compile.with {
             steps {
@@ -254,5 +324,8 @@ for(t in Targets) {
         GetJobQuirks(t, compile, testing, workspaceDir)
         GetCMakeSteps(t, compile, rel, 0, sourceDir)
         GetCMakeSteps(t, testing, rel, 1, sourceDir)
+
+        GetDockerDataLinux(t, compile, sourceDir, "${workspaceDir}/build_${rel}")
+        GetDockerDataLinux(t, testing, sourceDir, "${workspaceDir}/build_${rel}")
     }
 }
