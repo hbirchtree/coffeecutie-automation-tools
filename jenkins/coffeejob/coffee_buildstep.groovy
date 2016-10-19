@@ -53,13 +53,14 @@ def Targets = [
     new BuildTarget(LIN_RASPI, A_UNI, "linux && docker && raspi && bcm_gcc && armv7a",
                   "raspberry.cmake",
                   "gnueabihf-arm-raspberry.toolchain.cmake",
-		  		  "Ninja", "-DRASPBERRY_SDK=/raspi-sdk"),
+                                  "Ninja", "-DRASPBERRY_SDK=/raspi-sdk"),
     /* Android on a Docker container, composite project
      */
-    new BuildTarget(LIN_ANDRD, A_UNI, "linux && docker && android && android_sdk && android_ndk",
+    new BuildTarget(LIN_ANDRD, A_UNI,
+                   "linux && docker && android && android_sdk && android_ndk",
                    "android.cmake",
                    "all-android.toolchain.cmake",
-		   		   "Ninja", "")
+                                   "Ninja", "")
 ]
 
 class BuildTarget
@@ -118,6 +119,11 @@ void GetSourceStep(descriptor, sourceDir, job)
     }
 }
 
+String GetAutomationDir(sourceDir)
+{
+    return "${sourceDir}/tools/automation"
+}
+
 String GetDockerBuilder(variant)
 {
     return "builders/${variant}"
@@ -136,7 +142,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir)
     else
         return;
 
-    docker_dir = GetDockerBuilder(docker_dir)
+    docker_dir = GetAutomationDir(sourceDir)+GetDockerBuilder(docker_dir)
 
     job.with {
         wrappers {
