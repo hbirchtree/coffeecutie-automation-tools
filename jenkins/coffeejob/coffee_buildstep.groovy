@@ -149,9 +149,9 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceDir)
             buildInDocker {
                 dockerfile(docker_dir, docker_file)
                 verbose()
+                volume(buildDir, workspaceDir)
                 volume(sourceDir, sourceDir)
                 volume(buildDir, buildDir)
-                volume(buildDir, workspaceDir)
             }
         }
     }
@@ -166,6 +166,7 @@ void GetDockerDataRaspberry(descriptor, job)
                 buildInDocker {
                     dockerfile(docker_dir, docker_file)
                     verbose()
+                    volume(buildDir, workspaceDir)
                     volume(sourceDir, sourceDir)
                     volume(buildDir, buildDir)
                 }
