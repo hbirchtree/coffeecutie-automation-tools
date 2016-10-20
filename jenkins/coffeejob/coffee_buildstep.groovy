@@ -129,7 +129,7 @@ String GetDockerBuilder(variant)
     return "builders/${variant}"
 }
 
-void GetDockerDataLinux(descriptor, job, sourceDir, buildDir)
+void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceDir)
 {
     def docker_dir = 'ubuntu';
     def docker_file = "Dockerfile";
@@ -150,7 +150,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir)
                 dockerfile(docker_dir, docker_file)
                 verbose()
                 volume(sourceDir, sourceDir)
-                volume(buildDir, buildDir)
+                volume(buildDir, workspaceDir)
             }
         }
     }
