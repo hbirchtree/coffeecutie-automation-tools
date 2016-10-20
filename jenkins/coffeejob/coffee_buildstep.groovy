@@ -174,7 +174,7 @@ void GetDockerDataRaspberry(descriptor, job)
         return;
 }
 
-void GetCMakeSteps(descriptor, job, variant, level, source_dir)
+void GetCMakeSteps(descriptor, job, variant, level, source_dir, workspaceDir)
 {
     cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
     cmake_args += descriptor.cmake_options
@@ -201,7 +201,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir)
                 args("-DCMAKE_INSTALL_PREFIX=out ${cmake_args}")
                 preloadScript(descriptor.cmake_preload)
                 sourceDir(source_dir)
-                buildDir("build_${variant}")
+                buildDir("${workspaceDir}/build_${variant}")
                 buildType(variant)
 
                 buildToolStep {
@@ -327,8 +327,8 @@ for(t in Targets) {
         last_step = testing.name
 
         GetJobQuirks(t, compile, testing, workspaceDir)
-        GetCMakeSteps(t, compile, rel, 0, sourceDir)
-        GetCMakeSteps(t, testing, rel, 1, sourceDir)
+        GetCMakeSteps(t, compile, rel, 0, sourceDir, workspaceDir)
+        GetCMakeSteps(t, testing, rel, 1, sourceDir, workspaceDir)
 
         GetDockerDataLinux(t, compile, sourceDir, "${workspaceDir}/build_${rel}")
         GetDockerDataLinux(t, testing, sourceDir, "${workspaceDir}/build_${rel}")
