@@ -174,7 +174,7 @@ void GetDockerDataRaspberry(descriptor, job)
         return;
 }
 
-void GetCMakeSteps(descriptor, job, variant, level, source_dir, workspaceDir)
+void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
 {
     cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
     cmake_args += descriptor.cmake_options
@@ -201,7 +201,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, workspaceDir)
                 args("-DCMAKE_INSTALL_PREFIX=out ${cmake_args}")
                 preloadScript(descriptor.cmake_preload)
                 sourceDir(source_dir)
-                buildDir("${workspaceDir}/build_${variant}")
+                buildDir(build_dir)
                 buildType(variant)
 
                 buildToolStep {
@@ -226,7 +226,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, workspaceDir)
             publishers {
                 textFinder("The following tests FAILED",'', true, false, true)
                 archiveArtifacts {
-                    pattern("build_${variant}/out/**")
+                    pattern("${build_dir}/out/**")
                 }
             }
         }
@@ -301,8 +301,10 @@ for(t in Targets) {
 
     for(rel in RELEASE_TYPES)
     {
-        compile = job("${i}.0_${pipelineName}_${rel}")
-        testing = job("${i}.1_${pipelineName}_${rel}_Testing")
+        def compile = job("${i}.0_${pipelineName}_${rel}")
+        def testing = job("${i}.1_${pipelineName}_${rel}_Testing")
+
+        def buildDir = "${workspaceDir}/build_${rel}"
 
         i++;
 
@@ -327,10 +329,10 @@ for(t in Targets) {
         last_step = testing.name
 
         GetJobQuirks(t, compile, testing, workspaceDir)
-        GetCMakeSteps(t, compile, rel, 0, sourceDir, workspaceDir)
-        GetCMakeSteps(t, testing, rel, 1, sourceDir, workspaceDir)
+        GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
+        GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
 
-        GetDockerDataLinux(t, compile, sourceDir, "${workspaceDir}/build_${rel}")
-        GetDockerDataLinux(t, testing, sourceDir, "${workspaceDir}/build_${rel}")
+        GetDockerDataLinux(t, compile, sourceDir, buildDir, workspaceDir)
+        GetDockerDataLinux(t, testing, sourceDir, buildDir, workspaceDir)
     }
 }
