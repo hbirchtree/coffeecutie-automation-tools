@@ -91,9 +91,8 @@ class BuildTarget
 /* Setting up Git SCM
  * One function to change them all
  */
-void GetSourceStep(descriptor, sourceDir, job)
+void GetSourceStep(descriptor, sourceDir, job, branch_)
 {
-    def REPO_BRANCH = 'testing'
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
 
     job.with {
@@ -104,7 +103,7 @@ void GetSourceStep(descriptor, sourceDir, job)
                     name('origin')
                     url(REPO_URL)
                 }
-                branch(REPO_BRANCH)
+                branch(branch_)
                 extensions {
                     relativeTargetDirectory(sourceDir)
                     submoduleOptions {
@@ -135,7 +134,7 @@ String GetDockerBuilder(variant)
     return "builders/${variant}"
 }
 
-void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceDir)
+void GetDockerDataLinux(descriptor, job, sourceDir, buildDir)
 {
     def docker_dir = 'ubuntu';
     def docker_file = "Dockerfile";
@@ -155,7 +154,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceDir)
             buildInDocker {
                 dockerfile(docker_dir, docker_file)
                 verbose()
-                volume(buildDir, workspaceDir)
+                volume(buildDir, buildDir)
                 volume(sourceDir, sourceDir)
             }
         }
@@ -171,7 +170,7 @@ void GetDockerDataRaspberry(descriptor, job)
                 buildInDocker {
                     dockerfile(docker_dir, docker_file)
                     verbose()
-                    volume(buildDir, workspaceDir)
+                    volume(buildDir, buildDir)
                     volume(sourceDir, sourceDir)
                 }
             }
@@ -180,7 +179,7 @@ void GetDockerDataRaspberry(descriptor, job)
         return;
 }
 
-void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir, workspace_dir)
+void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
 {
     cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
     cmake_args += descriptor.cmake_options
@@ -200,12 +199,6 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir, works
         }
     }
 
-    def build_dir_fake = build_dir
-    if(IsDockerized(descriptor.platformName))
-    {
-    	build_dir_fake = workspace_dir
-    }
-
     job.with {
         steps {
             cmake {
@@ -213,7 +206,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir, works
                 args("-DCMAKE_INSTALL_PREFIX=out ${cmake_args}")
                 preloadScript(descriptor.cmake_preload)
                 sourceDir(source_dir)
-                buildDir(build_dir_fake)
+                buildDir(build_dir)
                 buildType(variant)
 
                 buildToolStep {
@@ -248,31 +241,31 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir, works
 /* Adds platform-specific features to jobs
  * Useful for fixing issues
  */
-void GetJobQuirks(descriptor, compile, testing, workspace)
+void GetJobQuirks(descriptor, compile, testing, sourceDir)
 {
     if(descriptor.platformName == WIN_WIN32
        || descriptor.platformName == WIN_MSUWP)
     {
         /* Linking library directories */
-        compile.with {
-            steps {
-                batchFile(
-                  """
-                    mkdir build_Debug
-                    mkdir build_Release
-                    mklink /J build_Debug\\libs libs
-                    mklink /J build_Release\\libs libs
-                    exit 0
-                  """)
-            }
-        }
+//        compile.with {
+//            steps {
+//                batchFile(
+//                  """
+//                    mkdir build_Debug
+//                    mkdir build_Release
+//                    mklink /J build_Debug\\libs libs
+//                    mklink /J build_Release\\libs libs
+//                    exit 0
+//                  """)
+//            }
+//        }
     }else if(descriptor.platformName == MAC_MCOSX)
     {
         compile.with {
             steps {
                 shell(
                   """
-                    cd "${workspace}/src/desktop/osx/"
+                    cd "${sourceDir}/desktop/osx/"
                     bash "gen_icons.sh"
                   """)
             }
@@ -281,9 +274,9 @@ void GetJobQuirks(descriptor, compile, testing, workspace)
 }
 
 for(t in Targets) {
+    branch = "testing"
     pipelineName = "${t.platformName}_${t.platformArch}"
-    workspaceDir = "/tmp/${pipelineName}"
-    sourceDir = "${workspaceDir}/src"
+    sourceDir = "${t.platformName}_${branch}_src"
 
     t.cmake_preload = "${sourceDir}/cmake/Preload/${t.cmake_preload}"
     t.cmake_toolchain = "${sourceDir}/cmake/Toolchains/${t.cmake_toolchain}"
@@ -294,10 +287,10 @@ for(t in Targets) {
     /* Acquiring the source code is step 0 */
     source_step = job("0.0_${pipelineName}_Setup")
     /* One function to insert the SCM data */
-    GetSourceStep(t, sourceDir, source_step)
+    GetSourceStep(t, sourceDir, source_step, branch)
 
     source_step.with {
-        customWorkspace(workspaceDir)
+        customWorkspace(sourceDir)
     }
 
     pip.with {
@@ -316,7 +309,7 @@ for(t in Targets) {
         def compile = job("${i}.0_${pipelineName}_${rel}")
         def testing = job("${i}.1_${pipelineName}_${rel}_Testing")
 
-        def buildDir = "${workspaceDir}/build_${rel}"
+	def workspaceDir = "${pipelineName}_build_${rel}"
 
         i++;
 
@@ -341,10 +334,13 @@ for(t in Targets) {
         last_step = testing.name
 
         GetJobQuirks(t, compile, testing, workspaceDir)
-        GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir, workspaceDir)
-        GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir, workspaceDir)
 
-        GetDockerDataLinux(t, compile, sourceDir, buildDir, workspaceDir)
-        GetDockerDataLinux(t, testing, sourceDir, buildDir, workspaceDir)
+	def buildDir = workspaceDir
+
+        GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
+        GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
+
+        GetDockerDataLinux(t, compile, sourceDir, buildDir)
+        GetDockerDataLinux(t, testing, sourceDir, buildDir)
     }
 }
