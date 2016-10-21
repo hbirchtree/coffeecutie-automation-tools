@@ -25,7 +25,7 @@ def Targets = [
                    "Ninja", LINUX_PACKAGING_OPTS),
     /* SteamOS builds, use a special Docker environment */
     new BuildTarget(LIN_STMOS, A_X64, "linux && docker && steamos && gcc && amd64",
-                   "x86_64-linux-generic.cmake",
+                   "x86_64-linux-steam.cmake",
                    "native-linux-generic.toolchain.cmake",
                    "Ninja", ""),
     /* Creates Win32 applications, bog standard,
