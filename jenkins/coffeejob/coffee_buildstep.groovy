@@ -233,7 +233,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
             publishers {
                 textFinder("The following tests FAILED",'', true, false, true)
                 archiveArtifacts {
-                    pattern("${build_dir}/out/**")
+                    pattern("out/**")
                 }
             }
         }
