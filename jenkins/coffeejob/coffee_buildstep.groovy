@@ -185,7 +185,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir, works
     cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
     cmake_args += descriptor.cmake_options
 
-    cmake_target = null
+    cmake_target = "install"
 
     if(level == 1)
     {
@@ -201,7 +201,9 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir, works
     }
 
     if(IsDockerized(descriptor.platformName))
+    {
     	build_dir = workspace_dir
+    }
 
     job.with {
         steps {
