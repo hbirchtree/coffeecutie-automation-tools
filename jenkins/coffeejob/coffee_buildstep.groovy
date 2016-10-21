@@ -1,5 +1,7 @@
 def RELEASE_TYPES = ['Debug', 'Release']
 
+PROJECT_NAME = "Coffee"
+
 LIN_UBNTU = "Ubuntu"
 LIN_STMOS = "SteamOS"
 LIN_RASPI = "Raspberry-Pi"
@@ -275,8 +277,8 @@ void GetJobQuirks(descriptor, compile, testing, sourceDir)
 
 for(t in Targets) {
     branch = "testing"
-    pipelineName = "${t.platformName}_${t.platformArch}"
-    sourceDir = "${t.platformName}_${branch}_src"
+    pipelineName = "${PROJECT_NAME}_${t.platformName}_${t.platformArch}"
+    sourceDir = "${PROJECT_NAME}_${branch}_src"
 
     t.cmake_preload = "${sourceDir}/cmake/Preload/${t.cmake_preload}"
     t.cmake_toolchain = "${sourceDir}/cmake/Toolchains/${t.cmake_toolchain}"
@@ -285,7 +287,7 @@ for(t in Targets) {
     pip = deliveryPipelineView("${pipelineName}")
 
     /* Acquiring the source code is step 0 */
-    source_step = job("0.0_${pipelineName}_Setup")
+    source_step = job("0.0_${pipelineName}_Source")
     /* One function to insert the SCM data */
     GetSourceStep(t, sourceDir, source_step, branch)
 
