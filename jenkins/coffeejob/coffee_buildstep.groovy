@@ -200,9 +200,10 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir, works
         }
     }
 
+    def build_dir_fake = build_dir
     if(IsDockerized(descriptor.platformName))
     {
-    	build_dir = workspace_dir
+    	build_dir_fake = workspace_dir
     }
 
     job.with {
@@ -212,7 +213,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir, works
                 args("-DCMAKE_INSTALL_PREFIX=out ${cmake_args}")
                 preloadScript(descriptor.cmake_preload)
                 sourceDir(source_dir)
-                buildDir(build_dir)
+                buildDir(build_dir_fake)
                 buildType(variant)
 
                 buildToolStep {
