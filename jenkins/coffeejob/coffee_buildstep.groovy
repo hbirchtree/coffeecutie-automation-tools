@@ -29,7 +29,7 @@ def Targets = [
     new BuildTarget(LIN_STMOS, A_X64, "linux && docker && steamos && gcc && amd64",
                    "x86_64-linux-steam.cmake",
                    "native-linux-generic.toolchain.cmake",
-                   "Ninja", ""),
+                   "Ninja", "", false),
     /* Creates Win32 applications, bog standard,
      * self-contained resources.
      */
@@ -78,6 +78,24 @@ class BuildTarget
         cmake_toolchain = cTC;
         cmake_generator = cGen;
         cmake_options = cOpts;
+
+	do_tests = true;
+    }
+
+    BuildTarget(String platName, String platArch,
+		String label, String cPreload,
+		String cTC, String cGen, String cOpts,
+		boolean do_tests)
+    {
+	platformName = platName;
+	platformArch = platArch;
+	this.label = label;
+	cmake_preload = cPreload;
+	cmake_toolchain = cTC;
+	cmake_generator = cGen;
+	cmake_options = cOpts;
+
+	this.do_tests = do_tests;
     }
 
     String platformName;
@@ -88,6 +106,8 @@ class BuildTarget
     String cmake_toolchain;
     String cmake_generator;
     String cmake_options;
+
+    boolean do_tests;
 };
 
 /* Setting up Git SCM
@@ -326,16 +346,22 @@ for(t in Targets) {
                 upstream(last_step)
             }
         }
-        testing.with {
-            label(t.label)
-            customWorkspace(workspaceDir)
-            deliveryPipelineConfiguration(pipelineName, "${rel} testing stage")
-            triggers {
-                upstream(compile.name)
-            }
-        }
+	if(t.do_tests)
+	{
+	    testing.with {
+		label(t.label)
+		customWorkspace(workspaceDir)
+		deliveryPipelineConfiguration(pipelineName, "${rel} testing stage")
+		triggers {
+		    upstream(compile.name)
+		}
+	    }
+	    last_step = testing.name
+	}else
+	{
+	    last_step = compile.name
+	}
 
-        last_step = testing.name
 
         GetJobQuirks(t, compile, testing, workspaceDir)
 
