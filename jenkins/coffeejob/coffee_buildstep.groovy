@@ -8,10 +8,10 @@ WIN_WIN32 = "Windows"
 WIN_MSUWP = "Windows-UWP"
 LIN_ANDRD = "Android"
 
-final String A_X64 = "x86-64"
-final String A_ARMV8A = "ARMv8A"
-final String A_ARMV7A = "ARMv7A"
-final String A_UNI = "Universal"
+A_X64 = "x86-64"
+A_ARMV8A = "ARMv8A"
+A_ARMV7A = "ARMv7A"
+A_UNI = "Universal"
 
 def LINUX_PACKAGING_OPTS = "-DCOFFEE_GENERATE_SNAPPY=ON"
 def Targets = [
@@ -119,6 +119,12 @@ void GetSourceStep(descriptor, sourceDir, job)
     }
 }
 
+boolean IsDockerized(platName)
+{
+	return (platName == LIN_UBNTU || platName == LIN_STMOS
+            || platName == LIN_RASPI || platName == LIN_ANDRD);
+}
+
 String GetAutomationDir(sourceDir)
 {
     return "${sourceDir}/tools/automation/"
@@ -174,7 +180,7 @@ void GetDockerDataRaspberry(descriptor, job)
         return;
 }
 
-void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
+void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir, workspace_dir)
 {
     cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
     cmake_args += descriptor.cmake_options
@@ -193,6 +199,9 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
             cmake_target = "test"
         }
     }
+
+    if(IsDockerized(descriptor.platformName))
+    	build_dir = workspace_dir
 
     job.with {
         steps {
@@ -329,8 +338,8 @@ for(t in Targets) {
         last_step = testing.name
 
         GetJobQuirks(t, compile, testing, workspaceDir)
-        GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
-        GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
+        GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir, workspaceDir)
+        GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir, workspaceDir)
 
         GetDockerDataLinux(t, compile, sourceDir, buildDir, workspaceDir)
         GetDockerDataLinux(t, testing, sourceDir, buildDir, workspaceDir)
