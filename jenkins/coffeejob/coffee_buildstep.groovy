@@ -275,10 +275,12 @@ void GetJobQuirks(descriptor, compile, testing, sourceDir)
     }
 }
 
+def WORKSPACE = "/tmp"
+
 for(t in Targets) {
     branch = "testing"
     pipelineName = "${PROJECT_NAME}_${t.platformName}_${t.platformArch}"
-    sourceDir = "${PROJECT_NAME}_${branch}_src"
+    sourceDir = "${WORKSPACE}/${PROJECT_NAME}_${branch}_src"
 
     t.cmake_preload = "${sourceDir}/cmake/Preload/${t.cmake_preload}"
     t.cmake_toolchain = "${sourceDir}/cmake/Toolchains/${t.cmake_toolchain}"
@@ -311,7 +313,7 @@ for(t in Targets) {
         def compile = job("${i}.0_${pipelineName}_${rel}")
         def testing = job("${i}.1_${pipelineName}_${rel}_Testing")
 
-	def workspaceDir = "${pipelineName}_build_${rel}"
+        def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
 
         i++;
 
