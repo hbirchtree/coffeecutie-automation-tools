@@ -151,7 +151,6 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceDir)
                 verbose()
                 volume(buildDir, workspaceDir)
                 volume(sourceDir, sourceDir)
-                volume(buildDir, buildDir)
             }
         }
     }
@@ -168,7 +167,6 @@ void GetDockerDataRaspberry(descriptor, job)
                     verbose()
                     volume(buildDir, workspaceDir)
                     volume(sourceDir, sourceDir)
-                    volume(buildDir, buildDir)
                 }
             }
         }
@@ -181,7 +179,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
     cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
     cmake_args += descriptor.cmake_options
 
-    cmake_target = "install"
+    cmake_target = null
 
     if(level == 1)
     {
