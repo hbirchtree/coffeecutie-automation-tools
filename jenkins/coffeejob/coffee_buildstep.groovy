@@ -331,7 +331,7 @@ for(t in Targets) {
     for(rel in RELEASE_TYPES)
     {
         def compile = job("${i}.0_${pipelineName}_${rel}")
-        def testing = job("${i}.1_${pipelineName}_${rel}_Testing")
+	def testing = null
 
         def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
 
@@ -348,6 +348,8 @@ for(t in Targets) {
         }
 	if(t.do_tests)
 	{
+	    testing = job("${i}.1_${pipelineName}_${rel}_Testing")
+
 	    testing.with {
 		label(t.label)
 		customWorkspace(workspaceDir)
@@ -368,9 +370,11 @@ for(t in Targets) {
 	def buildDir = workspaceDir
 
         GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
-        GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
+	if(t.do_tests)
+	    GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
 
         GetDockerDataLinux(t, compile, sourceDir, buildDir)
-        GetDockerDataLinux(t, testing, sourceDir, buildDir)
+	if(t.do_tests)
+	    GetDockerDataLinux(t, testing, sourceDir, buildDir)
     }
 }
