@@ -269,16 +269,14 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
             }
         }
     }
+}
 
-    if(level == 1)
-    {
-        /* Add artifact step, archiving the binaries */
-        job.with {
-            publishers {
-                textFinder("The following tests FAILED",'', true, false, true)
-                archiveArtifacts {
-                    pattern("out/**")
-                }
+void GetArtifactingStep(job, releaseName)
+{
+    job.with {
+        publishers {
+            archiveArtifacts {
+                pattern("out/**")
             }
         }
     }
@@ -338,11 +336,12 @@ for(t in Targets) {
 
     for(rel in RELEASE_TYPES)
     {
+        def releaseName = "${PROJECT_NAME}__${t.platformName}_${t.platformArch}"
+
         def compile = job("${i}.0_${pipelineName}_${rel}")
 	def testing = null
 
         def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
-
 
         /* Compilation and testing will only be performed on suitable hosts */
         compile.with {
@@ -383,6 +382,11 @@ for(t in Targets) {
         GetDockerDataLinux(t, compile, sourceDir, buildDir, WORKSPACE)
 	if(t.do_tests)
             GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE)
+
+        if(t.do_tests)
+            GetArtifactingStep(testing, releaseName)
+        else
+            GetArtifactingStep(compile, releaseName)
 
         /* Increment counter for ordering jobs in lists */
         i++;
