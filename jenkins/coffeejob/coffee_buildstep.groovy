@@ -193,7 +193,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
             }
             wrappers {
                 buildInDocker {
-                    dockerfile("raspberry", "Dockerfile")
+                    dockerfile(GetAutomationDir(sourceDir)+GetDockerBuilder("raspberry"), "Dockerfile")
                     verbose()
                     volume(buildDir, buildDir)
                     volume(sourceDir, sourceDir)
