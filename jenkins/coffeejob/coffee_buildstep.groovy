@@ -156,7 +156,7 @@ String GetDockerBuilder(variant)
     return "builders/${variant}"
 }
 
-void GetDockerDataLinux(descriptor, job, sourceDir, buildDir)
+void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
 {
     def docker_dir = 'ubuntu';
     def docker_file = "Dockerfile";
@@ -166,7 +166,48 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir)
     {}
     else if(descriptor.platformName == LIN_STMOS)
         docker_dir = "steam"
-    else
+    else if(descriptor.platformName == LIN_RASPI)
+    {
+        /* For Raspberry Pi, we need to download a sysroot
+         * The sysroot contains libraries and headers
+         * We download it from Github, but we should replace
+         * it with a better distribution method
+         */
+        def raspi_sdk_dir = "${workspaceRoot}/raspi-sdk"
+        def raspi_sdk = "/raspi-sdk"
+
+        job.with {
+            scm {
+                git {
+                    remote {
+                        name('origin')
+                        url("https://github.com/hbirchtree/raspberry-sysroot.git")
+                    }
+                    extensions {
+                        relativeTargetDirectory(raspi_sdk_dir)
+                        cloneOptions {
+                            shallow(true)
+                        }
+                    }
+                }
+            }
+            wrappers {
+                buildInDocker {
+                    dockerfile("raspberry", "Dockerfile")
+                    verbose()
+                    volume(buildDir, buildDir)
+                    volume(sourceDir, sourceDir)
+                    volume(raspi_sdk_dir + "/architectures/rpi-SDL2-X11-armv7a",raspi_sdk)
+                }
+            }
+        }
+        return;
+    else if(descriptor.platformName == LIN_ANDRD)
+    {
+        job.with {
+
+        }
+    }else
         return;
 
     docker_dir = GetAutomationDir(sourceDir)+GetDockerBuilder(docker_dir)
@@ -181,24 +222,6 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir)
             }
         }
     }
-}
-
-void GetDockerDataRaspberry(descriptor, job)
-{
-    if(job.platformName == LIN_RASPI)
-    {
-        job.with {
-            wrappers {
-                buildInDocker {
-                    dockerfile(docker_dir, docker_file)
-                    verbose()
-                    volume(buildDir, buildDir)
-                    volume(sourceDir, sourceDir)
-                }
-            }
-        }
-    }else
-        return;
 }
 
 void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
@@ -265,23 +288,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
  */
 void GetJobQuirks(descriptor, compile, testing, sourceDir)
 {
-    if(descriptor.platformName == WIN_WIN32
-       || descriptor.platformName == WIN_MSUWP)
-    {
-        /* Linking library directories */
-//        compile.with {
-//            steps {
-//                batchFile(
-//                  """
-//                    mkdir build_Debug
-//                    mkdir build_Release
-//                    mklink /J build_Debug\\libs libs
-//                    mklink /J build_Release\\libs libs
-//                    exit 0
-//                  """)
-//            }
-//        }
-    }else if(descriptor.platformName == MAC_MCOSX)
+    if(descriptor.platformName == MAC_MCOSX)
     {
         compile.with {
             steps {
@@ -373,8 +380,8 @@ for(t in Targets) {
 	if(t.do_tests)
 	    GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
 
-        GetDockerDataLinux(t, compile, sourceDir, buildDir)
+        GetDockerDataLinux(t, compile, sourceDir, buildDir, WORKSPACE)
 	if(t.do_tests)
-	    GetDockerDataLinux(t, testing, sourceDir, buildDir)
+            GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE)
     }
 }
