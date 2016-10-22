@@ -202,6 +202,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
             }
         }
         return;
+    }
     else if(descriptor.platformName == LIN_ANDRD)
     {
         job.with {
