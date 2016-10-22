@@ -41,7 +41,7 @@ def Targets = [
     new BuildTarget(WIN_MSUWP, A_X64, "windows && win10sdk && x64",
                    "x86_64-windows-uwp.cmake",
                    "x86_64-windows-uwp.toolchain.cmake",
-                   "Visual Studio 14 2015 Win64", ""),
+                   "Visual Studio 14 2015 Win64", "", false),
     /* Good old OS X .app directories with some spice,
      * self-contained resources.
      */
@@ -55,14 +55,14 @@ def Targets = [
     new BuildTarget(LIN_RASPI, A_UNI, "linux && docker && raspi && bcm_gcc && armv7a",
                   "raspberry.cmake",
                   "gnueabihf-arm-raspberry.toolchain.cmake",
-                                  "Ninja", "-DRASPBERRY_SDK=/raspi-sdk"),
+                   "Ninja", "-DRASPBERRY_SDK=/raspi-sdk", false),
     /* Android on a Docker container, composite project
      */
     new BuildTarget(LIN_ANDRD, A_UNI,
                    "linux && docker && android && android_sdk && android_ndk",
                    "android.cmake",
                    "all-android.toolchain.cmake",
-                                   "Ninja", "")
+                   "Ninja", "", false)
 ]
 
 class BuildTarget
@@ -343,7 +343,6 @@ for(t in Targets) {
 
         def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
 
-        i++;
 
         /* Compilation and testing will only be performed on suitable hosts */
         compile.with {
@@ -384,5 +383,8 @@ for(t in Targets) {
         GetDockerDataLinux(t, compile, sourceDir, buildDir, WORKSPACE)
 	if(t.do_tests)
             GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE)
+
+        /* Increment counter for ordering jobs in lists */
+        i++;
     }
 }
