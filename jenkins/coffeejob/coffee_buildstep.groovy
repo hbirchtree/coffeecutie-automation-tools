@@ -60,8 +60,7 @@ def Targets = [
      */
     new BuildTarget(LIN_ANDRD, A_UNI,
                    "linux && docker && android && android_sdk && android_ndk",
-                   "android.cmake",
-                   "all-android.toolchain.cmake",
+                   null, null,
                    "Ninja", "", false)
 ]
 
@@ -166,6 +165,21 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
     {}
     else if(descriptor.platformName == LIN_STMOS)
         docker_dir = "steam"
+    else if(descriptor.platformName == LIN_ANDRD)
+    {
+        job.with {
+            wrappers {
+                buildInDocker {
+                    dockerfile(GetAutomationDir(sourceDir)+GetDockerBuilder("android"), "Dockerfile")
+                    verbose()
+                    volume(buildDir, buildDir)
+                    volume(sourceDir, sourceDir)
+                }
+            }
+        }
+    }
+    return;
+    }
     else if(descriptor.platformName == LIN_RASPI)
     {
         /* For Raspberry Pi, we need to download a sysroot
@@ -205,12 +219,14 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
     }
     else if(descriptor.platformName == LIN_ANDRD)
     {
+        /* Android container needs special instrumentation */
         job.with {
 
         }
     }else
         return;
 
+    /* Normally, we just use a stock Docker container without many extras */
     docker_dir = GetAutomationDir(sourceDir)+GetDockerBuilder(docker_dir)
 
     job.with {
@@ -248,7 +264,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
     job.with {
         steps {
             cmake {
-                generator("${descriptor.cmake_generator}")
+                generator(descriptor.cmake_generator)
                 args("-DCMAKE_INSTALL_PREFIX=out ${cmake_args}")
                 preloadScript(descriptor.cmake_preload)
                 sourceDir(source_dir)
@@ -277,6 +293,44 @@ void GetArtifactingStep(job, releaseName)
         publishers {
             archiveArtifacts {
                 pattern("out/**")
+            }
+        }
+    }
+}
+
+void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir)
+{
+    def REPO_URL = 'https://github.com/hbirchtree/coffeecutie-meta.git'
+
+    job.with {
+        label(descriptor.label)
+        scm {
+            git {
+                remote {
+                    name("origin")
+                    url(REPO_URL)
+                }
+                branch("master")
+                extensions {
+                    relativeTargetDirectory(source_dir)
+                    cloneOptions {
+                        shallow(true)
+                    }
+                }
+            }
+        }
+    }
+
+    job.with {
+        steps {
+            cmake {
+                generator(dsecriptor.cmake_generator)
+                sourceDir(source_dir)
+                buildDir(build_dir)
+                buildType(variant)
+                buildToolStep {
+                    useCmake(true)
+                }
             }
         }
     }
@@ -375,9 +429,14 @@ for(t in Targets) {
 
 	def buildDir = workspaceDir
 
-        GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
-	if(t.do_tests)
-	    GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
+        if(descriptor.platformName == LIN_ANDRD)
+        {
+            GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir)
+        }else{
+            GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
+            if(t.do_tests)
+                GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
+        }
 
         GetDockerDataLinux(t, compile, sourceDir, buildDir, WORKSPACE)
 	if(t.do_tests)
