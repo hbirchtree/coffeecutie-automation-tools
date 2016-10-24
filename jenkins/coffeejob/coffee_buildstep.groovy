@@ -311,7 +311,7 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir)
                 }
                 branch("master")
                 extensions {
-                    relativeTargetDirectory(source_dir)
+                    relativeTargetDirectory("/tmp/Coffee_Meta_src")
                     cloneOptions {
                         shallow(true)
                     }
@@ -395,6 +395,9 @@ for(t in Targets) {
         def testing = null
 
         def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
+
+        if(t.platformName == LIN_ANDRD)
+            workspaceDir = "${WORKSPACE}/${pipelineName}_${rel}"
 
         /* Compilation and testing will only be performed on suitable hosts */
         compile.with {
