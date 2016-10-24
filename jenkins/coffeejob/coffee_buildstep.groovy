@@ -174,7 +174,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
                     verbose()
                     volume(buildDir, buildDir)
                     volume(sourceDir, sourceDir)
-                    volume("/tmp/Coffee_Meta_src","/tmp/Coffee_Meta_src")
+                    volume("/tmp/Coffee_Meta_src/android","/tmp/Coffee_Meta_src/android")
                 }
             }
         }
@@ -325,7 +325,7 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir)
         steps {
             cmake {
                 generator(descriptor.cmake_generator)
-                sourceDir(source_dir)
+                sourceDir(source_dir + "/android")
                 buildDir(build_dir)
                 buildType(variant)
                 buildToolStep {
