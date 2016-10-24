@@ -174,6 +174,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
                     verbose()
                     volume(buildDir, buildDir)
                     volume(sourceDir, sourceDir)
+                    volume("/tmp/Coffee_Meta_src","/tmp/Coffee_Meta_src")
                 }
             }
         }
@@ -311,7 +312,7 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir)
                 }
                 branch("master")
                 extensions {
-                    relativeTargetDirectory("/tmp/Coffee_Meta_src")
+                    relativeTargetDirectory(source_dir)
                     cloneOptions {
                         shallow(true)
                     }
@@ -397,7 +398,9 @@ for(t in Targets) {
         def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
 
         if(t.platformName == LIN_ANDRD)
+        {
             workspaceDir = "${WORKSPACE}/${pipelineName}_${rel}"
+        }
 
         /* Compilation and testing will only be performed on suitable hosts */
         compile.with {
@@ -433,7 +436,7 @@ for(t in Targets) {
 
         if(t.platformName == LIN_ANDRD)
         {
-            GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir)
+            GetCMakeMultiStep(t, compile, rel, 0, "/tmp/Coffee_Meta_src", buildDir)
         }else{
             GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
             if(t.do_tests)
