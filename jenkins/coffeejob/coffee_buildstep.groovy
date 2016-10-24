@@ -78,23 +78,23 @@ class BuildTarget
         cmake_generator = cGen;
         cmake_options = cOpts;
 
-	do_tests = true;
+        do_tests = true;
     }
 
     BuildTarget(String platName, String platArch,
-		String label, String cPreload,
-		String cTC, String cGen, String cOpts,
-		boolean do_tests)
+                String label, String cPreload,
+                String cTC, String cGen, String cOpts,
+                boolean do_tests)
     {
-	platformName = platName;
-	platformArch = platArch;
-	this.label = label;
-	cmake_preload = cPreload;
-	cmake_toolchain = cTC;
-	cmake_generator = cGen;
-	cmake_options = cOpts;
+        platformName = platName;
+        platformArch = platArch;
+        this.label = label;
+        cmake_preload = cPreload;
+        cmake_toolchain = cTC;
+        cmake_generator = cGen;
+        cmake_options = cOpts;
 
-	this.do_tests = do_tests;
+        this.do_tests = do_tests;
     }
 
     String platformName;
@@ -141,7 +141,7 @@ void GetSourceStep(descriptor, sourceDir, job, branch_)
 
 boolean IsDockerized(platName)
 {
-	return (platName == LIN_UBNTU || platName == LIN_STMOS
+        return (platName == LIN_UBNTU || platName == LIN_STMOS
             || platName == LIN_RASPI || platName == LIN_ANDRD);
 }
 
@@ -177,8 +177,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
                 }
             }
         }
-    }
-    return;
+        return;
     }
     else if(descriptor.platformName == LIN_RASPI)
     {
@@ -324,7 +323,7 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir)
     job.with {
         steps {
             cmake {
-                generator(dsecriptor.cmake_generator)
+                generator(descriptor.cmake_generator)
                 sourceDir(source_dir)
                 buildDir(build_dir)
                 buildType(variant)
@@ -393,7 +392,7 @@ for(t in Targets) {
         def releaseName = "${PROJECT_NAME}__${t.platformName}_${t.platformArch}"
 
         def compile = job("${i}.0_${pipelineName}_${rel}")
-	def testing = null
+        def testing = null
 
         def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
 
@@ -406,30 +405,30 @@ for(t in Targets) {
                 upstream(last_step)
             }
         }
-	if(t.do_tests)
-	{
-	    testing = job("${i}.1_${pipelineName}_${rel}_Testing")
+        if(t.do_tests)
+        {
+            testing = job("${i}.1_${pipelineName}_${rel}_Testing")
 
-	    testing.with {
-		label(t.label)
-		customWorkspace(workspaceDir)
-		deliveryPipelineConfiguration(pipelineName, "${rel} testing stage")
-		triggers {
-		    upstream(compile.name)
-		}
-	    }
-	    last_step = testing.name
-	}else
-	{
-	    last_step = compile.name
-	}
+            testing.with {
+                label(t.label)
+                customWorkspace(workspaceDir)
+                deliveryPipelineConfiguration(pipelineName, "${rel} testing stage")
+                triggers {
+                    upstream(compile.name)
+                }
+            }
+            last_step = testing.name
+        }else
+        {
+            last_step = compile.name
+        }
 
 
         GetJobQuirks(t, compile, testing, workspaceDir)
 
-	def buildDir = workspaceDir
+        def buildDir = workspaceDir
 
-        if(descriptor.platformName == LIN_ANDRD)
+        if(t.platformName == LIN_ANDRD)
         {
             GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir)
         }else{
@@ -439,7 +438,7 @@ for(t in Targets) {
         }
 
         GetDockerDataLinux(t, compile, sourceDir, buildDir, WORKSPACE)
-	if(t.do_tests)
+        if(t.do_tests)
             GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE)
 
         if(t.do_tests)
