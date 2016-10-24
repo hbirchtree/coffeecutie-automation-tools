@@ -7,21 +7,20 @@
 FROM ubuntu:xenial
 MAINTAINER H. Birch Tree
 
-ARG USERNAME "coffee"
+ARG USERNAME="coffee"
 
 ENV ndkver="10e"
 ENV sdkver="24.4.1"
 ENV sdktarget="19"
 
 ENV ANDROID_SDK="/home/${USERNAME}/android-sdk-linux"
-ENV ANDROID_SDK="/home/${USERNAME}/android-ndk-linux"
+ENV ANDROID_NDK="/home/${USERNAME}/android-ndk-linux"
 
 # Install dependencies for Android SDK/NDK as well as build tools
 RUN dpkg --add-architecture i386
-RUN apt-get -qy update && apt-get -qy install openjdk-8-jdk-headless mercurial git cmake swig usbutils openssl ninja-build make nano libc6:i386 libstdc++6:i386 wget ant openssh-server
+RUN apt-get -qy update && apt-get -qy install openjdk-8-jdk-headless mercurial git cmake swig openssl ninja-build make nano libc6:i386 libstdc++6:i386 wget ant
 
 # Create users for dev
-RUN groupadd ${USERNAME} -g 1000
 RUN useradd ${USERNAME} -m -u 1000
 
 # Set up the Android NDK and SDK
