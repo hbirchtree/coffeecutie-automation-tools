@@ -61,7 +61,7 @@ def Targets = [
     new BuildTarget(LIN_ANDRD, A_UNI,
                    "linux && docker && android && android_sdk && android_ndk",
                    null, null,
-                   "Ninja", "", false)
+                   "Unix Makefiles", "", false)
 ]
 
 class BuildTarget
@@ -155,7 +155,7 @@ String GetDockerBuilder(variant)
     return "builders/${variant}"
 }
 
-void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
+void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, meta_dir)
 {
     def docker_dir = 'ubuntu';
     def docker_file = "Dockerfile";
@@ -172,9 +172,9 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
                 buildInDocker {
                     dockerfile(GetAutomationDir(sourceDir)+GetDockerBuilder("android"), "Dockerfile")
                     verbose()
-                    volume(buildDir, buildDir)
-                    volume(sourceDir, sourceDir)
-                    volume("/tmp/Coffee_Meta_src/android","/tmp/Coffee_Meta_src/android")
+                    volume(buildDir, "/home/coffee/build")
+                    volume(sourceDir, "/home/coffee/code")
+                    volume(meta_dir, "/home/coffee/project")
                 }
             }
         }
@@ -216,13 +216,6 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot)
             }
         }
         return;
-    }
-    else if(descriptor.platformName == LIN_ANDRD)
-    {
-        /* Android container needs special instrumentation */
-        job.with {
-
-        }
     }else
         return;
 
@@ -298,7 +291,7 @@ void GetArtifactingStep(job, releaseName)
     }
 }
 
-void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir)
+void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, meta_dir)
 {
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie-meta.git'
 
@@ -312,7 +305,7 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir)
                 }
                 branch("master")
                 extensions {
-                    relativeTargetDirectory(source_dir)
+                    relativeTargetDirectory(meta_dir)
                     cloneOptions {
                         shallow(true)
                     }
@@ -325,8 +318,9 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir)
         steps {
             cmake {
                 generator(descriptor.cmake_generator)
-                sourceDir(source_dir + "/android")
-                buildDir(build_dir)
+                args("-DSOURCE_DIR=/home/coffee/code -DANDROID_SDK=/home/coffee/android-sdk-linux")
+                sourceDir("/home/coffee/project/android")
+                buildDir("/home/coffee/build")
                 buildType(variant)
                 buildToolStep {
                     useCmake(true)
@@ -436,16 +430,16 @@ for(t in Targets) {
 
         if(t.platformName == LIN_ANDRD)
         {
-            GetCMakeMultiStep(t, compile, rel, 0, "/tmp/Coffee_Meta_src", buildDir)
+            GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir, "/tmp/Coffee_Meta_src")
         }else{
             GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
             if(t.do_tests)
                 GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
         }
 
-        GetDockerDataLinux(t, compile, sourceDir, buildDir, WORKSPACE)
+        GetDockerDataLinux(t, compile, sourceDir, buildDir, WORKSPACE, "/tmp/Coffee_Meta_src")
         if(t.do_tests)
-            GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE)
+            GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE, "/tmp/Coffee_Meta_src")
 
         if(t.do_tests)
             GetArtifactingStep(testing, releaseName)
