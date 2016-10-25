@@ -316,16 +316,13 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
 
     job.with {
         steps {
-            cmake {
-                generator(descriptor.cmake_generator)
-                args("-DSOURCE_DIR=/home/coffee/code -DANDROID_SDK=/home/coffee/android-sdk-linux")
-                sourceDir("/home/coffee/project/android")
-                buildDir("/home/coffee/build")
-                buildType(variant)
-                buildToolStep {
-                    useCmake(true)
-                }
-            }
+            shell(
+              """
+cd /home/coffee/build
+cmake -G"Unix Makefiles" /home/coffee/project/android -DCMAKE_BUILD_TYPE=Debug -DSOURCE_DIR=/home/coffee/code -DANDROID_SDK=/home/coffee/android-sdk-linux
+cmake --build /home/coffee/build
+              """
+            )
         }
     }
 }
