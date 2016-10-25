@@ -319,7 +319,7 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
             shell(
               """
 cd /home/coffee/build
-cmake -G"Unix Makefiles" /home/coffee/project/android -DCMAKE_BUILD_TYPE=Debug -DSOURCE_DIR=/home/coffee/code -DANDROID_SDK=/home/coffee/android-sdk-linux
+cmake -G"Unix Makefiles" /home/coffee/project/android -DCMAKE_BUILD_TYPE=Debug -DSOURCE_DIR=/home/coffee/code -DANDROID_SDK=/home/coffee/android-sdk-linux -DANDROID_NDK=/home/coffee/android-ndk-linux
 cmake --build /home/coffee/build
               """
             )
