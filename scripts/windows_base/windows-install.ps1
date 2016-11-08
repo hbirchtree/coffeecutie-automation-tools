@@ -22,7 +22,10 @@ cmd /c "$env:TEMP/vcpp_buildtools.exe" /Q /S /NoRestart
 
 # Development libraries for SDL2
 Invoke-WebRequest https://www.libsdl.org/release/SDL2-devel-2.0.4-VC.zip -OutFile "$env:TEMP/SDL2.zip"
-Expand-Archive -Force -Path "$env:TEMP\SDL2.zip" -DestinationPath C:/SDL2
+Expand-Archive -Force -Path "$env:TEMP\SDL2.zip" -DestinationPath "$env:TEMP/SDL2"
+mv -ErrorAction Ignore -Force "$env:TEMP/SDL2/*" "C:\"
+mv -ErrorAction Ignore -Force "C:\SDL2-2.0.4" "C:\SDL2"
+rm -r -ErrorAction Ignore -Force "C:\SDL2\SDL2-2.0.4"
 
 # Development libraries for OpenAL
 Invoke-WebRequest https://www.openal.org/downloads/OpenAL11CoreSDK.zip -OutFile "$env:TEMP/OpenAL.zip"
