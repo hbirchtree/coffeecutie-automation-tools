@@ -308,12 +308,19 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
     }
 }
 
-void GetArtifactingStep(job, releaseName)
+void GetArtifactingStep(job, releaseName, descriptor)
 {
+    def artifact_glob = "out/**"
+
+    if(descriptor.platformName == GEN_DOCS)
+    {
+        artifact_glob = "out/docs/html/**"
+    }
+
     job.with {
         publishers {
             archiveArtifacts {
-                pattern("out/**")
+                pattern(artifact_glob)
             }
         }
     }
@@ -478,9 +485,9 @@ for(t in Targets) {
             GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE, "/tmp/Coffee_Meta_src")
 
         if(t.do_tests)
-            GetArtifactingStep(testing, releaseName)
+            GetArtifactingStep(testing, releaseName, t)
         else
-            GetArtifactingStep(compile, releaseName)
+            GetArtifactingStep(compile, releaseName, t)
 
         if(t.platformName == GEN_DOCS)
             break;
