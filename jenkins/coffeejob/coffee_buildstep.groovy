@@ -61,7 +61,10 @@ def Targets = [
     new BuildTarget(LIN_ANDRD, A_UNI,
                    "linux && docker && android && android_sdk && android_ndk",
                    null, null,
-                   "Unix Makefiles", "", false)
+                   "Unix Makefiles", "", false),
+    new BuildTarget("Docs", A_UI, "linux && docker",
+                    "none_docs-none-none.cmake", "native-linux-generic.toolchain.cmake",
+                    "Unix Makefiles", "", false, true),
 ]
 
 class BuildTarget
@@ -79,6 +82,7 @@ class BuildTarget
         cmake_options = cOpts;
 
         do_tests = true;
+        is_documentation = false;
     }
 
     BuildTarget(String platName, String platArch,
@@ -95,6 +99,24 @@ class BuildTarget
         cmake_options = cOpts;
 
         this.do_tests = do_tests;
+        is_documentation = false;
+    }
+
+    BuildTarget(String platName, String platArch,
+                String label, String cPreload,
+                String cTC, String cGen, String cOpts,
+                boolean do_tests, boolean docs)
+    {
+        platformName = platName;
+        platformArch = platArch;
+        this.label = label;
+        cmake_preload = cPreload;
+        cmake_toolchain = cTC;
+        cmake_generator = cGen;
+        cmake_options = cOpts;
+
+        this.do_tests = do_tests;
+        is_documentation = docs;
     }
 
     String platformName;
@@ -107,6 +129,7 @@ class BuildTarget
     String cmake_options;
 
     boolean do_tests;
+    boolean is_documentation;
 };
 
 /* Setting up Git SCM
