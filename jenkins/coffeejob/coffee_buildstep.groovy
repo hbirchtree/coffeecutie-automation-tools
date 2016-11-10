@@ -416,8 +416,10 @@ for(t in Targets) {
 
         if(t.platformName == GEN_DOCS)
         {
-            job_name = job_name + "_${rel}"
             pipeline_compile_name = "Documentation generation"
+        }else
+        {
+            job_name = job_name + "_${rel}"
         }
 
         def compile = job(job_name)
