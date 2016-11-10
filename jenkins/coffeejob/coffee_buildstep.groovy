@@ -10,6 +10,8 @@ WIN_WIN32 = "Windows"
 WIN_MSUWP = "Windows-UWP"
 LIN_ANDRD = "Android"
 
+GEN_DOCS = "Docs"
+
 A_X64 = "x86-64"
 A_ARMV8A = "ARMv8A"
 A_ARMV7A = "ARMv7A"
@@ -62,7 +64,7 @@ def Targets = [
                    "linux && docker && android && android_sdk && android_ndk",
                    null, null,
                    "Unix Makefiles", "", false),
-    new BuildTarget("Docs", A_UNI, "linux && docker",
+    new BuildTarget(GEN_DOCS, A_UNI, "linux && docker",
                     "none_docs-none-none.cmake", "native-linux-generic.toolchain.cmake",
                     "Unix Makefiles", "", false, true),
 ]
@@ -165,7 +167,8 @@ void GetSourceStep(descriptor, sourceDir, job, branch_)
 boolean IsDockerized(platName)
 {
         return (platName == LIN_UBNTU || platName == LIN_STMOS
-            || platName == LIN_RASPI || platName == LIN_ANDRD);
+            || platName == LIN_RASPI || platName == LIN_ANDRD
+            || platName == GEN_DOCS);
 }
 
 String GetAutomationDir(sourceDir)
@@ -239,7 +242,9 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
             }
         }
         return;
-    }else
+    }else if(descriptor.platformName == GEN_DOCS)
+        docker_dir = "doc-generator"
+    else
         return;
 
     /* Normally, we just use a stock Docker container without many extras */
@@ -406,7 +411,16 @@ for(t in Targets) {
     {
         def releaseName = "${PROJECT_NAME}__${t.platformName}_${t.platformArch}"
 
-        def compile = job("${i}.0_${pipelineName}_${rel}")
+        def job_name = "${i}.0_${pipelineName}"
+        def pipeline_compile_name = "${rel} compilation stage"
+
+        if(t.platformName == GEN_DOCS)
+        {
+            job_name = job_name + "_${rel}"
+            pipeline_compile_name = "Documentation generation"
+        }
+
+        def compile = job(job_name)
         def testing = null
 
         def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
@@ -420,7 +434,7 @@ for(t in Targets) {
         compile.with {
             label(t.label)
             customWorkspace(workspaceDir)
-            deliveryPipelineConfiguration(pipelineName, "${rel} compilation stage")
+            deliveryPipelineConfiguration(pipelineName, pipeline_compile_name)
             triggers {
                 upstream(last_step)
             }
@@ -465,6 +479,9 @@ for(t in Targets) {
             GetArtifactingStep(testing, releaseName)
         else
             GetArtifactingStep(compile, releaseName)
+
+        if(t.platformName == GEN_DOCS)
+            break;
 
         /* Increment counter for ordering jobs in lists */
         i++;
