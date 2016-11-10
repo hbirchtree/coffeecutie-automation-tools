@@ -62,7 +62,7 @@ def Targets = [
                    "linux && docker && android && android_sdk && android_ndk",
                    null, null,
                    "Unix Makefiles", "", false),
-    new BuildTarget("Docs", A_UI, "linux && docker",
+    new BuildTarget("Docs", A_UNI, "linux && docker",
                     "none_docs-none-none.cmake", "native-linux-generic.toolchain.cmake",
                     "Unix Makefiles", "", false, true),
 ]
