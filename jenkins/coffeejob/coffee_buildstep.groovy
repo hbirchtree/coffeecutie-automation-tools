@@ -467,7 +467,7 @@ for(t in Targets) {
         }
 
 
-        GetJobQuirks(t, compile, testing, workspaceDir)
+        GetJobQuirks(t, compile, testing, sourceDir)
 
         def buildDir = workspaceDir
 
