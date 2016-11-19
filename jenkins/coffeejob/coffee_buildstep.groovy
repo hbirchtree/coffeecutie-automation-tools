@@ -26,7 +26,7 @@ def Targets = [
     new BuildTarget(LIN_UBNTU, A_X64, "linux && docker && ubuntu && gcc && amd64",
                    "x86_64-linux-generic.cmake",
                    "native-linux-generic.toolchain.cmake",
-                   "Ninja", LINUX_PACKAGING_OPTS),
+                   "Ninja", LINUX_PACKAGING_OPTS + " -DSKIP_HIGHMEM_TESTS=ON"),
     /* SteamOS builds, use a special Docker environment */
     new BuildTarget(LIN_STMOS, A_X64, "linux && docker && steamos && gcc && amd64",
                    "x86_64-linux-steam.cmake",
@@ -38,7 +38,7 @@ def Targets = [
     new BuildTarget(WIN_WIN32, A_X64, "windows && vcpp && x64",
                    "x86_64-windows-generic.cmake",
                    "x86_64-windows-win32.toolchain.cmake",
-                   "Visual Studio 14 2015 Win64", ""),
+                   "Visual Studio 14 2015 Win64", "-DSKIP_HIGHMEM_TESTS=ON"),
     /* Windows UWP produces AppX directories for containment */
     new BuildTarget(WIN_MSUWP, A_X64, "windows && win10sdk && x64",
                    "x86_64-windows-uwp.cmake",
@@ -50,7 +50,7 @@ def Targets = [
     new BuildTarget(MAC_MCOSX, A_X64, "macintosh && clang && x64",
                    "x86_64-osx-generic.cmake",
                    "native-macintosh-generic.toolchain.cmake",
-                   "Ninja", ""),
+                   "Ninja", "-DSKIP_HIGHMEM_TESTS=ON"),
     /* Raspberry Pi, using a Docker container
      * Will require a special docker-compose for simplicity with volumes
      */
