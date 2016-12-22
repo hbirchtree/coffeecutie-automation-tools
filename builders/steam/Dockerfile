@@ -34,7 +34,8 @@ RUN rm /key.gpg
 
 RUN apt-get -qy update && apt-get -qy install \
         cmake ninja-build build-essential gdb \
-	steamrt-dev
+        steamrt-dev \
+        libqt5network5
 
 #Create user directory + group
 RUN groupadd buildusers -g ${USER_ID}
