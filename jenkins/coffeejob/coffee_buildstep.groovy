@@ -329,7 +329,7 @@ set +x
 wget -q https://github.com/hbirchtree/qthub/releases/download/v0.9/github-cli.github-cli -O github-cli
 chmod +x github-cli
 tar -zcvf binaries_${descriptor.platformName}_${descriptor.platformArch}_${releaseName}.tar.gz ${artifact_glob}
-./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:appveyor-build-207 bin_${descriptor.platformName}_${descriptor.platformArch}_${releaseName}.tar.gz
+./github-cli --api-token \$GH_API_TOKEN push asset hbirchtree/coffeecutie:appveyor-build-207 bin_${descriptor.platformName}_${descriptor.platformArch}_${releaseName}.tar.gz
                   """
                 )
             }
