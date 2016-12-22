@@ -322,7 +322,7 @@ void GetArtifactingStep(job, releaseName, descriptor)
         job.with {
             wrappers {
                 credentialsBinding {
-                    usernamePassword("GH_API_TOKEN", "GithubToken")
+                    string("GH_API_TOKEN", "GithubToken")
                 }
             }
             steps {
