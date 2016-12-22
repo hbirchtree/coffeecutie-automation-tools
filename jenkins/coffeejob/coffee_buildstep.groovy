@@ -320,6 +320,11 @@ void GetArtifactingStep(job, releaseName, descriptor)
     if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
     {
         job.with {
+            wrappers {
+                credentialsBinding {
+                    usernamePassword("GH_API_TOKEN", "GithubToken")
+                }
+            }
             steps {
                 shell(
                   '''
