@@ -328,8 +328,8 @@ set +x
 [[ -z "${GH_API_TOKEN}" ]] && exit 0
 wget -q https://github.com/hbirchtree/qthub/releases/download/v0.9/github-cli.github-cli -O github-cli
 chmod +x github-cli
-tar -zcvf binaries_''' + descriptor.platformName + '''_''' + descriptor.platformArch + '''_''' + releaseName + '''.tar.gz ''' + artifact_glob + '''
-./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:appveyor-build-207 bin_''' + descriptor.platformName + '''_''' + descriptor.platformArch + '''_''' + releaseName + '''.tar.gz
+tar -zcvf ''' + releaseName + '''.tar.gz ''' + artifact_glob + '''
+./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:appveyor-build-207 ''' + releaseName + '''.tar.gz
                   '''
                 )
             }
@@ -435,7 +435,7 @@ for(t in Targets) {
 
     for(rel in RELEASE_TYPES)
     {
-        def releaseName = "${PROJECT_NAME}__${t.platformName}_${t.platformArch}"
+        def releaseName = "${PROJECT_NAME}_${t.platformName}-${t.platformArch}"
 
         def job_name = "${i}.0_${pipelineName}"
         def pipeline_compile_name = "${rel} compilation stage"
