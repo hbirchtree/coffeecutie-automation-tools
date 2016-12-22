@@ -324,8 +324,8 @@ void GetArtifactingStep(job, releaseName, descriptor)
                 shell(
                   '''
 set +x
-[[ `uname` != 'Linux' ]] && exit 0
-[[ -z "${GH_API_TOKEN}" ]] && exit 0
+[ `uname` != 'Linux' ] && exit 0
+[ -z "${GH_API_TOKEN}" ] && exit 0
 wget -q https://github.com/hbirchtree/qthub/releases/download/v0.9/github-cli.github-cli -O github-cli
 chmod +x github-cli
 tar -zcvf ''' + releaseName + '''.tar.gz ''' + artifact_glob + '''

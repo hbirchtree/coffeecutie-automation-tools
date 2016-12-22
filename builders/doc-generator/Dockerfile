@@ -20,7 +20,8 @@ ENV PRELOAD_FILE ${PROJECT_VOLUME}/cmake/Preload/${PRELOAD_SPEC}.cmake
 RUN apt-get -qy update && apt-get -qy install \
         cmake build-essential \
         doxygen graphviz \
-        libqt5network5
+        libqt5network5 \
+        wget
 
 #Create user directory + group
 RUN groupadd coffeeusers -g 1000
