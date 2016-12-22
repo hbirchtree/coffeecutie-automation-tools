@@ -26,7 +26,8 @@ RUN apt-get -qy update && apt-get -qy install \
         git swig3.0 \
         libstdc++6:i386 \
         libz1:i386 \
-        libqt5network5
+        libqt5network5 \
+        wget
 
 # Set up toolchain files
 # We only fetch the relevant toolchain
