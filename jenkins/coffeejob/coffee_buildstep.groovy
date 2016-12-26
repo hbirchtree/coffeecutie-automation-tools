@@ -329,9 +329,20 @@ void GetArtifactingStep(job, releaseName, descriptor)
                 shell(
                   '''
 set +x
-[ `uname` != 'Linux' ] && exit 0
 [ -z "${GH_API_TOKEN}" ] && exit 0
-wget -q https://github.com/hbirchtree/qthub/releases/download/v0.9/github-cli.github-cli -O github-cli
+KERN=`uname`
+case $KERN in
+"Linux")
+[ `lsb_release -r -s` = "14.04" ] && exit 0 # For older Docker images
+wget -q https://github.com/hbirchtree/qthub/releases/download/v1.0.1.1/github-cli -O github-cli
+;;
+"Darwin")
+wget -q https://github.com/hbirchtree/qthub/releases/download/v1.0.1.1/github-cli-osx -O github-cli
+;;
+*)
+exit 0
+;;
+esac
 chmod +x github-cli
 tar -zcvf ''' + releaseName + '''.tar.gz ''' + artifact_glob + '''
 ./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:appveyor-build-207 ''' + releaseName + '''.tar.gz
