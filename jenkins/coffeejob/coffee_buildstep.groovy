@@ -112,6 +112,7 @@ class BuildTarget
         platformName = platName;
         platformArch = platArch;
         this.label = label;
+        this.testing_label = label;
         cmake_preload = cPreload;
         cmake_toolchain = cTC;
         cmake_generator = cGen;
@@ -124,6 +125,7 @@ class BuildTarget
     String platformName;
     String platformArch;
     String label;
+    String testing_label;
 
     String cmake_preload;
     String cmake_toolchain;
@@ -134,12 +136,72 @@ class BuildTarget
     boolean is_documentation;
 };
 
+void GetBuildParameters(job)
+{
+    job.with {
+        parameters {
+            stringParam('GH_BRANCH', null, 'Name of source Github ref')
+            stringParam('GH_RELEASE', null, 'Name of the generated Github release')
+        }
+    }
+}
+
+void GetGithubKit(job)
+{
+    job.with {
+        wrappers {
+            credentialsBinding {
+                string("GH_API_TOKEN", "GithubToken")
+            }
+        }
+        steps {
+            shell(
+'''
+set +x
+KERN=`uname`
+case $KERN in
+"Linux")
+[ `lsb_release -r -s` = "14.04" ] && exit 0 # For older Docker images
+wget -q https://github.com/hbirchtree/qthub/releases/download/v1.0.1.1/github-cli -O github-cli
+;;
+"Darwin")
+wget -q https://github.com/hbirchtree/qthub/releases/download/v1.0.1.1/github-cli-osx -O github-cli
+;;
+*)
+exit 0
+;;
+esac
+chmod +x github-cli
+'''
+            )
+        }
+    }
+}
+
+void GetDownstreamTrigger(job, downstream)
+{
+    job.with {
+        steps {
+            downstreamParameterized {
+                trigger(downstream) {
+                    parameters {
+                        currentBuild()
+                    }
+                }
+            }
+        }
+    }
+}
+
 /* Setting up Git SCM
  * One function to change them all
  */
 void GetSourceStep(descriptor, sourceDir, job, branch_)
 {
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
+
+    GetGithubKit(job)
+    GetBuildParameters(job)
 
     job.with {
         label(descriptor.label)
@@ -160,6 +222,15 @@ void GetSourceStep(descriptor, sourceDir, job, branch_)
                     }
                 }
             }
+        }
+        steps {
+            shell(
+              '''
+[ -z "${GH_API_TOKEN}" ] && exit 0
+./github-cli --api-token $GH_API_TOKEN push tag hbirchtree/coffeecutie:$GH_BRANCH jenkins-auto-${BUILD_NUMBER}
+./github-cli --api-token $GH_API_TOKEN push release hbirchtree/coffeecutie:jenkins-auto-${BUILD_NUMBER} "Jenkins Auto Build ${BUILD_NUMBER}"
+'''
+            )
         }
     }
 }
@@ -308,59 +379,9 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
     }
 }
 
-void GetArtifactingStep(job, releaseName, descriptor)
-{
-    def artifact_glob = "out/**"
-
-    if(descriptor.platformName == GEN_DOCS)
-    {
-        artifact_glob = "out/docs/html/**"
-    }
-
-    if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
-    {
-        job.with {
-            wrappers {
-                credentialsBinding {
-                    string("GH_API_TOKEN", "GithubToken")
-                }
-            }
-            steps {
-                shell(
-                  '''
-set +x
-[ -z "${GH_API_TOKEN}" ] && exit 0
-KERN=`uname`
-case $KERN in
-"Linux")
-[ `lsb_release -r -s` = "14.04" ] && exit 0 # For older Docker images
-wget -q https://github.com/hbirchtree/qthub/releases/download/v1.0.1.1/github-cli -O github-cli
-;;
-"Darwin")
-wget -q https://github.com/hbirchtree/qthub/releases/download/v1.0.1.1/github-cli-osx -O github-cli
-;;
-*)
-exit 0
-;;
-esac
-chmod +x github-cli
-tar -zcvf ''' + releaseName + '''.tar.gz ''' + artifact_glob + '''
-./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:appveyor-build-207 ''' + releaseName + '''.tar.gz
-                  '''
-                )
-            }
-        }
-    }
-
-    job.with {
-        publishers {
-            archiveArtifacts {
-                pattern(artifact_glob)
-            }
-        }
-    }
-}
-
+/* For special CMake jobs
+ * Eg. multi-arch Android builds, multi-arch Ubuntu builds
+ */
 void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, meta_dir)
 {
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie-meta.git'
@@ -393,6 +414,40 @@ cmake -G"Unix Makefiles" /home/coffee/project/android -DCMAKE_BUILD_TYPE=Debug -
 cmake --build /home/coffee/build
               """
             )
+        }
+    }
+}
+
+void GetArtifactingStep(job, releaseName, descriptor)
+{
+    def artifact_glob = "out/**"
+
+    if(descriptor.platformName == GEN_DOCS)
+    {
+        artifact_glob = "out/docs/html/**"
+    }
+
+    if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
+    {
+        GetGithubKit(job)
+        job.with {
+            steps {
+                shell(
+                  '''
+[ -z "${GH_API_TOKEN}" ] && exit 0
+tar -zcvf ''' + releaseName + '''.tar.gz ''' + artifact_glob + '''
+./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:$GH_RELEASE ''' + releaseName + '''.tar.gz
+                  '''
+                )
+            }
+        }
+    }
+
+    job.with {
+        publishers {
+            archiveArtifacts {
+                pattern(artifact_glob)
+            }
         }
     }
 }
@@ -433,6 +488,7 @@ for(t in Targets) {
     source_step = job("0.0_${pipelineName}_Source")
     /* One function to insert the SCM data */
     GetSourceStep(t, sourceDir, source_step, branch)
+    GetBuildParameters(source_step)
 
     source_step.with {
         customWorkspace(sourceDir)
@@ -446,7 +502,7 @@ for(t in Targets) {
         }
     }
 
-    last_step = source_step.name
+    last_job = source_step
     i = 1
 
     for(rel in RELEASE_TYPES)
@@ -479,28 +535,21 @@ for(t in Targets) {
             label(t.label)
             customWorkspace(workspaceDir)
             deliveryPipelineConfiguration(pipelineName, pipeline_compile_name)
-            triggers {
-                upstream(last_step)
-            }
         }
+        GetBuildParameters(compile)
+
         if(t.do_tests)
         {
             testing = job("${i}.1_${pipelineName}_${rel}_Testing")
+
+            GetBuildParameters(testing)
 
             testing.with {
                 label(t.label)
                 customWorkspace(workspaceDir)
                 deliveryPipelineConfiguration(pipelineName, "${rel} testing stage")
-                triggers {
-                    upstream(compile.name)
-                }
             }
-            last_step = testing.name
-        }else
-        {
-            last_step = compile.name
         }
-
 
         GetJobQuirks(t, compile, testing, sourceDir)
 
@@ -523,6 +572,15 @@ for(t in Targets) {
             GetArtifactingStep(testing, releaseName, t)
         else
             GetArtifactingStep(compile, releaseName, t)
+
+        GetDownstreamTrigger(last_job, compile.name)
+        if(testing != null)
+            GetDownstreamTrigger(compile, testing.name)
+
+        if(t.do_tests)
+            last_job = testing
+        else
+            last_job = compile
 
         if(t.platformName == GEN_DOCS)
             break;
