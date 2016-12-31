@@ -140,8 +140,9 @@ void GetBuildParameters(job)
 {
     job.with {
         parameters {
-            stringParam('GH_BRANCH', null, 'Name of source Github ref')
-            stringParam('GH_RELEASE', null, 'Name of the generated Github release')
+            stringParam('GH_BRANCH', "testing", 'Name of source Github ref')
+            stringParam('GH_RELEASE', 'jenkins-auto-${BUILD_NUMBER}', 'Name of the generated Github release')
+            stringParam('GH_BUILD_NUMBER', '${BUILD_NUMBER}', 'Release number')
         }
     }
 }
@@ -211,7 +212,7 @@ void GetSourceStep(descriptor, sourceDir, job, branch_)
                     name('origin')
                     url(REPO_URL)
                 }
-                branch(branch_)
+                branch('${GH_BRANCH}')
                 extensions {
                     relativeTargetDirectory(sourceDir)
                     submoduleOptions {
@@ -227,8 +228,8 @@ void GetSourceStep(descriptor, sourceDir, job, branch_)
             shell(
               '''
 [ -z "${GH_API_TOKEN}" ] && exit 0
-./github-cli --api-token $GH_API_TOKEN push tag hbirchtree/coffeecutie:$GH_BRANCH jenkins-auto-${BUILD_NUMBER}
-./github-cli --api-token $GH_API_TOKEN push release hbirchtree/coffeecutie:jenkins-auto-${BUILD_NUMBER} "Jenkins Auto Build ${BUILD_NUMBER}"
+./github-cli --api-token $GH_API_TOKEN push tag hbirchtree/coffeecutie:$GH_BRANCH $GH_RELEASE
+./github-cli --api-token $GH_API_TOKEN push release hbirchtree/coffeecutie:$GH_RELEASE "Jenkins Auto Build $GH_BUILD_NUMBER"
 '''
             )
         }
@@ -435,8 +436,8 @@ void GetArtifactingStep(job, releaseName, descriptor)
                 shell(
                   '''
 [ -z "${GH_API_TOKEN}" ] && exit 0
-tar -zcvf ''' + releaseName + '''.tar.gz ''' + artifact_glob + '''
-./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:$GH_RELEASE ''' + releaseName + '''.tar.gz
+tar -zcvf ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.gz ''' + artifact_glob + '''
+./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:$GH_RELEASE ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.gz
                   '''
                 )
             }
@@ -488,7 +489,6 @@ for(t in Targets) {
     source_step = job("0.0_${pipelineName}_Source")
     /* One function to insert the SCM data */
     GetSourceStep(t, sourceDir, source_step, branch)
-    GetBuildParameters(source_step)
 
     source_step.with {
         customWorkspace(sourceDir)
@@ -508,6 +508,7 @@ for(t in Targets) {
     for(rel in RELEASE_TYPES)
     {
         def releaseName = "${PROJECT_NAME}_${t.platformName}-${t.platformArch}"
+        def binaryName = "binary_${t.platformName}-${t.platformArch}"
 
         def job_name = "${i}.0_${pipelineName}"
         def pipeline_compile_name = "${rel} compilation stage"
@@ -569,9 +570,9 @@ for(t in Targets) {
             GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE, "${WORKSPACE}/Coffee_Meta_src")
 
         if(t.do_tests)
-            GetArtifactingStep(testing, releaseName, t)
+            GetArtifactingStep(testing, binaryName, t)
         else
-            GetArtifactingStep(compile, releaseName, t)
+            GetArtifactingStep(compile, binaryName, t)
 
         GetDownstreamTrigger(last_job, compile.name)
         if(testing != null)
