@@ -240,9 +240,8 @@ void GetSourceStep(descriptor, sourceDir, buildDir, job, branch_)
 [ -z "${GH_API_TOKEN}" ] && exit 0
 [ `lsb_release -r -s` = '14.04' ] && exit 0
 
-pushd ''' + sourceDir + '''
+cd ''' + sourceDir + '''
 GIT_COMMIT=`git rev-parse HEAD`
-popd
 
 mkdir -p ''' + buildDir + '''_Debug ''' + buildDir + '''_Release
 
