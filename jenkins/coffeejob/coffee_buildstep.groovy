@@ -612,6 +612,9 @@ SOURCE_STEPS.each {
             downstreamParameterized {
                 trigger(src.name)
                 {
+                    block {
+                        unstable('UNSTABLE')
+                    }
                     parameters {
                         predefinedProp('GH_BRANCH', 'testing')
                         predefinedProp('GH_RELEASE', 'jenkins-auto-1')
