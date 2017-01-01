@@ -593,6 +593,8 @@ for(t in Targets) {
     }
 }
 
+all_build_job = job('All Coffee')
+
 SOURCE_STEPS.each {
     def src = it;
     SOURCE_STEPS.each {
@@ -601,6 +603,19 @@ SOURCE_STEPS.each {
                 blockOn(it.name) {
                     blockLevel('NODE')
                     scanQueueFor('ALL')
+                }
+            }
+        }
+    }
+    all_build_job.with {
+        steps {
+            downstreamParameterized {
+                trigger(src.name)
+                {
+                    parameters {
+                        predefinedProp('GH_BRANCH', 'testing')
+                        predefinedProp('GH_RELEASE', 'jenkins-auto-1')
+                    }
                 }
             }
         }
