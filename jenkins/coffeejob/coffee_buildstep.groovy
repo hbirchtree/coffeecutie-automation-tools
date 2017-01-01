@@ -494,7 +494,7 @@ for(t in Targets) {
         customWorkspace(sourceDir)
     }
 
-    SOURCE_STEPS.append(source_step)
+    SOURCE_STEPS += source_step
 
     pip.with {
         allowPipelineStart(true)
