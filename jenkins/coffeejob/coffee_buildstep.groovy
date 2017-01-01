@@ -226,6 +226,7 @@ void GetSourceStep(descriptor, sourceDir, buildDir, job, branch_)
         steps {
             shell(
               '''
+mkdir -p ''' + buildDir + '''_Debug ''' + buildDir + '''_Release
 echo ${GH_RELEASE} > ''' + buildDir + '''_Debug/GithubData.txt
 echo ${BUILD_NUMBER} > ''' + buildDir + '''_Debug/GithubBuildNumber.txt
 
