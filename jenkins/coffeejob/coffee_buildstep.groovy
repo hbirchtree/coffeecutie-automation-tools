@@ -142,7 +142,6 @@ void GetBuildParameters(job)
         parameters {
             stringParam('GH_BRANCH', "testing", 'Name of source Github ref')
             stringParam('GH_RELEASE', 'jenkins-auto-${BUILD_NUMBER}', 'Name of the generated Github release')
-            stringParam('GH_BUILD_NUMBER', '${BUILD_NUMBER}', 'Release number')
         }
     }
 }
@@ -473,6 +472,7 @@ void GetJobQuirks(descriptor, compile, testing, sourceDir)
 }
 
 def WORKSPACE = "/tmp"
+def SOURCE_STEPS = []
 
 for(t in Targets) {
     branch = "testing"
@@ -493,6 +493,8 @@ for(t in Targets) {
     source_step.with {
         customWorkspace(sourceDir)
     }
+
+    SOURCE_STEPS.append(source_step)
 
     pip.with {
         allowPipelineStart(true)
@@ -588,5 +590,18 @@ for(t in Targets) {
 
         /* Increment counter for ordering jobs in lists */
         i++;
+    }
+}
+
+SOURCE_STEPS.each {
+    def src = it;
+    SOURCE_STEPS.each {
+        if(src != it) {
+            src.with {
+                blockOn(it.name) {
+                    blockLevel('NODE')
+                }
+            }
+        }
     }
 }
