@@ -154,9 +154,13 @@ void GetGithubKit(job)
                 string("GH_API_TOKEN", "GithubToken")
             }
         }
-        steps {
-            shell(
-'''
+    }
+    if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
+    {
+        job.with {
+            steps {
+                shell(
+                '''
 set +x
 KERN=`uname`
 case $KERN in
@@ -173,7 +177,8 @@ exit 0
 esac
 chmod +x github-cli
 '''
-            )
+                )
+            }
         }
     }
 }
@@ -223,9 +228,14 @@ void GetSourceStep(descriptor, sourceDir, buildDir, job, branch_)
                 }
             }
         }
-        steps {
-            shell(
-              '''
+    }
+
+    if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
+    {
+        job.with {
+            steps {
+                shell(
+                  '''
 
 [ -z "${GH_API_TOKEN}" ] && exit 0
 [ `lsb_release -r -s` = '14.04' ] && exit 0
@@ -247,7 +257,8 @@ echo ${BUILD_NUMBER} > ''' + buildDir + '''_Release/GithubBuildNumber.txt
 
 ./github-cli --api-token $GH_API_TOKEN push release hbirchtree/coffeecutie:$GH_RELEASE "Jenkins Auto Build $BUILD_NUMBER"
 '''
-            )
+                )
+            }
         }
     }
 }
