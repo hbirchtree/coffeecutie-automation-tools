@@ -614,7 +614,7 @@ SOURCE_STEPS.each {
                 {
                     parameters {
                         predefinedProp('GH_BRANCH', 'testing')
-                        predefinedProp('GH_RELEASE', 'jenkins-auto-1')
+                        predefinedProp('GH_RELEASE', 'jenkins-auto-${BUILD_NUMBER}')
                     }
                 }
             }
