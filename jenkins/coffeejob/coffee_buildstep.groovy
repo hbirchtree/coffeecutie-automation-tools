@@ -196,7 +196,7 @@ void GetDownstreamTrigger(job, downstream)
 /* Setting up Git SCM
  * One function to change them all
  */
-void GetSourceStep(descriptor, sourceDir, job, branch_)
+void GetSourceStep(descriptor, sourceDir, buildDir, job, branch_)
 {
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
 
@@ -226,10 +226,16 @@ void GetSourceStep(descriptor, sourceDir, job, branch_)
         steps {
             shell(
               '''
+echo ${GH_RELEASE} > ''' + buildDir + '''_Debug/GithubData.txt
+echo ${BUILD_NUMBER} > ''' + buildDir + '''_Debug/GithubBuildNumber.txt
+
+echo ${GH_RELEASE} > ''' + buildDir + '''_Release/GithubData.txt
+echo ${BUILD_NUMBER} > ''' + buildDir + '''_Release/GithubBuildNumber.txt
+
 [ -z "${GH_API_TOKEN}" ] && exit 0
 [ `lsb_release -r -s` = '14.04' ] && exit 0
 ./github-cli --api-token $GH_API_TOKEN push tag hbirchtree/coffeecutie:$GH_BRANCH $GH_RELEASE
-./github-cli --api-token $GH_API_TOKEN push release hbirchtree/coffeecutie:$GH_RELEASE "Jenkins Auto Build $GH_BUILD_NUMBER"
+./github-cli --api-token $GH_API_TOKEN push release hbirchtree/coffeecutie:$GH_RELEASE "Jenkins Auto Build $BUILD_NUMBER"
 '''
             )
         }
@@ -419,7 +425,7 @@ cmake --build /home/coffee/build
     }
 }
 
-void GetArtifactingStep(job, releaseName, descriptor)
+void GetArtifactingStep(job, releaseName, buildDir, descriptor)
 {
     def artifact_glob = "out/**"
 
@@ -437,6 +443,8 @@ void GetArtifactingStep(job, releaseName, descriptor)
                   '''
 [ -z "${GH_API_TOKEN}" ] && exit 0
 [ `lsb_release -r -s` = '14.04' ] && exit 0
+GH_RELEASE=`cat ''' + buildDir + '''/GithubData.txt`
+GH_BUILD_NUMBER=`cat ''' + buildDir + '''/GithubBuildNumber.txt`
 tar -zcvf ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.gz ''' + artifact_glob + '''
 ./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:$GH_RELEASE ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.gz
                   '''
@@ -479,7 +487,7 @@ def SOURCE_STEPS = []
 for(t in Targets) {
     branch = "testing"
     pipelineName = "${PROJECT_NAME}_${t.platformName}_${t.platformArch}"
-    sourceDir = "${WORKSPACE}/${PROJECT_NAME}_${branch}_src"
+    sourceDir = "${WORKSPACE}/${PROJECT_NAME}_" + '${GH_BRANCH}_src'
 
     t.cmake_preload = "${sourceDir}/cmake/Preload/${t.cmake_preload}"
     t.cmake_toolchain = "${sourceDir}/cmake/Toolchains/${t.cmake_toolchain}"
@@ -490,7 +498,8 @@ for(t in Targets) {
     /* Acquiring the source code is step 0 */
     source_step = job("0.0_${pipelineName}_Source")
     /* One function to insert the SCM data */
-    GetSourceStep(t, sourceDir, source_step, branch)
+
+    GetSourceStep(t, sourceDir, "${WORKSPACE}/${pipelineName}", source_step, branch)
 
     source_step.with {
         customWorkspace(sourceDir)
@@ -520,6 +529,13 @@ for(t in Targets) {
         def job_name = "${i}.0_${pipelineName}"
         def pipeline_compile_name = "${rel} compilation stage"
 
+        def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
+
+        if(t.platformName == LIN_ANDRD)
+        {
+            workspaceDir = "${WORKSPACE}/${pipelineName}_${rel}"
+        }
+
         if(t.platformName == GEN_DOCS)
         {
             pipeline_compile_name = "Documentation generation"
@@ -530,13 +546,6 @@ for(t in Targets) {
 
         def compile = job(job_name)
         def testing = null
-
-        def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
-
-        if(t.platformName == LIN_ANDRD)
-        {
-            workspaceDir = "${WORKSPACE}/${pipelineName}_${rel}"
-        }
 
         /* Compilation and testing will only be performed on suitable hosts */
         compile.with {
@@ -577,9 +586,9 @@ for(t in Targets) {
             GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE, "${WORKSPACE}/Coffee_Meta_src")
 
         if(t.do_tests)
-            GetArtifactingStep(testing, binaryName, t)
+            GetArtifactingStep(testing, binaryName, workspaceDir, t)
         else
-            GetArtifactingStep(compile, binaryName, t)
+            GetArtifactingStep(compile, binaryName, workspaceDir, t)
 
         GetDownstreamTrigger(last_job, compile.name)
         if(testing != null)
