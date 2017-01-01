@@ -146,7 +146,7 @@ void GetBuildParameters(job)
     }
 }
 
-void GetGithubKit(job)
+void GetGithubKit(job, platform)
 {
     job.with {
         wrappers {
@@ -155,7 +155,7 @@ void GetGithubKit(job)
             }
         }
     }
-    if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
+    if(platform != WIN_WIN32 && platform != WIN_MSUWP)
     {
         job.with {
             steps {
@@ -205,7 +205,7 @@ void GetSourceStep(descriptor, sourceDir, buildDir, job, branch_)
 {
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
 
-    GetGithubKit(job)
+    GetGithubKit(job, descriptor.platformName)
     GetBuildParameters(job)
 
     job.with {
@@ -456,7 +456,7 @@ void GetArtifactingStep(job, releaseName, buildDir, descriptor)
 
     if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
     {
-        GetGithubKit(job)
+        GetGithubKit(job, descriptor.platformName)
         job.with {
             steps {
                 shell(
@@ -627,7 +627,7 @@ for(t in Targets) {
 all_build_job = job('All Coffee')
 
 GetBuildParameters(all_build_job)
-GetGithubKit(all_build_job)
+GetGithubKit(all_build_job, LIN_UBNTU)
 all_build_job.with {
     label('ubuntu && amd64')
     steps {
