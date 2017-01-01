@@ -492,6 +492,9 @@ for(t in Targets) {
 
     source_step.with {
         customWorkspace(sourceDir)
+        blockOn('.*_Source') {
+            blockLevel('NODE')
+        }
     }
 
     SOURCE_STEPS += source_step
@@ -597,24 +600,11 @@ all_build_job = job('All Coffee')
 
 SOURCE_STEPS.each {
     def src = it;
-    SOURCE_STEPS.each {
-        if(src != it) {
-            src.with {
-                blockOn(it.name) {
-                    blockLevel('NODE')
-                    scanQueueFor('ALL')
-                }
-            }
-        }
-    }
     all_build_job.with {
         steps {
             downstreamParameterized {
                 trigger(src.name)
                 {
-                    block {
-                        unstable('UNSTABLE')
-                    }
                     parameters {
                         predefinedProp('GH_BRANCH', 'testing')
                         predefinedProp('GH_RELEASE', 'jenkins-auto-1')
