@@ -617,6 +617,7 @@ all_build_job = job('All Coffee')
 GetBuildParameters(all_build_job)
 GetGithubKit(all_build_job)
 all_build_job.with {
+    label('ubuntu && amd64')
     steps {
         shell(
         '''
