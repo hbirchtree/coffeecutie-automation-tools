@@ -227,6 +227,7 @@ void GetSourceStep(descriptor, sourceDir, job, branch_)
             shell(
               '''
 [ -z "${GH_API_TOKEN}" ] && exit 0
+[ `lsb_release -r -s` = '14.04' ] && exit 0
 ./github-cli --api-token $GH_API_TOKEN push tag hbirchtree/coffeecutie:$GH_BRANCH $GH_RELEASE
 ./github-cli --api-token $GH_API_TOKEN push release hbirchtree/coffeecutie:$GH_RELEASE "Jenkins Auto Build $GH_BUILD_NUMBER"
 '''
