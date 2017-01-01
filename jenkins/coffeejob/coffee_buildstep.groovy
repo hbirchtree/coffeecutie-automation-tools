@@ -435,6 +435,7 @@ void GetArtifactingStep(job, releaseName, descriptor)
                 shell(
                   '''
 [ -z "${GH_API_TOKEN}" ] && exit 0
+[ `lsb_release -r -s` = '14.04' ] && exit 0
 tar -zcvf ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.gz ''' + artifact_glob + '''
 ./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:$GH_RELEASE ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.gz
                   '''
