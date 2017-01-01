@@ -226,16 +226,25 @@ void GetSourceStep(descriptor, sourceDir, buildDir, job, branch_)
         steps {
             shell(
               '''
+
+[ -z "${GH_API_TOKEN}" ] && exit 0
+[ `lsb_release -r -s` = '14.04' ] && exit 0
+
+pushd ''' + sourceDir + '''
+GIT_COMMIT=`git rev-parse HEAD`
+popd
+
 mkdir -p ''' + buildDir + '''_Debug ''' + buildDir + '''_Release
+
+GH_RELEASE=`./github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
+BUILD_NUMBER=`echo $GH_RELEASE | cut -d '-' -f 3`
+
 echo ${GH_RELEASE} > ''' + buildDir + '''_Debug/GithubData.txt
 echo ${BUILD_NUMBER} > ''' + buildDir + '''_Debug/GithubBuildNumber.txt
 
 echo ${GH_RELEASE} > ''' + buildDir + '''_Release/GithubData.txt
 echo ${BUILD_NUMBER} > ''' + buildDir + '''_Release/GithubBuildNumber.txt
 
-[ -z "${GH_API_TOKEN}" ] && exit 0
-[ `lsb_release -r -s` = '14.04' ] && exit 0
-./github-cli --api-token $GH_API_TOKEN push tag hbirchtree/coffeecutie:$GH_BRANCH $GH_RELEASE
 ./github-cli --api-token $GH_API_TOKEN push release hbirchtree/coffeecutie:$GH_RELEASE "Jenkins Auto Build $BUILD_NUMBER"
 '''
             )
@@ -605,19 +614,21 @@ for(t in Targets) {
 
 all_build_job = job('All Coffee')
 
+GetBuildParameters(all_build_job)
+GetGithubKit(all_build_job)
+all_build_job.with {
+    steps {
+        shell(
+        '''
+[ -z "${GH_API_TOKEN}" ] && exit 0
+[ `lsb_release -r -s` = '14.04' ] && exit 0
+./github-cli --api-token $GH_API_TOKEN push tag hbirchtree/coffeecutie:$GH_BRANCH $GH_RELEASE
+'''
+        )
+    }
+}
+
 SOURCE_STEPS.each {
     def src = it;
-    all_build_job.with {
-        steps {
-            downstreamParameterized {
-                trigger(src.name)
-                {
-                    parameters {
-                        predefinedProp('GH_BRANCH', 'testing')
-                        predefinedProp('GH_RELEASE', 'jenkins-auto-${BUILD_NUMBER}')
-                    }
-                }
-            }
-        }
-    }
+    GetDownstreamTrigger(all_build_job, src.name)
 }
