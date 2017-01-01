@@ -600,6 +600,7 @@ SOURCE_STEPS.each {
             src.with {
                 blockOn(it.name) {
                     blockLevel('NODE')
+                    scanQueueFor('ALL')
                 }
             }
         }
