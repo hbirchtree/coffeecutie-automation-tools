@@ -530,12 +530,7 @@ for(t in Targets) {
         def job_name = "${i}.0_${pipelineName}"
         def pipeline_compile_name = "${rel} compilation stage"
 
-        def workspaceDir = "${WORKSPACE}/${pipelineName}_build_${rel}"
-
-        if(t.platformName == LIN_ANDRD)
-        {
-            workspaceDir = "${WORKSPACE}/${pipelineName}_${rel}"
-        }
+        def workspaceDir = "${WORKSPACE}/${pipelineName}_${rel}"
 
         if(t.platformName == GEN_DOCS)
         {
