@@ -616,7 +616,7 @@ for(t in Targets) {
             GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir, "${WORKSPACE}/Coffee_Meta_src")
         }else{
             GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
-            if(t.do_tests)
+            if(t.do_tests && t.testing_label != null)
                 GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
         }
 
