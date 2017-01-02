@@ -245,7 +245,7 @@ GIT_COMMIT=`git rev-parse HEAD`
 
 mkdir -p ''' + buildDir + '''_Debug ''' + buildDir + '''_Release
 
-GH_RELEASE=`./github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
+GH_RELEASE=`./github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | sort -n | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
 
 [ -z "${GH_RELEASE}" ] && exit 0
 BUILD_NUMBER=`echo $GH_RELEASE | cut -d '-' -f 3`
@@ -467,8 +467,8 @@ void GetArtifactingStep(job, releaseName, buildDir, descriptor)
 [ ! -f "''' + buildDir + '''/GithubData.txt" ] && exit 0 # Exit if no Github data
 GH_RELEASE=`cat ''' + buildDir + '''/GithubData.txt`
 GH_BUILD_NUMBER=`cat ''' + buildDir + '''/GithubBuildNumber.txt`
-tar -zcvf ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.gz ''' + artifact_glob + '''
-./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:$GH_RELEASE ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.gz
+tar -Jcvf ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.xz ''' + artifact_glob + '''
+./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:$GH_RELEASE ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.xz
                   '''
                 )
             }
