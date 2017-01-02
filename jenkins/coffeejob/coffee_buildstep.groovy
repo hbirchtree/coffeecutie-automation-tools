@@ -54,16 +54,18 @@ def Targets = [
     /* Raspberry Pi, using a Docker container
      * Will require a special docker-compose for simplicity with volumes
      */
-    new BuildTarget(LIN_RASPI, A_UNI, "linux && docker && raspi && bcm_gcc && armv7a",
+    new BuildTarget(LIN_RASPI, A_UNI, "linux && docker",
                   "raspberry.cmake",
                   "gnueabihf-arm-raspberry.toolchain.cmake",
-                   "Ninja", "-DRASPBERRY_SDK=/raspi-sdk", false),
+                   "Ninja", "-DRASPBERRY_SDK=/raspi-sdk",
+                   "raspi && native && test_platform"),
     /* Android on a Docker container, composite project
      */
     new BuildTarget(LIN_ANDRD, A_UNI,
-                   "linux && docker && android && android_sdk && android_ndk",
+                   "linux && docker && android",
                    null, null,
-                   "Unix Makefiles", "", false),
+                   "Unix Makefiles", "",
+                   "android && test_platform"),
     new BuildTarget(GEN_DOCS, A_UNI, "linux && docker",
                     "none_docs-none-none.cmake", "native-linux-generic.toolchain.cmake",
                     "Unix Makefiles", "", false, true),
@@ -78,6 +80,7 @@ class BuildTarget
         platformName = platName;
         platformArch = platArch;
         this.label = label;
+        this.testing_label = label;
         cmake_preload = cPreload;
         cmake_toolchain = cTC;
         cmake_generator = cGen;
@@ -95,12 +98,31 @@ class BuildTarget
         platformName = platName;
         platformArch = platArch;
         this.label = label;
+        this.testing_label = label;
         cmake_preload = cPreload;
         cmake_toolchain = cTC;
         cmake_generator = cGen;
         cmake_options = cOpts;
 
         this.do_tests = do_tests;
+        is_documentation = false;
+    }
+
+    BuildTarget(String platName, String platArch,
+                String build_label, String cPreload,
+                String cTC, String cGen, String cOpts,
+                String test_label)
+    {
+        platformName = platName;
+        platformArch = platArch;
+        label = build_label;
+        testing_label = test_label;
+        cmake_preload = cPreload;
+        cmake_toolchain = cTC;
+        cmake_generator = cGen;
+        cmake_options = cOpts;
+
+        this.do_tests = true;
         is_documentation = false;
     }
 
@@ -546,7 +568,7 @@ for(t in Targets) {
     for(rel in RELEASE_TYPES)
     {
         def releaseName = "${PROJECT_NAME}_${t.platformName}-${t.platformArch}"
-        def binaryName = "binary_${t.platformName}-${t.platformArch}"
+        def binaryName = "binary_${t.platformName}-${t.platformArch}-${rel}"
 
         def job_name = "${i}.0_${pipelineName}"
         def pipeline_compile_name = "${rel} compilation stage"
@@ -579,7 +601,7 @@ for(t in Targets) {
             GetBuildParameters(testing)
 
             testing.with {
-                label(t.label)
+                label(t.testing_label)
                 customWorkspace(workspaceDir)
                 deliveryPipelineConfiguration(pipelineName, "${rel} testing stage")
             }
