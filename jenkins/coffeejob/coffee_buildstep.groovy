@@ -191,7 +191,8 @@ case $KERN in
 wget -q https://github.com/hbirchtree/qthub/releases/download/v1.0.1.1/github-cli -O github-cli
 ;;
 "Darwin")
-wget -q https://github.com/hbirchtree/qthub/releases/download/v1.0.1.1/github-cli-osx -O github-cli
+# On OS X, we do not know if wget is in PATH. We'll check up with BASH
+`bash -c 'which wget'` -q https://github.com/hbirchtree/qthub/releases/download/v1.0.1.1/github-cli-osx -O github-cli
 ;;
 *)
 exit 0
