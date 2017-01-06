@@ -271,7 +271,7 @@ void GetSourceStep(descriptor, sourceDir, buildDir, job)
 cd ''' + sourceDir + '''
 GIT_COMMIT=`git rev-parse HEAD`
 
-GH_RELEASE=`${WORKSPACE}/github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | sort -n | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
+GH_RELEASE=`../github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | sort -n | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
 
 [ -z "${GH_RELEASE}" ] && exit 0
 BUILD_NUMBER=`echo $GH_RELEASE | cut -d '-' -f 3`
@@ -640,7 +640,7 @@ for(t in Targets) {
 
         GetDockerDataLinux(t, compile, "${WORKSPACE}/${sourceDir}", "${WORKSPACE}", "${WORKSPACE}", "${WORKSPACE}/Coffee_Meta_src")
         if(t.do_tests)
-            GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE, "${WORKSPACE}/Coffee_Meta_src")
+            GetDockerDataLinux(t, testing, "${WORKSPACE}/${sourceDir}", "${WORKSPACE}", "${WORKSPACE}", "${WORKSPACE}/Coffee_Meta_src")
 
         if(t.do_tests)
             GetArtifactingStep(testing, binaryName, workspaceDir, t)
