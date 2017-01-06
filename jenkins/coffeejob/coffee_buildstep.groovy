@@ -631,16 +631,16 @@ for(t in Targets) {
 
         if(t.platformName == LIN_ANDRD)
         {
-            GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir, "${WORKSPACE}/Coffee_Meta_src")
+            GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir, '${WORKSPACE}' + "/Coffee_Meta_src")
         }else{
             GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
             if(t.do_tests && t.testing_label != null)
                 GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
         }
 
-        GetDockerDataLinux(t, compile, "${WORKSPACE}/${sourceDir}", "${WORKSPACE}", "${WORKSPACE}", "${WORKSPACE}/Coffee_Meta_src")
+        GetDockerDataLinux(t, compile, '${WORKSPACE}' + "/${sourceDir}", '${WORKSPACE}', '${WORKSPACE}', '${WORKSPACE}' + "/Coffee_Meta_src")
         if(t.do_tests)
-            GetDockerDataLinux(t, testing, "${WORKSPACE}/${sourceDir}", "${WORKSPACE}", "${WORKSPACE}", "${WORKSPACE}/Coffee_Meta_src")
+            GetDockerDataLinux(t, testing, '${WORKSPACE}' + "/${sourceDir}", '${WORKSPACE}', '${WORKSPACE}', '${WORKSPACE}' + "/Coffee_Meta_src")
 
         if(t.do_tests)
             GetArtifactingStep(testing, binaryName, workspaceDir, t)
