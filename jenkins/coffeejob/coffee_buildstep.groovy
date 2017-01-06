@@ -463,8 +463,8 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
         steps {
             shell (
             """
-[ ! -f ${isoCode} ] && git clone --depth 1 ${REPO_URL} ${isoCode}
-cd ${isoCode}
+[ ! -f ${isoProj}/LICENSE ] && git clone --depth 1 ${REPO_URL} ${isoProj}
+cd ${isoProj}
 git reset --hard
 git pull origin master
 """
