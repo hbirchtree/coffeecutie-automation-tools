@@ -498,7 +498,6 @@ void GetArtifactingStep(job, releaseName, buildDir, descriptor)
 
     if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
     {
-        GetGithubKit(job, descriptor.platformName)
         job.with {
             steps {
                 shell(
@@ -515,15 +514,15 @@ tar -Jcvf ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.xz ''' + artifact_glob + 
                 )
             }
         }
+    }else{
+        job.with {
+            publishers {
+                archiveArtifacts {
+                    pattern(artifact_glob)
+                }
+            }
+        }
     }
-
-//    job.with {
-//        publishers {
-//            archiveArtifacts {
-//                pattern(artifact_glob)
-//            }
-//        }
-//    }
 }
 
 /* Adds platform-specific features to jobs
@@ -537,9 +536,9 @@ void GetJobQuirks(descriptor, compile, testing, sourceDir)
             steps {
                 shell(
                   """
-                    cd "${sourceDir}/desktop/osx/"
-                    bash "gen_icons.sh"
-                  """)
+cd "${sourceDir}/desktop/osx/"
+bash "gen_icons.sh"
+""")
             }
         }
     }
@@ -626,17 +625,20 @@ for(t in Targets) {
 
         def buildDir = workspaceDir
 
-        GetDockerDataLinux(t, compile, '${WORKSPACE}' + "/${sourceDir}", '${WORKSPACE}', '${WORKSPACE}', '${WORKSPACE}' + "/Coffee_Meta_src")
+        def sourceDir_Ref = '${WORKSPACE}' + "/${sourceDir}"
+        def buildDir_Ref = '${WORKSPACE}'
+
+        GetDockerDataLinux(t, compile, sourceDir_Ref, buildDir_Ref, buildDir_Ref, '${WORKSPACE}' + "/Coffee_Meta_src")
         if(t.do_tests)
-            GetDockerDataLinux(t, testing, '${WORKSPACE}' + "/${sourceDir}", '${WORKSPACE}', '${WORKSPACE}', '${WORKSPACE}' + "/Coffee_Meta_src")
+            GetDockerDataLinux(t, testing, sourceDir_Ref, buildDir_Ref, buildDir_Ref, '${WORKSPACE}' + "/Coffee_Meta_src")
 
         if(t.platformName == LIN_ANDRD)
         {
             GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir, '${WORKSPACE}' + "/Coffee_Meta_src")
         }else{
-            GetCMakeSteps(t, compile, rel, 0, sourceDir, buildDir)
-            if(t.do_tests && t.testing_label != null)
-                GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
+            GetCMakeSteps(t, compile, rel, 0, sourceDir_Ref, buildDir_Ref)
+            if(t.do_tests && t.testing_label == t.label)
+                GetCMakeSteps(t, testing, rel, 1, sourceDir_Ref, buildDir_Ref)
         }
 
 
