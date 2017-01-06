@@ -173,7 +173,7 @@ void GetBuildParameters(job)
     }
 }
 
-void GetGithubKit(job, platform)
+void GetGithubToken(job)
 {
     job.with {
         wrappers {
@@ -182,6 +182,11 @@ void GetGithubKit(job, platform)
             }
         }
     }
+}
+
+void GetGithubKit(job, platform)
+{
+    GetGithubToken(job)
     if(platform != WIN_WIN32 && platform != WIN_MSUWP)
     {
         job.with {
@@ -613,6 +618,7 @@ for(t in Targets) {
             testing = job("${i}.1_${pipelineName}_${rel}_Testing")
 
             GetBuildParameters(testing)
+            GetGithubToken(testing)
 
             testing.with {
                 label(t.testing_label)
