@@ -339,13 +339,14 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
          */
         def raspi_sdk_dir = "${workspaceRoot}/raspi-sdk"
         def raspi_sdk = "/raspi-sdk"
+        def raspi_sdk_root = "/raspi-sdk-root"
 
         job.with {
             steps {
                 shell (
                 """
-[ ! -f ${raspi_sdk} ] && git clone --depth 1 https://github.com/hbirchtree/raspberry-sysroot.git ${raspi_sdk}
-cd ${raspi_sdk}
+[ ! -f ${raspi_sdk_root}/README.md ] && git clone --depth 1 https://github.com/hbirchtree/raspberry-sysroot.git ${raspi_sdk_root}
+cd ${raspi_sdk_root}
 git reset --hard
 git pull origin master
 """
@@ -358,6 +359,7 @@ git pull origin master
                     volume(buildDir, "/build")
                     volume(sourceDir, "/source")
                     volume(raspi_sdk_dir + "/architectures/rpi-SDL2-X11-armv7a",raspi_sdk)
+                    volume(raspi_sdk_dir,raspi_sdk_root)
                 }
             }
         }
