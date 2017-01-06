@@ -425,7 +425,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
                 shell(
                 """
 cd ${build_dir}
-cmake ${source_dir} -G${descriptor.cmake_generator} -C${descriptor.cmake_preload} ${cmake_args} -DCMAKE_BUILD_TYPE=${variant}
+cmake ${source_dir} -G'${descriptor.cmake_generator}' -C${descriptor.cmake_preload} ${cmake_args} -DCMAKE_BUILD_TYPE=${variant}
 cmake --build ${build_dir} --target ${cmake_target}
 """)
             }
