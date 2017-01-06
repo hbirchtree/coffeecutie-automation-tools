@@ -359,7 +359,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
                 buildInDocker {
                     dockerfile(GetAutomationDir(sourceDir)+GetDockerBuilder("raspberry"), "Dockerfile")
                     verbose()
-                    /*volume(buildDir, "/build")*/
+                    volume(buildDir, "/build")
                     volume(sourceDir, "/source")
                     volume(raspi_sdk_dir + "/architectures/rpi-SDL2-X11-armv7a",raspi_sdk)
                 }
@@ -379,7 +379,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
             buildInDocker {
                 dockerfile(docker_dir, docker_file)
                 verbose()
-                /*volume(buildDir, "/build")*/
+                volume(buildDir, "/build")
                 volume(sourceDir, "/source")
             }
         }
@@ -388,7 +388,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
 
 void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
 {
-    cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} "
+    cmake_args = "-DCMAKE_TOOLCHAIN_FILE=${descriptor.cmake_toolchain} -DCMAKE_INSTALL_PREFIX=out "
     cmake_args += descriptor.cmake_options
 
     cmake_target = "install"
@@ -406,33 +406,46 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
         }
     }
 
-    if(IsDockerized(descriptor.platformName))
-    {
-        source_dir = "/source"
-        build_dir = "/build"
-    }
-
     job.with {
-        steps {
-            cmake {
-                generator(descriptor.cmake_generator)
-                args("-DCMAKE_INSTALL_PREFIX=out ${cmake_args}")
-                preloadScript(descriptor.cmake_preload)
-                sourceDir(source_dir)
-                buildDir(build_dir)
-                buildType(variant)
-
-                buildToolStep {
-                    useCmake(true)
-                    args("--target ${cmake_target}")
-                }
-            }
-        }
         /* Fixes some issues on Mac OS X with finding Brew */
         properties {
             environmentVariables {
                 keepSystemVariables(true)
                 keepBuildVariables(true)
+            }
+        }
+    }
+
+    if(IsDockerized(descriptor.platformName))
+    {
+        source_dir = "/source"
+        build_dir = "/build"
+        job.with {
+            steps {
+                shell(
+                """
+cd ${build_dir}
+cmake ${source_dir} -G${descriptor.cmake_generator} -C${descriptor.cmake_preload} ${cmake_args} -DCMAKE_BUILD_TYPE=${variant}
+cmake --build ${build_dir} --target ${cmake_target}
+""")
+            }
+        }
+    }else{
+        job.with {
+            steps {
+                cmake {
+                    generator(descriptor.cmake_generator)
+                    args(cmake_args)
+                    preloadScript(descriptor.cmake_preload)
+                    sourceDir(source_dir)
+                    buildDir(build_dir)
+                    buildType(variant)
+
+                    buildToolStep {
+                        useCmake(true)
+                        args("--target ${cmake_target}")
+                    }
+                }
             }
         }
     }
