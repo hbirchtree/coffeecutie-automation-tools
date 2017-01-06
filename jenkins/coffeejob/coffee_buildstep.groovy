@@ -458,22 +458,39 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
 {
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie-meta.git'
 
+//    job.with {
+//        label(descriptor.label)
+//        scm {
+//            git {
+//                remote {
+//                    name("origin")
+//                    url(REPO_URL)
+//                }
+//                branch("master")
+//                extensions {
+//                    relativeTargetDirectory(meta_dir)
+//                    cloneOptions {
+//                        shallow(true)
+//                    }
+//                }
+//            }
+//        }
+//    }
+    def isoBuild = "/home/coffee/build"
+    def isoCode = "/home/coffee/build/code"
+    def isoProj = "/home/coffee/project"
+
     job.with {
         label(descriptor.label)
-        scm {
-            git {
-                remote {
-                    name("origin")
-                    url(REPO_URL)
-                }
-                branch("master")
-                extensions {
-                    relativeTargetDirectory(meta_dir)
-                    cloneOptions {
-                        shallow(true)
-                    }
-                }
-            }
+        steps {
+            shell (
+            """
+[ ! -f ${isoCode} ] && git clone --depth 1 ${REPO_URL} ${isoCode}
+cd ${isoCode}
+git reset --hard
+git pull origin master
+"""
+            )
         }
     }
 
@@ -481,9 +498,9 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
         steps {
             shell(
               """
-cd /home/coffee/build
-cmake -G"Unix Makefiles" /home/coffee/project/android -DCMAKE_BUILD_TYPE=Debug -DSOURCE_DIR=/home/coffee/code -DANDROID_SDK=/home/coffee/android-sdk-linux -DANDROID_NDK=/home/coffee/android-ndk-linux
-cmake --build /home/coffee/build
+cd ${isoBuild}
+cmake -G"Unix Makefiles" ${isoProj}/android -DCMAKE_BUILD_TYPE=Debug -DSOURCE_DIR=${isoCode} -DANDROID_SDK=/home/coffee/android-sdk-linux -DANDROID_NDK=/home/coffee/android-ndk-linux
+cmake --build ${isoBuild}
               """
             )
         }
