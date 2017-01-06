@@ -17,11 +17,13 @@
 Non-Windows hosts will default to using the Ninja generator (unless modified).
 
  - Linux slaves
-   - Use the 'ubuntu && x64' labels (32-bit is not supported)
+   - Use the 'linux && docker && ubuntu && x64' labels (32-bit is not supported)
  - Mac OSX slaves
-   - Use the 'macintosh && x64' labels
+   - Use the 'macintosh && clang && x64' labels
+ - Raspberry Pi cross-compiler slaves
+   - Use the 'linux && docker' label
  - Android cross-compiler slaves
-   - Use the 'android' label (should be capable of compiling armv7a, arm64, x86)
+   - Use the 'linux && docker && android' label (uses included Docker builder)
    - It is recommended to use a Linux system to host this (Windows is not tested)
  - Windows slaves
-   - Use the 'windows && x64' and 'windows && x86' labels
+   - Use the 'windows && vcpp && x64' label, should have Windows 10 SDKs and etc. installed for UWP support. Some dependencies have static paths, because Windows is a pain to maintain.
