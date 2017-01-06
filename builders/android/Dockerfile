@@ -9,7 +9,7 @@ MAINTAINER H. Birch Tree
 
 ARG USERNAME="coffee"
 
-ENV ndkver="13"
+ENV ndkver="13b"
 ENV sdkver="24.4.1"
 ENV sdktarget="19"
 

@@ -38,7 +38,7 @@ RUN apt-get -qy update && apt-get -qy install \
 	libavformat-dev libswresample-dev \
 	libswscale-dev \
         libqt5network5 \
-        wget \
+        wget git \
         flatpak snapcraft ${EXTRA_PACKAGES}
 
 #Create user directory + group

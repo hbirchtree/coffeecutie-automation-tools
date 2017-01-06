@@ -21,7 +21,7 @@ RUN apt-get -qy update && apt-get -qy install \
         cmake build-essential \
         doxygen graphviz \
         libqt5network5 \
-        wget
+        wget git
 
 #Create user directory + group
 RUN groupadd coffeeusers -g 1000
