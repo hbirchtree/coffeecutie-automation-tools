@@ -640,7 +640,7 @@ for(t in Targets) {
         }
 
 
-        if(t.do_tests)
+        if(t.do_tests && t.testing_label == t.label)
             GetArtifactingStep(testing, binaryName, workspaceDir, t)
         else
             GetArtifactingStep(compile, binaryName, workspaceDir, t)
