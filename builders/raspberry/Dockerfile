@@ -27,7 +27,7 @@ RUN apt-get -qy update && apt-get -qy install \
         libstdc++6:i386 \
         libz1:i386 \
         libqt5network5 \
-        wget
+        wget lsb-release
 
 # Set up toolchain files
 # We only fetch the relevant toolchain
