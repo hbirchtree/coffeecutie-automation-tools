@@ -626,6 +626,10 @@ for(t in Targets) {
 
         def buildDir = workspaceDir
 
+        GetDockerDataLinux(t, compile, '${WORKSPACE}' + "/${sourceDir}", '${WORKSPACE}', '${WORKSPACE}', '${WORKSPACE}' + "/Coffee_Meta_src")
+        if(t.do_tests)
+            GetDockerDataLinux(t, testing, '${WORKSPACE}' + "/${sourceDir}", '${WORKSPACE}', '${WORKSPACE}', '${WORKSPACE}' + "/Coffee_Meta_src")
+
         if(t.platformName == LIN_ANDRD)
         {
             GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir, '${WORKSPACE}' + "/Coffee_Meta_src")
@@ -635,9 +639,6 @@ for(t in Targets) {
                 GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
         }
 
-        GetDockerDataLinux(t, compile, '${WORKSPACE}' + "/${sourceDir}", '${WORKSPACE}', '${WORKSPACE}', '${WORKSPACE}' + "/Coffee_Meta_src")
-        if(t.do_tests)
-            GetDockerDataLinux(t, testing, '${WORKSPACE}' + "/${sourceDir}", '${WORKSPACE}', '${WORKSPACE}', '${WORKSPACE}' + "/Coffee_Meta_src")
 
         if(t.do_tests)
             GetArtifactingStep(testing, binaryName, workspaceDir, t)
