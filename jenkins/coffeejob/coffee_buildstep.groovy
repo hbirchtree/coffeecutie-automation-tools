@@ -80,6 +80,7 @@ class BuildTarget
         platformName = platName;
         platformArch = platArch;
         this.label = label;
+        this.release_label = label;
         this.testing_label = label;
         cmake_preload = cPreload;
         cmake_toolchain = cTC;
@@ -98,6 +99,7 @@ class BuildTarget
         platformName = platName;
         platformArch = platArch;
         this.label = label;
+        this.release_label = label;
         this.testing_label = label;
         cmake_preload = cPreload;
         cmake_toolchain = cTC;
@@ -116,6 +118,7 @@ class BuildTarget
         platformName = platName;
         platformArch = platArch;
         label = build_label;
+        this.release_label = label;
         testing_label = test_label;
         cmake_preload = cPreload;
         cmake_toolchain = cTC;
@@ -134,6 +137,7 @@ class BuildTarget
         platformName = platName;
         platformArch = platArch;
         this.label = label;
+        this.release_label = label;
         this.testing_label = label;
         cmake_preload = cPreload;
         cmake_toolchain = cTC;
@@ -148,6 +152,7 @@ class BuildTarget
     String platformArch;
     String label;
     String testing_label;
+    String release_label;
 
     String cmake_preload;
     String cmake_toolchain;
@@ -224,7 +229,7 @@ void GetDownstreamTrigger(job, downstream)
 /* Setting up Git SCM
  * One function to change them all
  */
-void GetSourceStep(descriptor, sourceDir, buildDir, job, branch_)
+void GetSourceStep(descriptor, sourceDir, buildDir, job)
 {
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
 
@@ -266,18 +271,16 @@ void GetSourceStep(descriptor, sourceDir, buildDir, job, branch_)
 cd ''' + sourceDir + '''
 GIT_COMMIT=`git rev-parse HEAD`
 
-mkdir -p ''' + buildDir + '''_Debug ''' + buildDir + '''_Release
-
 GH_RELEASE=`./github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | sort -n | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
 
 [ -z "${GH_RELEASE}" ] && exit 0
 BUILD_NUMBER=`echo $GH_RELEASE | cut -d '-' -f 3`
 
-echo ${GH_RELEASE} > ''' + buildDir + '''_Debug/GithubData.txt
-echo ${BUILD_NUMBER} > ''' + buildDir + '''_Debug/GithubBuildNumber.txt
+echo ${GH_RELEASE} > ../GithubData.txt
+echo ${BUILD_NUMBER} > ../GithubBuildNumber.txt
 
-echo ${GH_RELEASE} > ''' + buildDir + '''_Release/GithubData.txt
-echo ${BUILD_NUMBER} > ''' + buildDir + '''_Release/GithubBuildNumber.txt
+echo ${GH_RELEASE} > ../GithubData.txt
+echo ${BUILD_NUMBER} > ../GithubBuildNumber.txt
 '''
                 )
             }
@@ -356,8 +359,8 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
                 buildInDocker {
                     dockerfile(GetAutomationDir(sourceDir)+GetDockerBuilder("raspberry"), "Dockerfile")
                     verbose()
-                    volume(buildDir, buildDir)
-                    volume(sourceDir, sourceDir)
+                    /*volume(buildDir, "/build")*/
+                    volume(sourceDir, "/source")
                     volume(raspi_sdk_dir + "/architectures/rpi-SDL2-X11-armv7a",raspi_sdk)
                 }
             }
@@ -376,8 +379,8 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
             buildInDocker {
                 dockerfile(docker_dir, docker_file)
                 verbose()
-                volume(buildDir, buildDir)
-                volume(sourceDir, sourceDir)
+                /*volume(buildDir, "/build")*/
+                volume(sourceDir, "/source")
             }
         }
     }
@@ -401,6 +404,12 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
             /* Runs CTest */
             cmake_target = "test"
         }
+    }
+
+    if(IsDockerized(descriptor.platformName))
+    {
+        source_dir = "/source"
+        build_dir = "/build"
     }
 
     job.with {
@@ -532,7 +541,7 @@ def SOURCE_STEPS = []
 for(t in Targets) {
     branch = "testing"
     pipelineName = "${PROJECT_NAME}_${t.platformName}_${t.platformArch}"
-    sourceDir = "${WORKSPACE}/${PROJECT_NAME}_" + '${GH_BRANCH}_src'
+    sourceDir = "src"
 
     t.cmake_preload = "${sourceDir}/cmake/Preload/${t.cmake_preload}"
     t.cmake_toolchain = "${sourceDir}/cmake/Toolchains/${t.cmake_toolchain}"
@@ -540,30 +549,7 @@ for(t in Targets) {
     /* Create a pipeline per build target */
     pip = deliveryPipelineView("${pipelineName}")
 
-    /* Acquiring the source code is step 0 */
-    source_step = job("0.0_${pipelineName}_Source")
-    /* One function to insert the SCM data */
-
-    GetSourceStep(t, sourceDir, "${WORKSPACE}/${pipelineName}", source_step, branch)
-
-    source_step.with {
-        customWorkspace(sourceDir)
-        blockOn('.*_Source') {
-            blockLevel('NODE')
-        }
-    }
-
-    SOURCE_STEPS += source_step
-
-    pip.with {
-        allowPipelineStart(true)
-        showTotalBuildTime(true)
-        pipelines {
-            component(pipelineName, source_step.name)
-        }
-    }
-
-    last_job = source_step
+    last_job = null
     i = 1
 
     for(rel in RELEASE_TYPES)
@@ -574,7 +560,7 @@ for(t in Targets) {
         def job_name = "${i}.0_${pipelineName}"
         def pipeline_compile_name = "${rel} compilation stage"
 
-        def workspaceDir = "${WORKSPACE}/${pipelineName}_${rel}"
+        def workspaceDir = "${pipelineName}_${rel}"
 
         if(t.platformName == GEN_DOCS)
         {
@@ -589,11 +575,30 @@ for(t in Targets) {
 
         /* Compilation and testing will only be performed on suitable hosts */
         compile.with {
-            label(t.label)
             customWorkspace(workspaceDir)
             deliveryPipelineConfiguration(pipelineName, pipeline_compile_name)
         }
-        GetBuildParameters(compile)
+        if(rel == "Release")
+            compile.with {
+                label(t.release_label)
+            }
+        else
+            compile.with {
+                label(t.label)
+            }
+
+        GetSourceStep(t, sourceDir, pipelineName, compile)
+        if(i==1)
+        {
+            SOURCE_STEPS += compile
+            pip.with {
+                allowPipelineStart(true)
+                showTotalBuildTime(true)
+                pipelines {
+                    component(pipelineName, compile.name)
+                }
+            }
+        }
 
         if(t.do_tests)
         {
@@ -630,7 +635,8 @@ for(t in Targets) {
         else
             GetArtifactingStep(compile, binaryName, workspaceDir, t)
 
-        GetDownstreamTrigger(last_job, compile.name)
+        if(last_job != null)
+                GetDownstreamTrigger(last_job, compile.name)
         if(testing != null)
             GetDownstreamTrigger(compile, testing.name)
 
