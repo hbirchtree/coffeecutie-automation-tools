@@ -341,19 +341,15 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
         def raspi_sdk = "/raspi-sdk"
 
         job.with {
-            scm {
-                git {
-                    remote {
-                        name('origin')
-                        url("https://github.com/hbirchtree/raspberry-sysroot.git")
-                    }
-                    extensions {
-                        relativeTargetDirectory(raspi_sdk_dir)
-                        cloneOptions {
-                            shallow(true)
-                        }
-                    }
-                }
+            steps {
+                shell (
+                """
+[ ! -f ${raspi_sdk} ] && git clone --depth 1 https://github.com/hbirchtree/raspberry-sysroot.git ${raspi_sdk}
+cd ${raspi_sdk}
+git reset --hard
+git pull origin master
+"""
+                )
             }
             wrappers {
                 buildInDocker {
@@ -458,24 +454,6 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
 {
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie-meta.git'
 
-//    job.with {
-//        label(descriptor.label)
-//        scm {
-//            git {
-//                remote {
-//                    name("origin")
-//                    url(REPO_URL)
-//                }
-//                branch("master")
-//                extensions {
-//                    relativeTargetDirectory(meta_dir)
-//                    cloneOptions {
-//                        shallow(true)
-//                    }
-//                }
-//            }
-//        }
-//    }
     def isoBuild = "/home/coffee/build"
     def isoCode = "/home/coffee/build/code"
     def isoProj = "/home/coffee/project"
