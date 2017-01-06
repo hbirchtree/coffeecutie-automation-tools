@@ -455,7 +455,7 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie-meta.git'
 
     def isoBuild = "/home/coffee/build"
-    def isoCode = "/home/coffee/build/code"
+    def isoCode = "/home/coffee/code"
     def isoProj = "/home/coffee/project"
 
     job.with {
