@@ -504,9 +504,9 @@ void GetArtifactingStep(job, releaseName, buildDir, descriptor)
 [ -z "${GH_API_TOKEN}" ] && exit 0
 [ `lsb_release -r -s` = '14.04' ] && exit 0
 
-[ ! -f "''' + buildDir + '''/GithubData.txt" ] && exit 0 # Exit if no Github data
-GH_RELEASE=`cat ''' + buildDir + '''/GithubData.txt`
-GH_BUILD_NUMBER=`cat ''' + buildDir + '''/GithubBuildNumber.txt`
+[ ! -f "GithubData.txt" ] && exit 0 # Exit if no Github data
+GH_RELEASE=`cat GithubData.txt`
+GH_BUILD_NUMBER=`cat GithubBuildNumber.txt`
 tar -Jcvf ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.xz ''' + artifact_glob + '''
 ./github-cli --api-token $GH_API_TOKEN push asset hbirchtree/coffeecutie:$GH_RELEASE ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.xz
                   '''
