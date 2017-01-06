@@ -271,7 +271,7 @@ void GetSourceStep(descriptor, sourceDir, buildDir, job)
 cd ''' + sourceDir + '''
 GIT_COMMIT=`git rev-parse HEAD`
 
-GH_RELEASE=`./github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | sort -n | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
+GH_RELEASE=`${WORKSPACE}/github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | sort -n | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
 
 [ -z "${GH_RELEASE}" ] && exit 0
 BUILD_NUMBER=`echo $GH_RELEASE | cut -d '-' -f 3`
@@ -520,13 +520,13 @@ tar -Jcvf ''' + releaseName + '''_$GH_BUILD_NUMBER.tar.xz ''' + artifact_glob + 
         }
     }
 
-    job.with {
-        publishers {
-            archiveArtifacts {
-                pattern(artifact_glob)
-            }
-        }
-    }
+//    job.with {
+//        publishers {
+//            archiveArtifacts {
+//                pattern(artifact_glob)
+//            }
+//        }
+//    }
 }
 
 /* Adds platform-specific features to jobs
@@ -548,7 +548,6 @@ void GetJobQuirks(descriptor, compile, testing, sourceDir)
     }
 }
 
-def WORKSPACE = "/tmp"
 def SOURCE_STEPS = []
 
 for(t in Targets) {
@@ -639,7 +638,7 @@ for(t in Targets) {
                 GetCMakeSteps(t, testing, rel, 1, sourceDir, buildDir)
         }
 
-        GetDockerDataLinux(t, compile, sourceDir, buildDir, WORKSPACE, "${WORKSPACE}/Coffee_Meta_src")
+        GetDockerDataLinux(t, compile, "${WORKSPACE}/${sourceDir}", "${WORKSPACE}", "${WORKSPACE}", "${WORKSPACE}/Coffee_Meta_src")
         if(t.do_tests)
             GetDockerDataLinux(t, testing, sourceDir, buildDir, WORKSPACE, "${WORKSPACE}/Coffee_Meta_src")
 
