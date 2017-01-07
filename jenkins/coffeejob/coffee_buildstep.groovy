@@ -329,7 +329,6 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
                     verbose()
                     volume(buildDir, "/home/coffee/build")
                     volume(sourceDir, "/home/coffee/code")
-                    volume(meta_dir, "/home/coffee/project")
                 }
             }
         }
