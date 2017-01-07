@@ -566,6 +566,8 @@ for(t in Targets) {
 
     for(rel in RELEASE_TYPES)
     {
+        // TODO: Add mkdir job that runs before compile
+
         def releaseName = "${PROJECT_NAME}_${t.platformName}-${t.platformArch}"
         def binaryName = "binary_${t.platformName}-${t.platformArch}-${rel}"
 
