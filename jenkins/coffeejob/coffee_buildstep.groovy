@@ -740,8 +740,8 @@ def GetPipeline(project, target, view_data)
     inst_dbg.mode = "Debug"
     inst_rel.mode = "Release"
 
-    def debug_pair = GetCompileTestingPair(base, target, inst_dbg, '${WORKSPACE}')
-    def release_pair = GetCompileTestingPair(base, target, inst_rel, '${WORKSPACE}')
+    def debug_pair = GetCompileTestingPair(base, target, inst_dbg, inst_dbg.workspace)
+    def release_pair = GetCompileTestingPair(base, target, inst_rel, inst_dbg.workspace)
 
     view_data[0].with {
         views {
