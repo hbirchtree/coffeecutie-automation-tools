@@ -17,8 +17,9 @@ A_ARMV8A = "ARMv8A"
 A_ARMV7A = "ARMv7A"
 A_UNI = "Universal"
 
-def LINUX_PACKAGING_OPTS = "-DCOFFEE_GENERATE_SNAPPY=ON"
-def Targets = [
+BuildTarget[] GetTargets() {
+    def LINUX_PACKAGING_OPTS = "-DCOFFEE_GENERATE_SNAPPY=ON"
+    return [
     /* Creates Ubuntu binaries linked against the system
      * Also outputs AppImage, Snappy and Flatpak packages
      * for better cross-compatibility.
@@ -69,7 +70,8 @@ def Targets = [
     new BuildTarget(GEN_DOCS, A_UNI, "linux && docker",
                     "none_docs-none-none.cmake", "native-linux-generic.toolchain.cmake",
                     "Unix Makefiles", "", false, true),
-]
+        ]
+}
 
 class BuildTarget
 {
@@ -186,7 +188,6 @@ void GetGithubToken(job)
 
 void GetGithubKit(job, platform)
 {
-    GetGithubToken(job)
     if(platform != WIN_WIN32 && platform != WIN_MSUWP)
     {
         job.with {
@@ -237,9 +238,6 @@ void GetDownstreamTrigger(job, downstream)
 void GetSourceStep(descriptor, sourceDir, buildDir, job)
 {
     def REPO_URL = 'https://github.com/hbirchtree/coffeecutie.git'
-
-    GetGithubKit(job, descriptor.platformName)
-    GetBuildParameters(job)
 
     job.with {
         label(descriptor.label)
@@ -293,6 +291,46 @@ echo ${BUILD_NUMBER} > ../GithubBuildNumber.txt
     }
 }
 
+void GetExtraSourceSteps(platformName, j, d)
+{
+    def RepoUrl = null
+    def SubdirPath = null
+
+    if(platformName == LIN_ANDRD)
+    {
+        SubdirPath = '${WORKSPACE}/meta_src'
+        RepoUrl = 'https://github.com/hbirchtree/coffeecutie-meta.git'
+    }else if(platformName == LIN_RASPI)
+    {
+        SubdirPath = '${WORKSPACE}/raspi-sdk'
+        RepoUrl = 'https://github.com/hbirchtree/raspberry-sysroot.git'
+    }
+
+    if(RepoUrl == null || SubdirPath == null)
+        return;
+
+    j.with {
+        scm {
+            git {
+                remote {
+                    name('origin')
+                    url(RepoUrl)
+                }
+                branch('master')
+                extensions {
+                    relativeTargetDirectory(SubdirPath)
+                    submoduleOptions {
+                        recursive(true)
+                    }
+                    cloneOptions {
+                        shallow(true)
+                    }
+                }
+            }
+        }
+    }
+}
+
 boolean IsDockerized(platName)
 {
         return (platName == LIN_UBNTU || platName == LIN_STMOS
@@ -329,6 +367,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
                     verbose()
                     volume(buildDir, "/home/coffee/build")
                     volume(sourceDir, "/home/coffee/code")
+                    volume(meta_dir, "/home/coffee/project")
                 }
             }
         }
@@ -343,19 +382,8 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
          */
         def raspi_sdk_dir = "${workspaceRoot}/raspi-sdk"
         def raspi_sdk = "/raspi-sdk"
-        def raspi_sdk_root = "/raspi-sdk-root"
 
         job.with {
-            steps {
-                shell (
-                """
-[ ! -f ${raspi_sdk_root}/README.md ] && git clone --depth 1 https://github.com/hbirchtree/raspberry-sysroot.git ${raspi_sdk_root}
-cd ${raspi_sdk_root}
-git reset --hard
-git pull origin master
-"""
-                )
-            }
             wrappers {
                 buildInDocker {
                     dockerfile(GetAutomationDir(sourceDir)+GetDockerBuilder("raspberry"), "Dockerfile")
@@ -363,7 +391,6 @@ git pull origin master
                     volume(buildDir, "/build")
                     volume(sourceDir, "/source")
                     volume(raspi_sdk_dir + "/architectures/rpi-SDL2-X11-armv7a",raspi_sdk)
-                    volume(raspi_sdk_dir,raspi_sdk_root)
                 }
             }
         }
@@ -466,16 +493,6 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
 
     job.with {
         label(descriptor.label)
-        steps {
-            shell (
-            """
-[ ! -f ${isoProj}/LICENSE ] && git clone --depth 1 ${REPO_URL} ${isoProj}
-cd ${isoProj}
-git reset --hard
-git pull origin master
-"""
-            )
-        }
     }
 
     job.with {
@@ -548,149 +565,218 @@ bash "gen_icons.sh"
     }
 }
 
-def SOURCE_STEPS = []
+class BuildInstance
+{
+    String pipeline;
+    String binaryName;
+    String workspace;
+    String sourceDir;
+    String buildDir;
+    String mode;
+};
 
-for(t in Targets) {
-    branch = "testing"
-    pipelineName = "${PROJECT_NAME}_${t.platformName}_${t.platformArch}"
-    sourceDir = "src"
+class PipelineDescriptor
+{
+    def pipeline;
+    def lastStep;
+};
 
-    t.cmake_preload = "${sourceDir}/cmake/Preload/${t.cmake_preload}"
-    t.cmake_toolchain = "${sourceDir}/cmake/Toolchains/${t.cmake_toolchain}"
+def GetBasePipeline(project, desc)
+{
+    def base = deliveryPipelineView("${project}_${desc.platformName}_${desc.platformArch}")
+    base.with {
+        allowPipelineStart(true)
+        showTotalBuildTime(true)
+    }
+    def pip = new PipelineDescriptor()
+    pip.pipeline = base
+    return pip
+}
 
-    /* Create a pipeline per build target */
-    pip = deliveryPipelineView("${pipelineName}")
+def GetBaseJob(name, workspace)
+{
+    def j = job(name)
+    GetBuildParameters(j)
+    GetGithubToken(j)
+    j.with {
+        customWorkspace(workspace)
+    }
+    return j
+}
 
-    last_job = null
-    i = 1
-
-    for(rel in RELEASE_TYPES)
+def ChainJobWithPipeline(pipeline, job, label)
+{
+    if(pipeline.lastStep == null)
     {
-        // TODO: Add mkdir job that runs before compile
-
-        def releaseName = "${PROJECT_NAME}_${t.platformName}-${t.platformArch}"
-        def binaryName = "binary_${t.platformName}-${t.platformArch}-${rel}"
-
-        def job_name = "${i}.0_${pipelineName}"
-        def pipeline_compile_name = "${rel} compilation stage"
-
-        def workspaceDir = "${pipelineName}_${rel}"
-
-        if(t.platformName == GEN_DOCS)
-        {
-            pipeline_compile_name = "Documentation generation"
-        }else
-        {
-            job_name = job_name + "_${rel}"
-        }
-
-        def compile = job(job_name)
-        def testing = null
-
-        /* Compilation and testing will only be performed on suitable hosts */
-        compile.with {
-            customWorkspace(workspaceDir)
-            deliveryPipelineConfiguration(pipelineName, pipeline_compile_name)
-        }
-        if(rel == "Release")
-            compile.with {
-                label(t.release_label)
-            }
-        else
-            compile.with {
-                label(t.label)
-            }
-
-        GetSourceStep(t, sourceDir, pipelineName, compile)
-        if(i==1)
-        {
-            SOURCE_STEPS += compile
-            pip.with {
-                allowPipelineStart(true)
-                showTotalBuildTime(true)
-                pipelines {
-                    component(pipelineName, compile.name)
-                }
+        pipeline.pipeline.with {
+            pipelines {
+                component(pipeline.pipeline.name,job.name)
             }
         }
-
-        if(t.do_tests)
-        {
-            testing = job("${i}.1_${pipelineName}_${rel}_Testing")
-
-            GetBuildParameters(testing)
-            GetGithubToken(testing)
-
-            testing.with {
-                label(t.testing_label)
-                customWorkspace(workspaceDir)
-                deliveryPipelineConfiguration(pipelineName, "${rel} testing stage")
-            }
-        }
-
-        GetJobQuirks(t, compile, testing, sourceDir)
-
-        def buildDir = workspaceDir
-
-        def sourceDir_Ref = '${WORKSPACE}' + "/${sourceDir}"
-        def buildDir_Ref = '${WORKSPACE}'
-
-        GetDockerDataLinux(t, compile, sourceDir_Ref, buildDir_Ref, buildDir_Ref, '${WORKSPACE}' + "/Coffee_Meta_src")
-        if(t.do_tests)
-            GetDockerDataLinux(t, testing, sourceDir_Ref, buildDir_Ref, buildDir_Ref, '${WORKSPACE}' + "/Coffee_Meta_src")
-
-        if(t.platformName == LIN_ANDRD)
-        {
-            GetCMakeMultiStep(t, compile, rel, 0, sourceDir, buildDir, '${WORKSPACE}' + "/Coffee_Meta_src")
-        }else{
-            GetCMakeSteps(t, compile, rel, 0, sourceDir_Ref, buildDir_Ref)
-            if(t.do_tests && t.testing_label == t.label)
-                GetCMakeSteps(t, testing, rel, 1, sourceDir_Ref, buildDir_Ref)
-        }
-
-
-        if(t.do_tests && t.testing_label == t.label)
-            GetArtifactingStep(testing, binaryName, workspaceDir, t)
-        else
-            GetArtifactingStep(compile, binaryName, workspaceDir, t)
-
-        if(last_job != null)
-                GetDownstreamTrigger(last_job, compile.name)
-        if(testing != null)
-            GetDownstreamTrigger(compile, testing.name)
-
-        if(t.do_tests)
-            last_job = testing
-        else
-            last_job = compile
-
-        if(t.platformName == GEN_DOCS)
-            break;
-
-        /* Increment counter for ordering jobs in lists */
-        i++;
+    }else{
+        GetDownstreamTrigger(pipeline.lastStep, job.name)
+    }
+    pipeline.lastStep = job
+    job.with {
+        deliveryPipelineConfiguration(pipeline.pipeline.name, label)
     }
 }
 
-all_build_job = job('All Coffee')
+def GetCompileJob(desc, mode, workspace)
+{
+    def sourceSubDir = "src"
+    mode.buildDir = '${WORKSPACE}/'
+    mode.sourceDir = mode.buildDir + sourceSubDir
+    def metaDir = mode.buildDir + "meta_src"
 
-GetBuildParameters(all_build_job)
-GetGithubKit(all_build_job, LIN_UBNTU)
-all_build_job.with {
-    label('ubuntu && amd64')
-    steps {
-        shell(
-        '''
+    def base = GetBaseJob("Compile_${desc.platformName}_${desc.platformArch}",
+                          workspace)
+    GetGithubKit(base, desc.platformName)
+    GetSourceStep(desc, mode.sourceDir, mode.pipeline, base)
+    GetDockerDataLinux(desc, base, mode.sourceDir, mode.buildDir,
+                       mode.buildDir, metaDir)
+    if(mode.mode != "Release")
+        base.with {
+            label(desc.label)
+        }
+    else
+        base.with {
+            label(desc.release_label)
+        }
+    if(desc.platformName == LIN_ANDRD)
+        GetCMakeMultiStep(desc, base, mode.mode, 0, mode.sourceDir,
+                          mode.buildDir, metaDir)
+    else
+        GetCMakeSteps(desc, base, mode.mode, 0, mode.sourceDir, mode.buildDir)
+
+    return base
+}
+
+def GetTestingJob(desc, mode, workspace)
+{
+    /* Directory for meta-project */
+    def metaDir = mode.buildDir + "meta_src"
+
+    def base = GetBaseJob("Test_${desc.platformName}_${desc.platformArch}",
+                          workspace)
+    base.with {
+        label(desc.testing_label)
+    }
+    GetDockerDataLinux(desc, base, mode.sourceDir, mode.buildDir,
+                       mode.buildDir, metaDir)
+    /* Check if testing happens on build machine */
+    if(desc.testing_label == desc.label)
+        GetCMakeSteps(desc, base, mode.mode, 1, mode.sourceDir, mode.buildDir)
+    return base
+}
+
+def GetCompileTestingPair(pip, desc, mode, workspace)
+{
+    def compile = GetCompileJob(desc, mode, workspace)
+    def last_job = compile
+    def testing = null
+    if(desc.do_tests)
+    {
+        testing = GetTestingJob(desc, mode, workspace)
+        last_job = testing
+    }
+    GetJobQuirks(desc, compile, testing, mode.sourceDir)
+
+    def exsource = job("ExtraSource_${desc.platformName}_${desc.platformArch}")
+    GetExtraSourceSteps(desc.platformName, exsource)
+
+    {
+        def artifact_step = testing
+        if((desc.testing_label != desc.label
+            && mode.mode == "Debug")
+           || (desc.testing_label != desc.release_label
+               && mode.mode == "Release") || testing == null)
+            artifact_step = compile
+        GetArtifactingStep(artifact_step, mode.binaryName,
+                           mode.workspace, desc)
+    }
+
+    exsource.name = "0_" + exsource.name + "_${mode.mode}"
+    compile.name = "1_" + compile.name + "_${mode.mode}"
+    if(testing != null)
+        testing.name = "2_" + testing.name + "_${mode.mode}"
+
+    if(mode.mode == "Debug")
+    {
+        exsource.name = "1." + exsource.name
+        compile.name = "1." + compile.name
+        if(testing != null)
+                testing.name = "1." + testing.name
+    }else{
+        exsource.name = "2." + exsource.name
+        compile.name = "2." + compile.name
+        if(testing != null)
+                testing.name = "2." + testing.name
+    }
+
+    ChainJobWithPipeline(pip, exsource, "Pre-source ${desc.platformName}_${desc.platformArch}_${mode.mode}")
+    ChainJobWithPipeline(pip, compile,
+                         "Compile ${desc.platformName}_${desc.platformArch}_${mode.mode}")
+    if(testing != null)
+        ChainJobWithPipeline(pip, testing,
+                             "Test ${desc.platformName}_${desc.platformArch}_${mode.mode}")
+
+    return [exsource, last_job]
+}
+
+def GetPipeline(project, target)
+{
+    def inst_dbg = new BuildInstance();
+    def inst_rel = new BuildInstance();
+    def source_step = null
+
+    def base = GetBasePipeline(project, target)
+
+    inst_dbg.pipeline = base.pipeline.name
+    inst_rel.pipeline = base.pipeline.name
+    inst_dbg.binaryName = "binary_${target.platformName}-${target.platformArch}_Dbg"
+    inst_rel.binaryName = "binary_${target.platformName}-${target.platformArch}_Rel"
+    inst_dbg.workspace = '${WORKSPACE}'
+    inst_rel.workspace = '${WORKSPACE}'
+    inst_dbg.mode = "Debug"
+    inst_rel.mode = "Release"
+
+    def debug_pair = GetCompileTestingPair(base, target, inst_dbg, '${WORKSPACE}')
+    def release_pair = GetCompileTestingPair(base, target, inst_rel, '${WORKSPACE}')
+
+    return debug_pair[0]
+}
+
+def SOURCE_STEPS = []
+
+for(t in GetTargets()) {
+    t.cmake_preload = '${WORKSPACE}' + "/src/cmake/Preload/${t.cmake_preload}"
+    t.cmake_toolchain = '${WORKSPACE}' + "/src/cmake/Toolchains/${t.cmake_toolchain}"
+
+    SOURCE_STEPS += GetPipeline('Coffee', t)
+}
+
+def GetAllJob(source_steps)
+{
+    def base = job('All Coffee')
+    GetBuildParameters(base)
+    GetGithubKit(base, LIN_UBNTU)
+    base.with {
+        label('ubuntu && amd64')
+        steps {
+            shell(
+            '''
 [ -z "${GH_API_TOKEN}" ] && exit 0
 [ `lsb_release -r -s` = '14.04' ] && exit 0
 ./github-cli --api-token $GH_API_TOKEN push tag hbirchtree/coffeecutie:$GH_BRANCH $GH_RELEASE
 ./github-cli --api-token $GH_API_TOKEN push release hbirchtree/coffeecutie:$GH_RELEASE "Jenkins Auto Build $BUILD_NUMBER"
 '''
-        )
+            )
+        }
+    }
+    source_steps.each {
+        GetDownstreamTrigger(base, it.name)
     }
 }
 
-SOURCE_STEPS.each {
-    def src = it;
-    GetDownstreamTrigger(all_build_job, src.name)
-}
+GetAllJob(SOURCE_STEPS)
