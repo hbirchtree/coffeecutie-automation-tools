@@ -724,7 +724,7 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     return [exsource, last_job]
 }
 
-def GetPipeline(project, target)
+def GetPipeline(project, target, view_data)
 {
     def inst_dbg = new BuildInstance();
     def inst_rel = new BuildInstance();
@@ -744,19 +744,38 @@ def GetPipeline(project, target)
     def debug_pair = GetCompileTestingPair(base, target, inst_dbg, '${WORKSPACE}')
     def release_pair = GetCompileTestingPair(base, target, inst_rel, '${WORKSPACE}')
 
+    view_data[0].with {
+        views {
+            deliveryPipelineView(base.pipeline.name)
+        }
+    }
+
     return debug_pair[0]
 }
 
+def GetAllView()
+{
+    def base = nestedView("Coffee")
+    def meta = deliveryPipelineView("Meta")
+    base.with {
+        views {
+            deliveryPipelineView(meta.name)
+        }
+    }
+    return [base, meta]
+}
+
+def view_data = GetAllView()
 def SOURCE_STEPS = []
 
 for(t in GetTargets()) {
     t.cmake_preload = '${WORKSPACE}' + "/src/cmake/Preload/${t.cmake_preload}"
     t.cmake_toolchain = '${WORKSPACE}' + "/src/cmake/Toolchains/${t.cmake_toolchain}"
 
-    SOURCE_STEPS += GetPipeline('Coffee', t)
+    SOURCE_STEPS += GetPipeline('Coffee', t, view_data)
 }
 
-def GetAllJob(source_steps)
+def GetAllJob(source_steps, meta)
 {
     def base = job('All Coffee')
     GetBuildParameters(base)
@@ -777,6 +796,11 @@ def GetAllJob(source_steps)
     source_steps.each {
         GetDownstreamTrigger(base, it.name)
     }
+    meta.with {
+        pipelines {
+            component('Compile all Coffee', base.name)
+        }
+    }
 }
 
-GetAllJob(SOURCE_STEPS)
+GetAllJob(SOURCE_STEPS, view_data[1])
