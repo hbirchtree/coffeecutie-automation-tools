@@ -291,7 +291,7 @@ echo ${BUILD_NUMBER} > ../GithubBuildNumber.txt
     }
 }
 
-void GetExtraSourceSteps(platformName, j, d)
+void GetExtraSourceSteps(platformName, j)
 {
     def RepoUrl = null
     def SubdirPath = null
@@ -632,7 +632,7 @@ def GetCompileJob(desc, mode, workspace)
     def base = GetBaseJob("Compile_${desc.platformName}_${desc.platformArch}",
                           workspace)
     GetGithubKit(base, desc.platformName)
-    GetSourceStep(desc, mode.sourceDir, mode.pipeline, base)
+    GetSourceStep(desc, sourceSubDir, mode.pipeline, base)
     GetDockerDataLinux(desc, base, mode.sourceDir, mode.buildDir,
                        mode.buildDir, metaDir)
     if(mode.mode != "Release")
@@ -684,6 +684,7 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
 
     def exsource = job("ExtraSource_${desc.platformName}_${desc.platformArch}")
     GetExtraSourceSteps(desc.platformName, exsource)
+    GetBuildParameters(exsource)
 
     {
         def artifact_step = testing
