@@ -686,16 +686,14 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     GetExtraSourceSteps(desc.platformName, exsource)
     GetBuildParameters(exsource)
 
-    {
-        def artifact_step = testing
-        if((desc.testing_label != desc.label
-            && mode.mode == "Debug")
-           || (desc.testing_label != desc.release_label
-               && mode.mode == "Release") || testing == null)
-            artifact_step = compile
-        GetArtifactingStep(artifact_step, mode.binaryName,
-                           mode.workspace, desc)
-    }
+    def artifact_step = testing
+    if((desc.testing_label != desc.label
+        && mode.mode == "Debug")
+       || (desc.testing_label != desc.release_label
+           && mode.mode == "Release") || testing == null)
+        artifact_step = compile
+    GetArtifactingStep(artifact_step, mode.binaryName,
+                       mode.workspace, desc)
 
     exsource.name = "0_" + exsource.name + "_${mode.mode}"
     compile.name = "1_" + compile.name + "_${mode.mode}"
