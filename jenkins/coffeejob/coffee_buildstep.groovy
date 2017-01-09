@@ -734,10 +734,10 @@ def GetPipeline(project, target)
 
     inst_dbg.pipeline = base.pipeline.name
     inst_rel.pipeline = base.pipeline.name
-    inst_dbg.binaryName = "binary_${target.platformName}-${target.platformArch}_Dbg"
-    inst_rel.binaryName = "binary_${target.platformName}-${target.platformArch}_Rel"
-    inst_dbg.workspace = '${WORKSPACE}'
-    inst_rel.workspace = '${WORKSPACE}'
+    inst_dbg.binaryName = "binary_${target.platformName}_${target.platformArch}_Dbg"
+    inst_rel.binaryName = "binary_${target.platformName}_${target.platformArch}_Rel"
+    inst_dbg.workspace = "${target.platformName}_${target.platformArch}_Dbg"
+    inst_rel.workspace = "${target.platformName}_${target.platformArch}_Rel"
     inst_dbg.mode = "Debug"
     inst_rel.mode = "Release"
 
