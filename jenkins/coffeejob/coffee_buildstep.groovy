@@ -640,18 +640,20 @@ def GetCompileJob(desc, mode, workspace, exsource)
         base.with {
             label(desc.label)
         }
-        exsource.with {
-            label(desc.label)
-        }
+        if(exsource != null)
+            exsource.with {
+                label(desc.label)
+            }
     }
     else
     {
         base.with {
             label(desc.release_label)
         }
-        exsource.with {
-            label(desc.release_label)
-        }
+        if(exsource != null)
+            exsource.with {
+                label(desc.release_label)
+            }
     }
     if(desc.platformName == LIN_ANDRD)
         GetCMakeMultiStep(desc, base, mode.mode, 0, mode.sourceDir,
