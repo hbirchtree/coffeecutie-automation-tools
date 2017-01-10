@@ -220,15 +220,11 @@ chmod +x github-cli
 void GetDownstreamTrigger(job, downstream, fail)
 {
     job.with {
-        wrappers {
-            release {
-                postSuccessfulBuildSteps {
-                    downstreamParameterized {
-                        trigger(downstream) {
-                            parameters {
-                                currentBuild()
-                            }
-                        }
+        steps {
+            downstreamParameterized {
+                trigger(downstream) {
+                    parameters {
+                        currentBuild()
                     }
                 }
             }
