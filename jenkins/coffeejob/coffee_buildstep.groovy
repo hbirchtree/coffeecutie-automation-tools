@@ -298,11 +298,11 @@ void GetExtraSourceSteps(platformName, j)
 
     if(platformName == LIN_ANDRD)
     {
-        SubdirPath = '${WORKSPACE}/meta_src'
+        SubdirPath = 'meta_src'
         RepoUrl = 'https://github.com/hbirchtree/coffeecutie-meta.git'
     }else if(platformName == LIN_RASPI)
     {
-        SubdirPath = '${WORKSPACE}/raspi-sdk'
+        SubdirPath = 'raspi-sdk'
         RepoUrl = 'https://github.com/hbirchtree/raspberry-sysroot.git'
     }
 
