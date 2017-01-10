@@ -695,9 +695,12 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     if(desc.platformName != GEN_DOCS)
         exsource = GetBaseJob("ExtraSource_${desc.platformName}_${desc.platformArch}",
                               workspace)
-    GetExtraSourceSteps(desc.platformName, exsource)
-    exsource.with {
-        label(mode.compileLabel)
+    if(exsource != null)
+    {
+        GetExtraSourceSteps(desc.platformName, exsource)
+        exsource.with {
+            label(mode.compileLabel)
+        }
     }
 
     def artifact_step = testing
