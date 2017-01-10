@@ -250,9 +250,10 @@ curl -X POST -H "Authorization: token $GH_API_TOKEN" https://api.github.com/repo
     if(end)
     {
         job.with {
-            wrappers {
-                release {
-                    postSuccessfulBuildSteps {
+            publishers {
+                postBuildScripts {
+                    onlyIfBuildSucceeds(true)
+                    steps {
                         shell("BUILD_STATE=success" + p1)
                     }
                 }
@@ -260,9 +261,11 @@ curl -X POST -H "Authorization: token $GH_API_TOKEN" https://api.github.com/repo
         }
     }
     job.with {
-        wrappers {
-            release {
-                postFailedBuildSteps {
+        publishers {
+            postBuildScripts {
+                onlyIfBuildSucceeds(false)
+                onlyIfBuildFails(true)
+                steps {
                     shell("BUILD_STATE=failure" + p1)
                 }
             }
