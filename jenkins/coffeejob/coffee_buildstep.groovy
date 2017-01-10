@@ -682,14 +682,16 @@ def GetTestingJob(desc, mode, workspace)
 
 def GetCompileTestingPair(pip, desc, mode, workspace)
 {
-    def exsource = GetBaseJob("ExtraSource_${desc.platformName}_${desc.platformArch}",
+    def exsource = null
+    if(desc.platformName != GEN_DOCS)
+    exsource = GetBaseJob("ExtraSource_${desc.platformName}_${desc.platformArch}",
                               workspace)
     GetExtraSourceSteps(desc.platformName, exsource)
 
     def compile = GetCompileJob(desc, mode, workspace, exsource)
     def last_job = compile
     def testing = null
-    if(desc.do_tests)
+    if(desc.do_tests && exsource != null)
     {
         testing = GetTestingJob(desc, mode, workspace)
         last_job = testing
@@ -706,25 +708,32 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     GetArtifactingStep(artifact_step, mode.binaryName,
                        mode.workspace, desc)
 
-    exsource.name = "0_" + exsource.name + "_${mode.mode}"
-    compile.name = "1_" + compile.name + "_${mode.mode}"
-    if(testing != null)
-        testing.name = "2_" + testing.name + "_${mode.mode}"
+    if(desc.platformName != GEN_DOCS)
+    {
+        if(exsource != null)
+            exsource.name = "0_" + exsource.name + "_${mode.mode}"
+        compile.name = "1_" + compile.name + "_${mode.mode}"
+        if(testing != null)
+            testing.name = "2_" + testing.name + "_${mode.mode}"
+    }
 
     if(mode.mode == "Debug")
     {
-        exsource.name = "1." + exsource.name
+        if(exsource != null)
+            exsource.name = "1." + exsource.name
         compile.name = "1." + compile.name
         if(testing != null)
                 testing.name = "1." + testing.name
     }else{
-        exsource.name = "2." + exsource.name
+        if(exsource != null)
+            exsource.name = "2." + exsource.name
         compile.name = "2." + compile.name
         if(testing != null)
                 testing.name = "2." + testing.name
     }
 
-    ChainJobWithPipeline(pip, exsource, "Pre-source ${desc.platformName}_${desc.platformArch}_${mode.mode}")
+    if(exsource != null)
+        ChainJobWithPipeline(pip, exsource, "Pre-source ${desc.platformName}_${desc.platformArch}_${mode.mode}")
     ChainJobWithPipeline(pip, compile,
                          "Compile ${desc.platformName}_${desc.platformArch}_${mode.mode}")
     if(testing != null)
@@ -751,8 +760,14 @@ def GetPipeline(project, target, view_data)
     inst_dbg.mode = "Debug"
     inst_rel.mode = "Release"
 
+    if(target.platformName == GEN_DOCS)
+    {
+        inst_dbg = "Documentation"
+    }
+
     def debug_pair = GetCompileTestingPair(base, target, inst_dbg, inst_dbg.workspace)
-    def release_pair = GetCompileTestingPair(base, target, inst_rel, inst_dbg.workspace)
+    if(target.platformName != GEN_DOCS)
+        GetCompileTestingPair(base, target, inst_rel, inst_dbg.workspace)
 
     view_data[0].with {
         views {
