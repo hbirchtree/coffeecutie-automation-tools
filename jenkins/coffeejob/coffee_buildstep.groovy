@@ -59,14 +59,14 @@ BuildTarget[] GetTargets() {
                   "raspberry.cmake",
                   "gnueabihf-arm-raspberry.toolchain.cmake",
                    "Ninja", "-DRASPBERRY_SDK=/raspi-sdk",
-                   "raspi && native && test_platform"),
+                   /*"raspi && native && test_platform"*/, false),
     /* Android on a Docker container, composite project
      */
     new BuildTarget(LIN_ANDRD, A_UNI,
                    "linux && docker && android",
                    null, null,
                    "Unix Makefiles", "",
-                   "android && test_platform"),
+                   /*"android && test_platform"*/, false),
     new BuildTarget(GEN_DOCS, A_UNI, "linux && docker",
                     "none_docs-none-none.cmake", "native-linux-generic.toolchain.cmake",
                     "Unix Makefiles", "", false, true),
