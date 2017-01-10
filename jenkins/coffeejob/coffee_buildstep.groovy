@@ -682,9 +682,9 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     }
     GetJobQuirks(desc, compile, testing, mode.sourceDir)
 
-    def exsource = job("ExtraSource_${desc.platformName}_${desc.platformArch}")
+    def exsource = GetBaseJob("ExtraSource_${desc.platformName}_${desc.platformArch}",
+                              workspace)
     GetExtraSourceSteps(desc.platformName, exsource)
-    GetBuildParameters(exsource)
 
     def artifact_step = testing
     if((desc.testing_label != desc.label
