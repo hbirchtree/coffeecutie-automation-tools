@@ -773,6 +773,9 @@ def GetPipeline(project, target, view_data)
     if(target.platformName != GEN_DOCS)
         GetCompileTestingPair(base, target, inst_rel, inst_dbg.workspace)
 
+    if(target.platformName == GEN_DOCS)
+        debug_pair[0].name = "1.0_Compile_Documentation"
+
     view_data[0].with {
         views {
             deliveryPipelineView(base.pipeline.name)
