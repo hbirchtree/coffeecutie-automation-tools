@@ -693,6 +693,7 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     def compile = GetCompileJob(desc, mode, workspace, exsource)
     def last_job = compile
     def testing = null
+    def deploy = null
     if(desc.do_tests && exsource != null)
     {
         testing = GetTestingJob(desc, mode, workspace)
@@ -719,6 +720,21 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
             testing.name = "2_" + testing.name + "_${mode.mode}"
     }
 
+    /* Big problem: SteamOS building happens in a Trusty container,
+     *  which does not support recent enough Qt. Solution: Another step, unisolated.
+     * It's terrible, but it works.
+     */
+    if(desc.platformName == LIN_STMOS)
+    {
+        deploy = GetBaseJob("3_Deploy_${desc.platformName}_${desc.platformArch}_${mode.mode}",
+                                workspace)
+        last_job = deploy
+        GetGithubKit(deploy, LIN_UBNTU)
+        GetArtifactingStep(deploy, mode.binaryName,
+                           mode.workspace, desc)
+
+    }
+
     if(mode.mode == "Debug")
     {
         if(exsource != null)
@@ -726,12 +742,16 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
         compile.name = "1." + compile.name
         if(testing != null)
                 testing.name = "1." + testing.name
+        if(deploy != null)
+            deploy.name = "1." + deploy.name
     }else{
         if(exsource != null)
             exsource.name = "2." + exsource.name
         compile.name = "2." + compile.name
         if(testing != null)
-                testing.name = "2." + testing.name
+            testing.name = "2." + testing.name
+        if(deploy != null)
+            deploy.name = "2." + deploy.name
     }
 
     if(exsource != null)
@@ -741,6 +761,10 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     if(testing != null)
         ChainJobWithPipeline(pip, testing,
                              "Test ${desc.platformName}_${desc.platformArch}_${mode.mode}")
+    if(deploy != null)
+        ChainJobWithPipeline(pip, deploy,
+                             "Deploy ${desc.platformName}_${desc.platformArch}_${mode.mode}")
+
     if(exsource != null)
         return [exsource, last_job]
     else
