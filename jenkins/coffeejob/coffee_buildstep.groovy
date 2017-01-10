@@ -741,8 +741,10 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     if(testing != null)
         ChainJobWithPipeline(pip, testing,
                              "Test ${desc.platformName}_${desc.platformArch}_${mode.mode}")
-
-    return [exsource, last_job]
+    if(exsource != null)
+        return [exsource, last_job]
+    else
+        return [compile, last_job]
 }
 
 def GetPipeline(project, target, view_data)
