@@ -840,6 +840,7 @@ def GetAllJob(source_steps, meta)
 {
     def base = job('All Coffee')
     GetBuildParameters(base)
+    GetGithubToken(base)
     GetGithubKit(base, LIN_UBNTU)
     base.with {
         label('ubuntu && amd64')
