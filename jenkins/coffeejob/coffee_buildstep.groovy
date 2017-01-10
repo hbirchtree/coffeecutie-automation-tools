@@ -622,7 +622,7 @@ def ChainJobWithPipeline(pipeline, job, label)
     }
 }
 
-def GetCompileJob(desc, mode, workspace)
+def GetCompileJob(desc, mode, workspace, exsource)
 {
     def sourceSubDir = "src"
     mode.buildDir = '${WORKSPACE}/'
@@ -636,13 +636,23 @@ def GetCompileJob(desc, mode, workspace)
     GetDockerDataLinux(desc, base, mode.sourceDir, mode.buildDir,
                        mode.buildDir, metaDir)
     if(mode.mode != "Release")
+    {
         base.with {
             label(desc.label)
         }
+        exsource.with {
+            label(desc.label)
+        }
+    }
     else
+    {
         base.with {
             label(desc.release_label)
         }
+        exsource.with {
+            label(desc.release_label)
+        }
+    }
     if(desc.platformName == LIN_ANDRD)
         GetCMakeMultiStep(desc, base, mode.mode, 0, mode.sourceDir,
                           mode.buildDir, metaDir)
@@ -672,7 +682,11 @@ def GetTestingJob(desc, mode, workspace)
 
 def GetCompileTestingPair(pip, desc, mode, workspace)
 {
-    def compile = GetCompileJob(desc, mode, workspace)
+    def exsource = GetBaseJob("ExtraSource_${desc.platformName}_${desc.platformArch}",
+                              workspace)
+    GetExtraSourceSteps(desc.platformName, exsource)
+
+    def compile = GetCompileJob(desc, mode, workspace, exsource)
     def last_job = compile
     def testing = null
     if(desc.do_tests)
@@ -682,12 +696,6 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     }
     GetJobQuirks(desc, compile, testing, mode.sourceDir)
 
-    def exsource = GetBaseJob("ExtraSource_${desc.platformName}_${desc.platformArch}",
-                              workspace)
-    GetExtraSourceSteps(desc.platformName, exsource)
-    exsource.with {
-        label(compile.label)
-    }
 
     def artifact_step = testing
     if((desc.testing_label != desc.label
