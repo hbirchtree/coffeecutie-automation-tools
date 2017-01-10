@@ -681,7 +681,7 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
 {
     def exsource = null
 
-    def compile = GetCompileJob(desc, mode, workspace, exsource)
+    def compile = GetCompileJob(desc, mode, workspace)
     def last_job = compile
     def testing = null
     def deploy = null
