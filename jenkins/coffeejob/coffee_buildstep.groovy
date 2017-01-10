@@ -246,7 +246,7 @@ BUILD_VARIANT=${code}
 GIT_SHA=`git rev-parse HEAD`
 """ +
     '''
-curl -X POST -H "Authorization: token $GH_API_TOKEN" https://api.github.com/repos/hbirchtree/coffeecutie/statuses/$GIT_SHA -d "{\\"state\\": \\"$BUILD_STATE\", \\"description\\": \\"$BUILD_VARIANT build\\", \\"context\\": \\"continuous-integration/jenkins/$BUILD_VARIANT\\"}" '''
+curl -X POST -H "Authorization: token $GH_API_TOKEN" https://api.github.com/repos/hbirchtree/coffeecutie/statuses/$GIT_SHA -d "{\\"state\\": \\"$BUILD_STATE\\", \\"description\\": \\"$BUILD_VARIANT build\\", \\"context\\": \\"continuous-integration/jenkins/$BUILD_VARIANT\\"}" '''
     if(end)
     {
         job.with {
