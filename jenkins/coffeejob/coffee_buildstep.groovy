@@ -762,7 +762,7 @@ def GetPipeline(project, target, view_data)
 
     if(target.platformName == GEN_DOCS)
     {
-        inst_dbg = "Documentation"
+        inst_dbg.binaryName = "Documentation"
     }
 
     def debug_pair = GetCompileTestingPair(base, target, inst_dbg, inst_dbg.workspace)
