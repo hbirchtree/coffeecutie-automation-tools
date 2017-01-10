@@ -217,15 +217,57 @@ chmod +x github-cli
     }
 }
 
-void GetDownstreamTrigger(job, downstream)
+void GetDownstreamTrigger(job, downstream, fail)
 {
     job.with {
-        steps {
-            downstreamParameterized {
-                trigger(downstream) {
-                    parameters {
-                        currentBuild()
+        wrappers {
+            release {
+                postSuccessfulBuildSteps {
+                    downstreamParameterized {
+                        trigger(downstream) {
+                            parameters {
+                                currentBuild()
+                            }
+                        }
                     }
+                }
+            }
+        }
+    }
+}
+
+void GetGHStatusTransmitter(job, desc, end)
+{
+    if(job == null || desc.platformName == WIN_WIN32 || desc.platformName == WIN_MSUWP)
+        return
+
+    def code = desc.platformName
+    def codeLower = code.toLowerCase()
+    def p1 = """
+
+cd src
+BUILD_VARIANT=${code}
+GIT_SHA=`git rev-parse HEAD`
+""" +
+    '''
+curl -X POST -H "Authorization: token $GH_API_TOKEN" https://api.github.com/repos/hbirchtree/coffeecutie/statuses/$GIT_SHA -d "{\"state\": \"$BUILD_STATE\", \"description\": \"$BUILD_VARIANT build\", \"context\": \"continuous-integration/jenkins/$BUILD_VARIANT"}\" '''
+    if(end)
+    {
+        job.with {
+            wrappers {
+                release {
+                    postSuccessfulBuildSteps {
+                        shell("BUILD_STATE=success" + p1)
+                    }
+                }
+            }
+        }
+    }
+    job.with {
+        wrappers {
+            release {
+                postFailedBuildSteps {
+                    shell("BUILD_STATE=failure" + p1)
                 }
             }
         }
@@ -616,7 +658,7 @@ def ChainJobWithPipeline(pipeline, job, label)
             }
         }
     }else{
-        GetDownstreamTrigger(pipeline.lastStep, job.name)
+        GetDownstreamTrigger(pipeline.lastStep, job.name, false)
     }
     pipeline.lastStep = job
     job.with {
@@ -686,7 +728,7 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     def last_job = compile
     def testing = null
     def deploy = null
-    if(desc.do_tests && exsource != null)
+    if(desc.do_tests)
     {
         testing = GetTestingJob(desc, mode, workspace)
         last_job = testing
@@ -760,20 +802,29 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
     }
 
     if(exsource != null)
+    {
         ChainJobWithPipeline(pip, exsource, "Pre-source ${desc.platformName}_${desc.platformArch}_${mode.mode}")
+    }
     ChainJobWithPipeline(pip, compile,
                          "Compile ${desc.platformName}_${desc.platformArch}_${mode.mode}")
     if(testing != null)
+    {
         ChainJobWithPipeline(pip, testing,
                              "Test ${desc.platformName}_${desc.platformArch}_${mode.mode}")
+    }
     if(deploy != null)
+    {
         ChainJobWithPipeline(pip, deploy,
                              "Deploy ${desc.platformName}_${desc.platformArch}_${mode.mode}")
+    }
 
-    if(exsource != null)
-        return [exsource, last_job]
-    else
-        return [compile, last_job]
+    def pre_list = [exsource, compile, testing, deploy]
+    def post_list = []
+    pre_list.each {
+        if(it != null)
+                post_list += it
+    }
+    return post_list
 }
 
 def GetPipeline(project, target, view_data)
@@ -799,8 +850,23 @@ def GetPipeline(project, target, view_data)
     }
 
     def debug_pair = GetCompileTestingPair(base, target, inst_dbg, inst_dbg.workspace)
+    def release_pair = null
+    def final_job = debug_pair.last()
     if(target.platformName != GEN_DOCS)
-        GetCompileTestingPair(base, target, inst_rel, inst_dbg.workspace)
+    {
+        release_pair = GetCompileTestingPair(base, target, inst_rel, inst_dbg.workspace)
+        final_job = release_pair.last()
+    }
+
+    debug_pair.each {
+        def stat = (it == debug_pair.last() && release_pair == null)
+        GetGHStatusTransmitter(it, target, stat)
+    }
+    if(release_pair != null)
+        release_pair.each {
+            def stat = (it == release_pair.last())
+            GetGHStatusTransmitter(it, target, stat)
+        }
 
     if(target.platformName == GEN_DOCS)
         debug_pair[0].name = "1.0_Compile_Documentation"
@@ -856,7 +922,7 @@ def GetAllJob(source_steps, meta)
         }
     }
     source_steps.each {
-        GetDownstreamTrigger(base, it.name)
+        GetDownstreamTrigger(base, it.name, false)
     }
     meta.with {
         pipelines {
