@@ -232,6 +232,34 @@ void GetDownstreamTrigger(job, downstream)
     }
 }
 
+void GetBuildNumber(descriptor, sourceDir, job)
+{
+    if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
+    {
+        job.with {
+            steps {
+                shell(
+                  '''
+[ -z "${GH_API_TOKEN}" ] && exit 0
+[ `lsb_release -r -s` = '14.04' ] && exit 0
+
+cd ''' + sourceDir + '''
+GIT_COMMIT=`git rev-parse HEAD`
+
+GH_RELEASE=`../github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | sort -n | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
+
+[ -z "${GH_RELEASE}" ] && exit 0
+BUILD_NUMBER=`echo $GH_RELEASE | cut -d '-' -f 3`
+
+echo ${GH_RELEASE} > ../GithubData.txt
+echo ${BUILD_NUMBER} > ../GithubBuildNumber.txt
+'''
+                )
+            }
+        }
+    }
+}
+
 /* Setting up Git SCM
  * One function to change them all
  */
@@ -261,34 +289,7 @@ void GetSourceStep(descriptor, sourceDir, buildDir, job)
         }
     }
 
-    if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
-    {
-        job.with {
-            steps {
-                shell(
-                  '''
-
-[ -z "${GH_API_TOKEN}" ] && exit 0
-[ `lsb_release -r -s` = '14.04' ] && exit 0
-
-cd ''' + sourceDir + '''
-GIT_COMMIT=`git rev-parse HEAD`
-
-GH_RELEASE=`../github-cli --api-token $GH_API_TOKEN list tag hbirchtree/coffeecutie | sort -n | grep jenkins-auto | grep $GIT_COMMIT | sed -n 1p | cut -d '|' -f 2`
-
-[ -z "${GH_RELEASE}" ] && exit 0
-BUILD_NUMBER=`echo $GH_RELEASE | cut -d '-' -f 3`
-
-echo ${GH_RELEASE} > ../GithubData.txt
-echo ${BUILD_NUMBER} > ../GithubBuildNumber.txt
-
-echo ${GH_RELEASE} > ../GithubData.txt
-echo ${BUILD_NUMBER} > ../GithubBuildNumber.txt
-'''
-                )
-            }
-        }
-    }
+    GetBuildNumber(descriptor, sourceDir, job)
 }
 
 void GetExtraSourceSteps(platformName, j)
@@ -731,6 +732,7 @@ def GetCompileTestingPair(pip, desc, mode, workspace)
                                 workspace)
         last_job = deploy
         GetGithubKit(deploy, LIN_UBNTU)
+        GetBuildNumber(desc, "src", deploy)
         GetArtifactingStep(deploy, mode.binaryName,
                            mode.workspace, desc)
         deploy.with {
