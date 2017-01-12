@@ -10,12 +10,15 @@ WIN_WIN32 = "Windows"
 WIN_MSUWP = "Windows-UWP"
 LIN_ANDRD = "Android"
 
+WEB_ASMJS = "Emscripten"
+
 GEN_DOCS = "Docs"
 
 A_X64 = "x86-64"
 A_ARMV8A = "ARMv8A"
 A_ARMV7A = "ARMv7A"
 A_UNI = "Universal"
+A_WEB = "Web"
 
 BuildTarget[] GetTargets() {
     def LINUX_PACKAGING_OPTS = "-DCOFFEE_GENERATE_SNAPPY=ON"
@@ -70,6 +73,9 @@ BuildTarget[] GetTargets() {
     new BuildTarget(GEN_DOCS, A_UNI, "linux && docker",
                     "none_docs-none-none.cmake", "native-linux-generic.toolchain.cmake",
                     "Unix Makefiles", "", false, true),
+    new BuildTarget(WEB_ASMJS, A_WEB, "linux && docker",
+                    "emscripten.cmake", "js-emscripten.toolchain.cmake",
+                    "Ninja", "", false)
         ]
 }
 
@@ -346,6 +352,9 @@ void GetExtraSourceSteps(platformName, j)
     {
         SubdirPath = 'raspi-sdk'
         RepoUrl = 'https://github.com/hbirchtree/raspberry-sysroot.git'
+    }else if(platformName == WEB_ASMJS)
+    {
+
     }
 
     if(RepoUrl == null || SubdirPath == null)
@@ -377,7 +386,7 @@ boolean IsDockerized(platName)
 {
         return (platName == LIN_UBNTU || platName == LIN_STMOS
             || platName == LIN_RASPI || platName == LIN_ANDRD
-            || platName == GEN_DOCS);
+            || platName == GEN_DOCS || platName == WEB_ASMJS);
 }
 
 String GetAutomationDir(sourceDir)
@@ -437,6 +446,8 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
             }
         }
         return;
+    }else if(descriptor.platformName == WEB_ASMJS)
+        docker_dir = "emscripten"
     }else if(descriptor.platformName == GEN_DOCS)
         docker_dir = "doc-generator"
     else
@@ -491,6 +502,20 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
     {
         source_dir = "/source"
         build_dir = "/build"
+    }
+    if(descriptor.platformName == MAC_MCOSX)
+    {
+        job.with {
+            steps {
+                environmentVariables {
+                    env('CC', 'clang-3.8')
+                    env('CXX', 'clang++-3.8')
+                }
+            }
+        }
+    }
+    if(IsDockerized(descriptor.platformName) || descriptor.platformName == MAC_MCOSX)
+    {
         job.with {
             steps {
                 shell(
