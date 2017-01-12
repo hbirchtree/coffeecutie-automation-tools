@@ -453,7 +453,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
         job.with {
             steps {
                 environmentVariables {
-                    env('EMSCRIPTEN', '/emsdk_portable/emscripten/master')
+                    env('EMSCRIPTEN', '/emsdk_portable')
                 }
             }
         }
@@ -497,12 +497,15 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
         }
     }
 
-    job.with {
-        /* Fixes some issues on Mac OS X with finding Brew */
-        properties {
-            environmentVariables {
-                keepSystemVariables(true)
-                keepBuildVariables(true)
+    if(descriptor.platformName == MAC_MCOSX)
+    {
+        job.with {
+            /* Fixes some issues on Mac OS X with finding Brew */
+            properties {
+                environmentVariables {
+                    keepSystemVariables(true)
+                    keepBuildVariables(true)
+                }
             }
         }
     }
