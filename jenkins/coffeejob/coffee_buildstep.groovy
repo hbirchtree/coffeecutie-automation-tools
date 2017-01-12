@@ -491,6 +491,20 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
     {
         source_dir = "/source"
         build_dir = "/build"
+    }
+    if(descriptor.platformName == MAC_MCOSX)
+    {
+        job.with {
+            steps {
+                environmentVariables {
+                    env('CC', 'clang-3.8')
+                    env('CXX', 'clang++-3.8')
+                }
+            }
+        }
+    }
+    if(IsDockerized(descriptor.platformName) || descriptor.platformName == MAC_MCOSX)
+    {
         job.with {
             steps {
                 shell(
