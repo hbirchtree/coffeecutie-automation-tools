@@ -448,7 +448,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
         return;
     }else if(descriptor.platformName == WEB_ASMJS)
         docker_dir = "emscripten"
-    }else if(descriptor.platformName == GEN_DOCS)
+    else if(descriptor.platformName == GEN_DOCS)
         docker_dir = "doc-generator"
     else
         return;
