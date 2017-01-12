@@ -75,7 +75,7 @@ BuildTarget[] GetTargets() {
                     "Unix Makefiles", "", false, true),
     new BuildTarget(WEB_ASMJS, A_WEB, "linux && docker",
                     "emscripten.cmake", "js-emscripten.toolchain.cmake",
-                    "Ninja", "", false)
+                    "Ninja", "-DNATIVE_LIB_ROOT=nativelib -DEMSDK_ROOT=/emsdk_portable/emscripten/master", false)
         ]
 }
 
@@ -354,7 +354,8 @@ void GetExtraSourceSteps(platformName, j)
         RepoUrl = 'https://github.com/hbirchtree/raspberry-sysroot.git'
     }else if(platformName == WEB_ASMJS)
     {
-
+        SubdirPath = 'nativelib'
+        RepoUrl = 'https://github.com/hbirchtree/native-library-bundle.git'
     }
 
     if(RepoUrl == null || SubdirPath == null)
