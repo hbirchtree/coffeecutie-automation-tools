@@ -75,7 +75,7 @@ BuildTarget[] GetTargets() {
                     "Unix Makefiles", "", false, true),
     new BuildTarget(WEB_ASMJS, A_WEB, "linux && docker",
                     "emscripten.cmake", "js-emscripten.toolchain.cmake",
-                    "Ninja", "-DNATIVE_LIB_ROOT=nativelib -DEMSDK_ROOT=/emsdk_portable/emscripten/master", false)
+                    "Ninja", "-DNATIVE_LIB_ROOT=nativelib", false)
         ]
 }
 
@@ -448,8 +448,16 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
         }
         return;
     }else if(descriptor.platformName == WEB_ASMJS)
+    {
         docker_dir = "emscripten"
-    else if(descriptor.platformName == GEN_DOCS)
+        job.with {
+            steps {
+                environmentVariables {
+                    env('EMSDK_ROOT', '/emsdk_portable')
+                }
+            }
+        }
+    }else if(descriptor.platformName == GEN_DOCS)
         docker_dir = "doc-generator"
     else
         return;
