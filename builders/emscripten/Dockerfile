@@ -21,8 +21,11 @@ RUN wget https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portab
 
 RUN /emsdk_portable/emsdk update
 RUN /emsdk_portable/emsdk install latest
-RUN /emsdk_portable/emsdk activate latest
 
 ENV PATH=$PATH:/emsdk_portable:/emsdk_portable/clang/fastcomp/build_master_64/bin:/emsdk_portable/node/4.1.1_64bit/bin:/emsdk_portable/emscripten/master
+
+RUN adduser -u 1000 coffee
+USER coffee
+RUN /emsdk_portable/emsdk activate latest
 
 VOLUME ["/code","/build/output"]

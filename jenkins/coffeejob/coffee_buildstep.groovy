@@ -564,6 +564,31 @@ cmake --build ${isoBuild}
     }
 }
 
+/* Emscripten was so bad to set up that I just put this here.
+ * Something was really weird about Jenkins' way of inputting environment variables.
+ */
+void GetEmscriptenStep(descriptor, job, variant, target)
+{
+    job.with {
+        steps {
+            shell(
+            '''
+docker run --rm --workdir /build -v ${WORKSPACE}:/build emscripten:v2 \
+    cmake /build/src -GNinja \
+        -DNATIVE_LIB_ROOT=nativelib \
+        -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master \
+        ''' + """-Csrc/cmake/Preload/${descriptor.cmake_preload}.cmake \
+        -DCMAKE_TOOLCHAIN_FILE=src/cmake/Toolchains/${descriptor.cmake_toolchain} \
+        -DCMAKE_INSTALL_PREFIX=out \
+        -DCMAKE_BUILD_TYPE=${variant}""" + '''
+docker run --rm --workdir /build -v ${WORKSPACE}:/build emscripten:v2 \
+    ''' + """cmake --build /build --target ${target}
+"""
+            )
+        }
+    }
+}
+
 void GetArtifactingStep(job, releaseName, buildDir, descriptor)
 {
     def artifact_glob = "out/**"
@@ -690,8 +715,6 @@ def GetCompileJob(desc, mode, workspace)
                           workspace)
     GetGithubKit(base, desc.platformName)
     GetSourceStep(desc, sourceSubDir, mode.pipeline, base)
-    GetDockerDataLinux(desc, base, mode.sourceDir, mode.buildDir,
-                       mode.buildDir, metaDir)
     if(mode.mode != "Release")
     {
         base.with {
@@ -706,11 +729,21 @@ def GetCompileJob(desc, mode, workspace)
         }
         mode.compileLabel = desc.release_label
     }
-    if(desc.platformName == LIN_ANDRD)
-        GetCMakeMultiStep(desc, base, mode.mode, 0, mode.sourceDir,
-                          mode.buildDir, metaDir)
-    else
-        GetCMakeSteps(desc, base, mode.mode, 0, mode.sourceDir, mode.buildDir)
+    if(desc.platformName != WEB_ASMJS)
+    {
+        GetDockerDataLinux(desc, base, mode.sourceDir, mode.buildDir,
+                           mode.buildDir, metaDir)
+        if(desc.platformName == LIN_ANDRD)
+            GetCMakeMultiStep(desc, base, mode.mode, 0, mode.sourceDir,
+                              mode.buildDir, metaDir)
+        else
+            GetCMakeSteps(desc, base, mode.mode, 0, mode.sourceDir, mode.buildDir)
+    }else{
+        /* Emscripten build does not work with Jenkins' Docker support
+         * We need a better alternative.
+         */
+        GetEmscriptenStep(desc, base, mode.mode, "install")
+    }
 
     return base
 }
