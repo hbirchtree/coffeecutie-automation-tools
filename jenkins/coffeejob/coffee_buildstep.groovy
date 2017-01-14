@@ -965,8 +965,11 @@ def view_data = GetAllView()
 def SOURCE_STEPS = []
 
 for(t in GetTargets()) {
-    t.cmake_preload = '${WORKSPACE}' + "/src/cmake/Preload/${t.cmake_preload}"
-    t.cmake_toolchain = '${WORKSPACE}' + "/src/cmake/Toolchains/${t.cmake_toolchain}"
+    if(t.platformName != WEB_ASMJS)
+    {
+        t.cmake_preload = '${WORKSPACE}' + "/src/cmake/Preload/${t.cmake_preload}"
+        t.cmake_toolchain = '${WORKSPACE}' + "/src/cmake/Toolchains/${t.cmake_toolchain}"
+    }
 
     SOURCE_STEPS += GetPipeline('Coffee', t, view_data)
 }
