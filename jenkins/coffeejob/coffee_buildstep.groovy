@@ -781,11 +781,16 @@ def GetTestingJob(desc, mode, workspace)
     base.with {
         label(desc.testing_label)
     }
-    GetDockerDataLinux(desc, base, mode.sourceDir, mode.buildDir,
-                       mode.buildDir, metaDir)
-    /* Check if testing happens on build machine */
-    if(desc.testing_label == desc.label)
-        GetCMakeSteps(desc, base, mode.mode, 1, mode.sourceDir, mode.buildDir)
+    if(desc.platformName != WEB_ASMJS)
+    {
+        GetDockerDataLinux(desc, base, mode.sourceDir, mode.buildDir,
+                           mode.buildDir, metaDir)
+        /* Check if testing happens on build machine */
+        if(desc.testing_label == desc.label)
+            GetCMakeSteps(desc, base, mode.mode, 1, mode.sourceDir, mode.buildDir)
+    }else{
+        GetEmscriptenStep(desc, base, mode.mode, "test")
+    }
     return base
 }
 
