@@ -75,7 +75,7 @@ BuildTarget[] GetTargets() {
                     "Unix Makefiles", "", false, true),
     new BuildTarget(WEB_ASMJS, A_WEB, "linux && docker",
                     "emscripten.cmake", "js-emscripten.toolchain.cmake",
-                    "Ninja", "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master", true)
+                    "Unix Makefiles", "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master", true)
         ]
 }
 
@@ -596,15 +596,17 @@ void GetEmscriptenStep(descriptor, job, variant, target)
         steps {
             shell(
             '''
-docker run --rm --workdir /build -v ${WORKSPACE}:/build emscripten:v2 \
-    cmake /build/src -GNinja \
+docker run --rm --workdir /build -v ${WORKSPACE}:/build \
+    -e EMSCRIPTEN=/emsdk_portable/emscripten/master emscripten:v2 \
+    cmake /build/src -G"Unix Makefiles" \
         -DNATIVE_LIB_ROOT=nativelib \
         -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master \
         ''' + """-Csrc/cmake/Preload/${descriptor.cmake_preload} \
         -DCMAKE_TOOLCHAIN_FILE=src/cmake/Toolchains/${descriptor.cmake_toolchain} \
         -DCMAKE_INSTALL_PREFIX=out \
         -DCMAKE_BUILD_TYPE=${variant}""" + '''
-docker run --rm --workdir /build -v ${WORKSPACE}:/build emscripten:v2 \
+docker run --rm --workdir /build -v ${WORKSPACE}:/build \
+    -e EMSCRIPTEN=/emsdk_portable/emscripten/master emscripten:v2 \
     ''' + """cmake --build /build --target ${target}
 """
             )
