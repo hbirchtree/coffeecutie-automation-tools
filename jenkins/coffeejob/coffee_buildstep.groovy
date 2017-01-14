@@ -600,7 +600,7 @@ docker run --rm --workdir /build -v ${WORKSPACE}:/build emscripten:v2 \
     cmake /build/src -GNinja \
         -DNATIVE_LIB_ROOT=nativelib \
         -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master \
-        ''' + """-Csrc/cmake/Preload/${descriptor.cmake_preload}.cmake \
+        ''' + """-Csrc/cmake/Preload/${descriptor.cmake_preload} \
         -DCMAKE_TOOLCHAIN_FILE=src/cmake/Toolchains/${descriptor.cmake_toolchain} \
         -DCMAKE_INSTALL_PREFIX=out \
         -DCMAKE_BUILD_TYPE=${variant}""" + '''
