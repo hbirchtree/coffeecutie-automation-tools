@@ -39,7 +39,8 @@ RUN apt-get -qy update && apt-get -qy install \
 	libswscale-dev \
         libqt5network5 \
         wget git lsb-release \
-        flatpak snapcraft ${EXTRA_PACKAGES}
+        flatpak snapcraft ${EXTRA_PACKAGES} \
+	curl
 
 #Create user directory + group
 RUN groupadd buildusers -g ${USER_ID}

@@ -18,7 +18,13 @@ ENV ANDROID_NDK="/home/${USERNAME}/android-ndk-linux"
 
 # Install dependencies for Android SDK/NDK as well as build tools
 RUN dpkg --add-architecture i386
-RUN apt-get -qy update && apt-get -qy install openjdk-8-jdk-headless mercurial git cmake swig openssl ninja-build make nano libc6:i386 libstdc++6:i386 wget ant imagemagick unzip libqt5network5 lsb-release xz-utils
+RUN apt-get -qy update && apt-get -qy install \
+	openjdk-8-jdk-headless \
+	mercurial git cmake swig openssl ninja-build make \
+	nano libc6:i386 libstdc++6:i386 wget \
+	ant imagemagick unzip \
+	libqt5network5 lsb-release xz-utils \
+	curl
 
 # Create users for dev
 RUN useradd ${USERNAME} -m -u 1000
