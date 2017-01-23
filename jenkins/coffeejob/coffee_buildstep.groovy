@@ -75,7 +75,7 @@ BuildTarget[] GetTargets() {
                     "Unix Makefiles", "", false, true),
     new BuildTarget(WEB_ASMJS, A_WEB, "linux && docker",
                     "emscripten.cmake", "js-emscripten.toolchain.cmake",
-                    "Unix Makefiles", "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master", true)
+                    "Unix Makefiles", "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true)
         ]
 }
 
@@ -238,7 +238,7 @@ void GetDownstreamTrigger(job, downstream, fail)
     }
 }
 
-void GetGHStatusTransmitter(job, desc, end)
+void GetGHStatusTransmitter(job, desc, end, start)
 {
     if(job == null || desc.platformName == WIN_WIN32 || desc.platformName == WIN_MSUWP)
         return
@@ -253,27 +253,36 @@ GIT_SHA=`git rev-parse HEAD`
 """ +
     '''
 curl -X POST -H "Authorization: token $GH_API_TOKEN" https://api.github.com/repos/hbirchtree/coffeecutie/statuses/$GIT_SHA -d "{\\"state\\": \\"$BUILD_STATE\\", \\"description\\": \\"$BUILD_VARIANT build\\", \\"context\\": \\"continuous-integration/jenkins/$BUILD_VARIANT\\"}" '''
-    if(end)
+    if(!start)
     {
-        job.with {
-            publishers {
-                postBuildScripts {
-                    onlyIfBuildSucceeds(true)
-                    steps {
-                        shell("BUILD_STATE=success" + p1)
+        if(end)
+        {
+            job.with {
+                publishers {
+                    postBuildScripts {
+                        onlyIfBuildSucceeds(true)
+                        steps {
+                            shell("BUILD_STATE=success" + p1)
+                        }
                     }
                 }
             }
         }
-    }
-    job.with {
-        publishers {
-            postBuildScripts {
-                onlyIfBuildSucceeds(false)
-                onlyIfBuildFails(true)
-                steps {
-                    shell("BUILD_STATE=failure" + p1)
+        job.with {
+            publishers {
+                postBuildScripts {
+                    onlyIfBuildSucceeds(false)
+                    onlyIfBuildFails(true)
+                    steps {
+                        shell("BUILD_STATE=failure" + p1)
+                    }
                 }
+            }
+        }
+    }else{
+        job.with {
+            steps {
+                shell("BUILD_STATE=pending" + p1)
             }
         }
     }
@@ -580,7 +589,7 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
               """
 cd ${isoBuild}
 cmake -G"Unix Makefiles" ${isoProj}/android -DCMAKE_BUILD_TYPE=Debug -DSOURCE_DIR=${isoCode} -DANDROID_SDK=/home/coffee/android-sdk-linux -DANDROID_NDK=/home/coffee/android-ndk-linux
-cmake --build ${isoBuild}
+cmake --build ${isoBuild} --config ${variant}
               """
             )
         }
@@ -604,10 +613,10 @@ docker run --rm --workdir /build -v ${WORKSPACE}:/build \
         ''' + """-Csrc/cmake/Preload/${descriptor.cmake_preload} \
         -DCMAKE_TOOLCHAIN_FILE=src/cmake/Toolchains/${descriptor.cmake_toolchain} \
         -DCMAKE_INSTALL_PREFIX=out \
-        -DCMAKE_BUILD_TYPE=${variant}""" + '''
+        -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc""" + '''
 docker run --rm --workdir /build -v ${WORKSPACE}:/build \
     -e EMSCRIPTEN=/emsdk_portable/emscripten/master emscripten:v2 \
-    ''' + """cmake --build /build --target ${target}
+    ''' + """cmake --build /build --config ${variant} --target ${target}
 """
             )
         }
@@ -742,6 +751,7 @@ def GetCompileJob(desc, mode, workspace)
     GetSourceStep(desc, sourceSubDir, mode.pipeline, base)
     if(mode.mode != "Release")
     {
+        GetGHStatusTransmitter(base, desc, false, true)
         base.with {
             label(desc.label)
         }
@@ -936,12 +946,12 @@ def GetPipeline(project, target, view_data)
 
     debug_pair.each {
         def stat = (it == debug_pair.last() && release_pair == null)
-        GetGHStatusTransmitter(it, target, stat)
+        GetGHStatusTransmitter(it, target, stat, false)
     }
     if(release_pair != null)
         release_pair.each {
             def stat = (it == release_pair.last())
-            GetGHStatusTransmitter(it, target, stat)
+            GetGHStatusTransmitter(it, target, stat, false)
         }
 
     if(target.platformName == GEN_DOCS)
@@ -978,7 +988,9 @@ for(t in GetTargets()) {
         t.cmake_toolchain = '${WORKSPACE}' + "/src/cmake/Toolchains/${t.cmake_toolchain}"
     }
 
-    SOURCE_STEPS += GetPipeline('Coffee', t, view_data)
+
+    src = GetPipeline('Coffee', t, view_data)
+    SOURCE_STEPS += src
 }
 
 def GetAllJob(source_steps, meta)
