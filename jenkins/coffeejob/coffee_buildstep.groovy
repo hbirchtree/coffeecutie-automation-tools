@@ -34,7 +34,7 @@ BuildTarget[] GetTargets() {
     /* SteamOS builds, use a special Docker environment */
     new BuildTarget(LIN_STMOS, A_X64, "linux && docker && steamos && gcc && amd64",
                    "x86_64-linux-steam.cmake",
-                   "native-linux-generic.toolchain.cmake",
+                   "native-linux-steamos.toolchain.cmake",
                    "Ninja", "", false),
     /* Creates Win32 applications, bog standard,
      * self-contained resources.
