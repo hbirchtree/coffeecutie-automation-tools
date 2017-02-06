@@ -32,7 +32,7 @@ BuildTarget[] GetTargets() {
                    "linux-generic_linux.toolchain.cmake",
                    "Ninja", LINUX_PACKAGING_OPTS + " -DSKIP_HIGHMEM_TESTS=ON"),
     /* SteamOS builds, use a special Docker environment */
-    new BuildTarget(LIN_STMOS, A_X64, "linux ge&& docker && steamos && gcc && amd64",
+    new BuildTarget(LIN_STMOS, A_X64, "linux && docker && steamos && gcc && amd64",
                    "linux-steam.cmake",
                    "linux-steam_linux.toolchain.cmake",
                    "Ninja", "", false),
