@@ -36,7 +36,8 @@ RUN apt-get -qy update && apt-get -qy install \
         cmake ninja-build build-essential gdb \
         steamrt-dev \
         libqt5network5 \
-        wget git lsb-release
+        wget git lsb-release \
+	curl
 
 #Create user directory + group
 RUN groupadd buildusers -g ${USER_ID}

@@ -941,7 +941,7 @@ def GetPipeline(project, target, view_data)
     def final_job = debug_pair.last()
     if(target.platformName != GEN_DOCS)
     {
-        release_pair = GetCompileTestingPair(base, target, inst_rel, inst_dbg.workspace)
+        release_pair = GetCompileTestingPair(base, target, inst_rel, inst_rel.workspace)
         final_job = release_pair.last()
     }
 

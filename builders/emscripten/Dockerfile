@@ -10,7 +10,8 @@ RUN apt-get -qy update && apt-get -qy install \
         wget build-essential git \
         cmake ninja-build \
         python2.7 nodejs \
-        default-jre
+        default-jre \
+	curl
 
 RUN ln -s /usr/bin/python2.7 /usr/bin/python
 
