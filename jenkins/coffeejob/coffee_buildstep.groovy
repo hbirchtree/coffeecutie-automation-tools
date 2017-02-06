@@ -28,39 +28,39 @@ BuildTarget[] GetTargets() {
      * for better cross-compatibility.
      */
     new BuildTarget(LIN_UBNTU, A_X64, "linux && docker && ubuntu && gcc && amd64",
-                   "x86_64-linux-generic.cmake",
-                   "native-linux-generic.toolchain.cmake",
+                   "linux-generic.cmake",
+                   "linux-generic_linux.toolchain.cmake",
                    "Ninja", LINUX_PACKAGING_OPTS + " -DSKIP_HIGHMEM_TESTS=ON"),
     /* SteamOS builds, use a special Docker environment */
-    new BuildTarget(LIN_STMOS, A_X64, "linux && docker && steamos && gcc && amd64",
-                   "x86_64-linux-steam.cmake",
-                   "native-linux-generic.toolchain.cmake",
+    new BuildTarget(LIN_STMOS, A_X64, "linux ge&& docker && steamos && gcc && amd64",
+                   "linux-steam.cmake",
+                   "linux-steam_linux.toolchain.cmake",
                    "Ninja", "", false),
     /* Creates Win32 applications, bog standard,
      * self-contained resources.
      */
     new BuildTarget(WIN_WIN32, A_X64, "windows && vcpp && x64",
-                   "x86_64-windows-generic.cmake",
-                   "x86_64-windows-win32.toolchain.cmake",
+                   "windows-generic.cmake",
+                   "windows-win32_windows.toolchain.cmake",
                    "Visual Studio 14 2015 Win64", "-DSKIP_HIGHMEM_TESTS=ON"),
     /* Windows UWP produces AppX directories for containment */
     new BuildTarget(WIN_MSUWP, A_X64, "windows && win10sdk && x64",
-                   "x86_64-windows-uwp.cmake",
-                   "x86_64-windows-uwp.toolchain.cmake",
+                   "windows-uwp.cmake",
+                   "windows-uwp_windows.toolchain.cmake",
                    "Visual Studio 14 2015 Win64", "", false),
     /* Good old OS X .app directories with some spice,
      * self-contained resources.
      */
     new BuildTarget(MAC_MCOSX, A_X64, "macintosh && clang && x64",
-                   "x86_64-osx-generic.cmake",
-                   "native-macintosh-generic.toolchain.cmake",
+                   "osx-generic.cmake",
+                   "osx-generic_osx.toolchain.cmake",
                    "Ninja", "-DSKIP_HIGHMEM_TESTS=ON"),
     /* Raspberry Pi, using a Docker container
      * Will require a special docker-compose for simplicity with volumes
      */
     new BuildTarget(LIN_RASPI, A_UNI, "linux && docker",
-                  "raspberry.cmake",
-                  "gnueabihf-arm-raspberry.toolchain.cmake",
+                  "linux-raspberry.cmake",
+                  "linux-raspberry-armhf_linux.toolchain.cmake",
                    "Ninja", "-DRASPBERRY_SDK=/raspi-sdk",
                    /*"raspi && native && test_platform"*/, false),
     /* Android on a Docker container, composite project
@@ -71,11 +71,12 @@ BuildTarget[] GetTargets() {
                    "Unix Makefiles", "",
                    /*"android && test_platform"*/, false),
     new BuildTarget(GEN_DOCS, A_UNI, "linux && docker",
-                    "none_docs-none-none.cmake", "native-linux-generic.toolchain.cmake",
+                    "docs-all.cmake", "linux-generic_linux.toolchain.cmake",
                     "Unix Makefiles", "", false, true),
     new BuildTarget(WEB_ASMJS, A_WEB, "linux && docker",
-                    "emscripten.cmake", "js-emscripten.toolchain.cmake",
-                    "Unix Makefiles", "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true)
+                    "js-emscripten.cmake", "js-emscripten.toolchain.cmake",
+                    "Unix Makefiles",
+                    "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true)
         ]
 }
 
