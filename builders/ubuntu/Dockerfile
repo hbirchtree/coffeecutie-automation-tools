@@ -43,7 +43,9 @@ RUN apt-get -qy update && apt-get -qy install \
 	curl
 
 RUN wget -q http://developer.download.nvidia.com/compute/cuda/7.5/Prod/gdk/gdk_linux_amd64_352_79_release.run -O nvidia-gdk.run
-RUN chmod +x nvidia-gdk.run && ./nvidia-gdk.run --installdir=/nvidia-gdk && rm nvidia-gdk.run
+RUN chmod +x nvidia-gdk.run
+RUN ./nvidia-gdk.run --silent --installdir=/nvidia-gdk
+RUN rm nvidia-gdk.run
 
 #Create user directory + group
 RUN groupadd buildusers -g ${USER_ID}
