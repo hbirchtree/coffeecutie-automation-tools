@@ -42,6 +42,9 @@ RUN apt-get -qy update && apt-get -qy install \
         flatpak snapcraft ${EXTRA_PACKAGES} \
 	curl
 
+RUN wget -q http://developer.download.nvidia.com/compute/cuda/7.5/Prod/gdk/gdk_linux_amd64_352_79_release.run -O nvidia-gdk.run
+RUN chmod +x nvidia-gdk.run && ./nvidia-gdk.run && rm nvidia-gdk.run
+
 #Create user directory + group
 RUN groupadd buildusers -g ${USER_ID}
 RUN useradd ${USER} -m -u ${USER_ID}
