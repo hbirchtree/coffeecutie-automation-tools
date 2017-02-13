@@ -544,7 +544,7 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
                 """
 cd ${build_dir}
 cmake ${source_dir} -G'${descriptor.cmake_generator}' -C${descriptor.cmake_preload} ${cmake_args} -DCMAKE_BUILD_TYPE=${variant}
-cmake --build ${build_dir} --target ${cmake_target}
+cmake --build ${build_dir} --target ${cmake_target} --config ${variant}
 """)
             }
         }
@@ -606,6 +606,7 @@ void GetEmscriptenStep(descriptor, job, variant, target)
         steps {
             shell(
             '''
+docker build -t emscripten:v2 src/tools/automation/builders/emscripten/
 docker run --rm --workdir /build -v ${WORKSPACE}:/build \
     -e EMSCRIPTEN=/emsdk_portable/emscripten/master emscripten:v2 \
     cmake /build/src -G"Unix Makefiles" \
