@@ -1,0 +1,18 @@
+FROM ubuntu:trusty
+MAINTAINER H. Birch Tree
+
+ENV USER coffee
+ENV USER_ID 1000
+
+ENV TESTS_VOLUME "/build"
+ENV STEAMRT_GIT "/steam-git"
+ENV STEAMRT_DIR "/steam-runtime"
+
+RUN apt-get -qy update && apt-get -qy install \
+        git dpkg-dev python-debian
+
+RUN git clone https://github.com/ValveSoftware/steam-runtime.git ${STEAMRT_GIT}
+WORKDIR ${STEAMRT_GIT}
+RUN python ${STEAMRT_GIT}/build-runtime.py -r ${STEAMRT_DIR}
+
+ENV STEAM_RUNTIME ${STEAMRT_DIR}
