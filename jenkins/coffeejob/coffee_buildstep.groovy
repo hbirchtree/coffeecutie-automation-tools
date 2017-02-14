@@ -11,6 +11,7 @@ WIN_MSUWP = "Windows-UWP"
 LIN_ANDRD = "Android"
 
 WEB_ASMJS = "Emscripten"
+WEB_NACL = "NaCL"
 
 GEN_DOCS = "Docs"
 
@@ -76,7 +77,10 @@ BuildTarget[] GetTargets() {
     new BuildTarget(WEB_ASMJS, A_WEB, "linux && docker",
                     "js-emscripten.cmake", "js-emscripten.toolchain.cmake",
                     "Unix Makefiles",
-                    "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true)
+                    "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true),
+    new BuildTarget(WEB_NACL, A_WEB, "linux && docker",
+                    "linux-nativeclient.cmake", "linux-nativeclient_linux.toolchain.cmake",
+                    "Ninja", "-DNATIVE_LIBRARY_DIR=/native-libs", false)
         ]
 }
 
@@ -247,7 +251,6 @@ void GetGHStatusTransmitter(job, desc, end, start)
     def code = desc.platformName
     def codeLower = code.toLowerCase()
     def p1 = """
-
 cd src
 BUILD_VARIANT=${code}
 GIT_SHA=`git rev-parse HEAD`
@@ -397,7 +400,8 @@ boolean IsDockerized(platName)
 {
         return (platName == LIN_UBNTU || platName == LIN_STMOS
             || platName == LIN_RASPI || platName == LIN_ANDRD
-            || platName == GEN_DOCS || platName == WEB_ASMJS);
+            || platName == GEN_DOCS || platName == WEB_ASMJS
+            || platName == WEB_NACL);
 }
 
 String GetAutomationDir(sourceDir)
@@ -464,6 +468,15 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
             steps {
                 environmentVariables {
                     env('EMSCRIPTEN', '/emsdk_portable')
+                }
+            }
+        }
+    } else if(descriptor.platformName == WEB_NACL)
+        docker_dir = "native-client"
+        job.with {
+            steps {
+                environmentVariables {
+                    env('NACL_ROOT', '/home/coffee/nacl_sdk')
                 }
             }
         }
