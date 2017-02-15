@@ -480,7 +480,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
                     verbose()
                     volume(buildDir, "/build")
                     volume(sourceDir, "/source")
-                    volume(sourceDir + "/" + "nativelib", "/native-lib")
+                    volume(buildDir + "/" + "nativelib", "/native-lib")
                 }
             }
         }
