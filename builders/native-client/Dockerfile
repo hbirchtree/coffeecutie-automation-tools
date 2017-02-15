@@ -5,7 +5,8 @@ RUN dpkg --add-architecture i386
 
 RUN apt-get -qy update && apt-get -qy install \
         build-essential libc6:i386 \
-        cmake \
+        cmake git lsb-release curl \
+        libqt5network5 \
         wget unzip python
 
 RUN adduser coffee
@@ -19,5 +20,3 @@ RUN unzip nacl_sdk.zip
 RUN $HOME/nacl_sdk/naclsdk update
 
 ENV NACL_ROOT "$HOME/nacl_sdk/pepper_49"
-
-USER root
