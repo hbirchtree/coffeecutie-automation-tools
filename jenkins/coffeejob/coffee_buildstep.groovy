@@ -80,7 +80,7 @@ BuildTarget[] GetTargets() {
                     "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true),
     new BuildTarget(WEB_NACL, A_WEB, "linux && docker",
                     "linux-nativeclient.cmake", "linux-nativeclient_linux.toolchain.cmake",
-                    "Ninja", "-DNATIVE_LIBRARY_DIR=/native-libs", false)
+                    "Ninja", "-DNATIVE_LIBRARY_DIR=/nativelib/NaCL", false)
         ]
 }
 
@@ -365,7 +365,7 @@ void GetExtraSourceSteps(platformName, j)
     {
         SubdirPath = 'raspi-sdk'
         RepoUrl = 'https://github.com/hbirchtree/raspberry-sysroot.git'
-    }else if(platformName == WEB_ASMJS)
+    }else if(platformName == WEB_ASMJS || platformName == WEB_NACL)
     {
         SubdirPath = 'nativelib'
         RepoUrl = 'https://github.com/hbirchtree/native-library-bundle.git'
@@ -477,6 +477,15 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
             steps {
                 environmentVariables {
                     env('NACL_ROOT', '/home/coffee/nacl_sdk')
+                }
+            }
+            wrappers {
+                buildInDocker {
+                    dockerfile(GetAutomationDir(sourceDir)+GetDockerBuilder("native-client"), docker_file)
+                    verbose()
+                    volume(buildDir, "/build")
+                    volume(sourceDir, "/source")
+                    volume(sourceDir + "/" + "nativelib", "/native-lib")
                 }
             }
         }
