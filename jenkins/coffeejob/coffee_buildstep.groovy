@@ -471,7 +471,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
                 }
             }
         }
-    } else if(descriptor.platformName == WEB_NACL)
+    } else if(descriptor.platformName == WEB_NACL) {
         docker_dir = "native-client"
         job.with {
             steps {
