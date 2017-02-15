@@ -474,11 +474,6 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
     } else if(descriptor.platformName == WEB_NACL) {
         docker_dir = "native-client"
         job.with {
-            steps {
-                environmentVariables {
-                    env('NACL_ROOT', '/home/coffee/nacl_sdk')
-                }
-            }
             wrappers {
                 buildInDocker {
                     dockerfile(GetAutomationDir(sourceDir)+GetDockerBuilder("native-client"), docker_file)

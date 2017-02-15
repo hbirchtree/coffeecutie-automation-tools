@@ -19,4 +19,4 @@ RUN wget \
 RUN unzip nacl_sdk.zip
 RUN $HOME/nacl_sdk/naclsdk update
 
-ENV NACL_ROOT "$HOME/nacl_sdk/pepper_49"
+ENV NACL_ROOT "/home/coffee/nacl_sdk/pepper_49"
