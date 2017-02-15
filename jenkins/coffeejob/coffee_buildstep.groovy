@@ -80,7 +80,7 @@ BuildTarget[] GetTargets() {
                     "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true),
     new BuildTarget(WEB_NACL, A_WEB, "linux && docker",
                     "linux-nativeclient.cmake", "linux-nativeclient_linux.toolchain.cmake",
-                    "Ninja", "-DNATIVE_LIBRARY_DIR=/nativelib/NaCL", false)
+                    "Ninja", "", false)
         ]
 }
 
@@ -484,6 +484,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
                 }
             }
         }
+        return;
     }else if(descriptor.platformName == GEN_DOCS)
         docker_dir = "doc-generator"
     else
