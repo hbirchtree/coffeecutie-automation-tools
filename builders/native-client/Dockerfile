@@ -6,7 +6,7 @@ RUN dpkg --add-architecture i386
 RUN apt-get -qy update && apt-get -qy install \
         build-essential libc6:i386 \
         cmake git lsb-release curl \
-        libqt5network5 \
+        libqt5network5 ninja-build \
         wget unzip python
 
 RUN adduser coffee
