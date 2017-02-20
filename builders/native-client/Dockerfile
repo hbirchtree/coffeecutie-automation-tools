@@ -4,8 +4,8 @@ MAINTAINER H. Birch Tree
 RUN dpkg --add-architecture i386
 
 RUN apt-get -qy update && apt-get -qy install \
-        build-essential libc6:i386 \
-        cmake \
+        build-essential git libc6:i386 \
+        cmake lsb-release curl libqt5network5 \
         wget unzip python
 
 RUN adduser coffee
