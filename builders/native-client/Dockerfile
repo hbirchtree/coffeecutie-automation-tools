@@ -4,9 +4,9 @@ MAINTAINER H. Birch Tree
 RUN dpkg --add-architecture i386
 
 RUN apt-get -qy update && apt-get -qy install \
-        build-essential git libc6:i386 \
-        cmake ninja-build \
-        lsb-release curl libqt5network5 \
+        build-essential libc6:i386 \
+        cmake git lsb-release curl \
+        libqt5network5 ninja-build \
         wget unzip python
 
 RUN adduser coffee
@@ -19,6 +19,4 @@ RUN wget \
 RUN unzip nacl_sdk.zip
 RUN $HOME/nacl_sdk/naclsdk update
 
-ENV NACL_ROOT "$HOME/nacl_sdk/pepper_49"
-
-USER root
+ENV NACL_ROOT "/home/coffee/nacl_sdk/pepper_49"

@@ -11,6 +11,7 @@ WIN_MSUWP = "Windows-UWP"
 LIN_ANDRD = "Android"
 
 WEB_ASMJS = "Emscripten"
+WEB_NACL = "NaCL"
 
 GEN_DOCS = "Docs"
 
@@ -76,7 +77,10 @@ BuildTarget[] GetTargets() {
     new BuildTarget(WEB_ASMJS, A_WEB, "linux && docker",
                     "js-emscripten.cmake", "js-emscripten.toolchain.cmake",
                     "Unix Makefiles",
-                    "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true)
+                    "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true),
+    new BuildTarget(WEB_NACL, A_WEB, "linux && docker",
+                    "linux-nativeclient.cmake", "linux-nativeclient_linux.toolchain.cmake",
+                    "Ninja", "", false)
         ]
 }
 
@@ -247,7 +251,6 @@ void GetGHStatusTransmitter(job, desc, end, start)
     def code = desc.platformName
     def codeLower = code.toLowerCase()
     def p1 = """
-
 cd src
 BUILD_VARIANT=${code}
 GIT_SHA=`git rev-parse HEAD`
@@ -362,7 +365,7 @@ void GetExtraSourceSteps(platformName, j)
     {
         SubdirPath = 'raspi-sdk'
         RepoUrl = 'https://github.com/hbirchtree/raspberry-sysroot.git'
-    }else if(platformName == WEB_ASMJS)
+    }else if(platformName == WEB_ASMJS || platformName == WEB_NACL)
     {
         SubdirPath = 'nativelib'
         RepoUrl = 'https://github.com/hbirchtree/native-library-bundle.git'
@@ -397,7 +400,8 @@ boolean IsDockerized(platName)
 {
         return (platName == LIN_UBNTU || platName == LIN_STMOS
             || platName == LIN_RASPI || platName == LIN_ANDRD
-            || platName == GEN_DOCS || platName == WEB_ASMJS);
+            || platName == GEN_DOCS || platName == WEB_ASMJS
+            || platName == WEB_NACL);
 }
 
 String GetAutomationDir(sourceDir)
@@ -467,6 +471,20 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
                 }
             }
         }
+    } else if(descriptor.platformName == WEB_NACL) {
+        docker_dir = "native-client"
+        job.with {
+            wrappers {
+                buildInDocker {
+                    dockerfile(GetAutomationDir(sourceDir)+GetDockerBuilder("native-client"), docker_file)
+                    verbose()
+                    volume(buildDir, "/build")
+                    volume(sourceDir, "/source")
+                    volume(buildDir + "/" + "nativelib", "/nativelib")
+                }
+            }
+        }
+        return;
     }else if(descriptor.platformName == GEN_DOCS)
         docker_dir = "doc-generator"
     else
