@@ -5,6 +5,7 @@ PROJECT_NAME = "Coffee"
 LIN_UBNTU = "Ubuntu"
 LIN_STMOS = "SteamOS"
 LIN_RASPI = "Raspberry-Pi"
+LIN_MAEMO = "Maemo"
 MAC_MCOSX = "Mac-OS-X"
 WIN_WIN32 = "Windows"
 WIN_MSUWP = "Windows-UWP"
@@ -80,8 +81,11 @@ BuildTarget[] GetTargets() {
                     "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true),
     new BuildTarget(WEB_NACL, A_WEB, "linux && docker",
                     "linux-nativeclient.cmake", "linux-nativeclient_linux.toolchain.cmake",
-                    "Ninja", "", false)
+                    "Ninja", "", false),
+    new BuildTarget(LIN_MAEMO, A_ARMV7A, "linux && docker",
+    	            "", "", "", "", false)
         ]
+
 }
 
 class BuildTarget
@@ -626,7 +630,7 @@ void GetEmscriptenStep(descriptor, job, variant, target)
             '''
 docker build -t emscripten:v2 src/tools/automation/builders/emscripten/
 docker run --rm --workdir /build -v ${WORKSPACE}:/build \
-    -e EMSCRIPTEN=/emsdk_portable/emscripten/master emscripten:v2 \
+    -e EMSCRIPTEN=/emsdk_portable/emscripten/master hbirch/emscripten:v2 \
     cmake /build/src -G"Unix Makefiles" \
         -DNATIVE_LIB_ROOT=nativelib \
         -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master \
@@ -643,6 +647,28 @@ docker run --rm --workdir /build -v ${WORKSPACE}:/build \
     }
 }
 
+void GetMaemoStep(descriptor, job, variant, target)
+{
+    job.with {
+        steps {
+            shell(
+            '''
+docker run --rm -ti \
+-v ${WORKSPACE}:/maemo/build \
+-v ${WORKSPACE}/src:/maemo/source \
+hbirch/maemo-builder:v3 \
+''' + """/bin/sh -c ' \
+cd /build && \
+cmake -DCMAKE_TOOLCHAIN_FILE=/source/cmake/Toolchains/linux-maemo-armv7_linux.toolchain.cmake \
+	-C/source/cmake/Preload/linux-maemo.cmake \
+	-DCMAKE_INSTALL_PREFIX=out /source && \
+cmake --build /build --target ${target} --config ${variant}'
+"""
+            )
+        }
+    }
+}
+
 void GetArtifactingStep(job, releaseName, buildDir, descriptor)
 {
     def artifact_glob = "out/**"
@@ -650,7 +676,7 @@ void GetArtifactingStep(job, releaseName, buildDir, descriptor)
     if(descriptor.platformName == GEN_DOCS)
     {
         artifact_glob = "out/docs/html/**"
-    }
+    }else if(descriptor.platformName == LIN_MAEMO)
 
     if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
     {
@@ -784,8 +810,16 @@ def GetCompileJob(desc, mode, workspace)
         }
         mode.compileLabel = desc.release_label
     }
-    if(desc.platformName != WEB_ASMJS)
+    if(desc.platformName == WEB_ASMJS)
     {
+        /* Emscripten build does not work with Jenkins' Docker support
+         * We need a better alternative.
+         */
+        GetEmscriptenStep(desc, base, mode.mode, "install")
+    }else if(desc.platformName == LIN_MAEMO)
+    {
+        GetMaemoStep(desc, base, mode.mode, "install");
+    }else{
         GetDockerDataLinux(desc, base, mode.sourceDir, mode.buildDir,
                            mode.buildDir, metaDir)
         if(desc.platformName == LIN_ANDRD)
@@ -793,11 +827,6 @@ def GetCompileJob(desc, mode, workspace)
                               mode.buildDir, metaDir)
         else
             GetCMakeSteps(desc, base, mode.mode, 0, mode.sourceDir, mode.buildDir)
-    }else{
-        /* Emscripten build does not work with Jenkins' Docker support
-         * We need a better alternative.
-         */
-        GetEmscriptenStep(desc, base, mode.mode, "install")
     }
 
     return base
