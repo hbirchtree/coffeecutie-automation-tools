@@ -662,7 +662,7 @@ cd /build && \
 cmake -DCMAKE_TOOLCHAIN_FILE=/source/cmake/Toolchains/linux-maemo-armv7_linux.toolchain.cmake \
 	-C/source/cmake/Preload/linux-maemo.cmake \
 	-DCMAKE_INSTALL_PREFIX=out /source && \
-make -j7'
+make -j7 ${target}'
 """
             )
         }
