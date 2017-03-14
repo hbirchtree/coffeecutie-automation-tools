@@ -676,7 +676,7 @@ void GetArtifactingStep(job, releaseName, buildDir, descriptor)
     if(descriptor.platformName == GEN_DOCS)
     {
         artifact_glob = "out/docs/html/**"
-    }else if(descriptor.platformName == LIN_MAEMO)
+    }
 
     if(descriptor.platformName != WIN_WIN32 && descriptor.platformName != WIN_MSUWP)
     {
