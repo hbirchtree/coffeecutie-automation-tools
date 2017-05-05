@@ -552,8 +552,8 @@ void GetCMakeSteps(descriptor, job, variant, level, source_dir, build_dir)
         job.with {
             steps {
                 environmentVariables {
-                    env('CC', 'clang-3.8')
-                    env('CXX', 'clang++-3.8')
+                    env('CC', 'clang')
+                    env('CXX', 'clang++')
                 }
             }
         }
