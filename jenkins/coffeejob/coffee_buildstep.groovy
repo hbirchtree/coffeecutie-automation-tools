@@ -611,7 +611,7 @@ void GetCMakeMultiStep(descriptor, job, variant, level, source_dir, build_dir, m
             shell(
               """
 cd ${isoBuild}
-cmake -G"Unix Makefiles" ${isoProj}/android -DCMAKE_BUILD_TYPE=Debug -DSOURCE_DIR=${isoCode} -DANDROID_SDK=/home/coffee/android-sdk-linux -DANDROID_NDK=/home/coffee/android-ndk-linux
+cmake -G"Unix Makefiles" ${isoProj}/android -DANDROID_SDK=/home/coffee/android-sdk-linux -DANDROID_NDK=/home/coffee/android-ndk-linux
 cmake --build ${isoBuild} --config ${variant}
               """
             )
