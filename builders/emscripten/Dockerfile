@@ -24,6 +24,7 @@ RUN /emsdk_portable/emsdk update
 RUN /emsdk_portable/emsdk install latest
 
 ENV PATH=$PATH:/emsdk_portable:/emsdk_portable/clang/fastcomp/build_master_64/bin:/emsdk_portable/node/4.1.1_64bit/bin:/emsdk_portable/emscripten/master
+ENV EMSCRIPTEN_ROOT=/emsdk_portable/emscripten/master
 
 RUN adduser -u 1000 coffee
 USER coffee

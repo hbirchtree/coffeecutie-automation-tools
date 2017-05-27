@@ -40,7 +40,7 @@ RUN apt-get -qy update && apt-get -qy install \
         libqt5network5 \
         wget git lsb-release \
         flatpak snapcraft ${EXTRA_PACKAGES} \
-	curl
+	curl lcov
 
 RUN wget -q http://developer.download.nvidia.com/compute/cuda/7.5/Prod/gdk/gdk_linux_amd64_352_79_release.run -O nvidia-gdk.run
 RUN chmod +x nvidia-gdk.run
