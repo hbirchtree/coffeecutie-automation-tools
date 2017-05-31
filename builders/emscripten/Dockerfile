@@ -18,7 +18,7 @@ RUN ln -s /usr/bin/python2.7 /usr/bin/python
 WORKDIR /
 RUN wget https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz \
     && tar -zxvf emsdk-portable.tar.gz \
-    && rm emsdk-portable.tar.gz
+    && rm emsdk-portable.tar.gz \
     && [ -d /emsdk-portable ] && mv /emsdk-portable /emsdk_portable
 
 RUN /emsdk_portable/emsdk update
