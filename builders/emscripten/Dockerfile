@@ -1,11 +1,16 @@
 #
 # This Dockerfile sets up an environment for building with emscripten
-# NOTE: Untested
 #
 
 FROM ubuntu:xenial
 MAINTAINER H. Birch Tree
 
+ENV USNAME="coffee"
+ENV EMSDK_DIR="/home/coffee/emsdk_portable"
+
+####
+# Installing some dependencies
+####
 RUN apt-get -qy update && apt-get -qy install \
         wget build-essential git \
         cmake ninja-build \
@@ -13,22 +18,32 @@ RUN apt-get -qy update && apt-get -qy install \
         default-jre \
 	curl
 
+####
+# Get the emsdk
+####
 RUN ln -s /usr/bin/python2.7 /usr/bin/python
 
-WORKDIR /
+RUN adduser -u 1000 $USNAME
+USER $USNAME
+
+WORKDIR /home/$USNAME
 RUN wget https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz \
     && tar -zxvf emsdk-portable.tar.gz \
     && rm emsdk-portable.tar.gz \
-    && [ -d /emsdk-portable ] && mv /emsdk-portable /emsdk_portable
+    && [ -d emsdk-portable ] && mv emsdk-portable $EMSDK_DIR
 
-RUN /emsdk_portable/emsdk update
-RUN /emsdk_portable/emsdk install latest
+####
+# Installing latest Emscripten version
+####
 
-ENV PATH=$PATH:/emsdk_portable:/emsdk_portable/clang/fastcomp/build_master_64/bin:/emsdk_portable/node/4.1.1_64bit/bin:/emsdk_portable/emscripten/master
-ENV EMSCRIPTEN_ROOT=/emsdk_portable/emscripten/master
+RUN $EMSDK_DIR/emsdk update
+RUN $EMSDK_DIR/emsdk install latest
 
-RUN adduser -u 1000 coffee
-USER coffee
-RUN /emsdk_portable/emsdk activate latest
+ENV PATH=$PATH:$EMSDK_DIR:$EMSDK_DIR/clang/fastcomp/build_master_64/bin:$EMSDK_DIR/node/4.1.1_64bit/bin:$EMSDK_DIR/emscripten/master
+ENV EMSCRIPTEN_ROOT=$EMSDK_DIR/emscripten/master
+
+RUN $EMSDK_DIR/emsdk activate latest
+
+WORKDIR /
 
 VOLUME ["/code","/build/output"]

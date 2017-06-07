@@ -78,7 +78,7 @@ BuildTarget[] GetTargets() {
     new BuildTarget(WEB_ASMJS, A_WEB, "linux && docker",
                     "js-emscripten.cmake", "js-emscripten.toolchain.cmake",
                     "Unix Makefiles",
-                    "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true),
+                    "-DNATIVE_LIB_ROOT=nativelib -DEMSCRIPTEN_ROOT_PATH=/home/coffee/emsdk_portable/emscripten/master -DSDL2_LIBRARY=/home/coffee/.emscripten_cache/asmjs/sdl2.bc", true),
     new BuildTarget(WEB_NACL, A_WEB, "linux && docker",
                     "linux-nativeclient.cmake", "linux-nativeclient_linux.toolchain.cmake",
                     "Ninja", "", false),
@@ -471,7 +471,7 @@ void GetDockerDataLinux(descriptor, job, sourceDir, buildDir, workspaceRoot, met
         job.with {
             steps {
                 environmentVariables {
-                    env('EMSCRIPTEN', '/emsdk_portable')
+                    env('EMSCRIPTEN', '/home/coffee/emsdk_portable')
                 }
             }
         }
@@ -630,10 +630,10 @@ void GetEmscriptenStep(descriptor, job, variant, target)
             '''
 docker build -t emscripten:v2 src/tools/automation/builders/emscripten/
 docker run --rm --workdir /build -v ${WORKSPACE}:/build \
-    -e EMSCRIPTEN=/emsdk_portable/emscripten/master hbirch/emscripten:v2 \
+    -e EMSCRIPTEN=/home/coffee/emsdk_portable/emscripten/master hbirch/emscripten:v2 \
     cmake /build/src -G"Unix Makefiles" \
         -DNATIVE_LIB_ROOT=nativelib \
-        -DEMSCRIPTEN_ROOT_PATH=/emsdk_portable/emscripten/master \
+        -DEMSCRIPTEN_ROOT_PATH=/home/coffee/emsdk_portable/emscripten/master \
         ''' + """-Csrc/cmake/Preload/${descriptor.cmake_preload} \
         -DCMAKE_TOOLCHAIN_FILE=src/cmake/Toolchains/${descriptor.cmake_toolchain} \
         -DCMAKE_INSTALL_PREFIX=out \
