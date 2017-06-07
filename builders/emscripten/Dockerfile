@@ -44,6 +44,8 @@ ENV EMSCRIPTEN_ROOT=$EMSDK_DIR/emscripten/master
 
 RUN $EMSDK_DIR/emsdk activate latest
 
+RUN ln -s $EMSDK_DIR/emscripten/* $EMSDK_DIR/emscripten/master
+
 WORKDIR /
 
 VOLUME ["/code","/build/output"]
