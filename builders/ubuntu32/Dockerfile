@@ -40,7 +40,8 @@ RUN apt-get -qy update && apt-get -qy install \
         libqt5network5 \
         wget git lsb-release \
         flatpak snapcraft ${EXTRA_PACKAGES} \
-	curl lcov
+	curl lcov \
+	squashfs-tools
 
 RUN wget -q http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_340_29_gdk_linux_32.run -O nvidia-gdk.run
 RUN chmod +x nvidia-gdk.run
