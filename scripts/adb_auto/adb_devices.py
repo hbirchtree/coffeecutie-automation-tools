@@ -44,10 +44,8 @@ class device:
     def unlock_device(self):
         self.execute(["shell", "input", "keyevent", "82"])
 
-
     def lock_device(self):
         self.execute(["shell", "input", "keyevent", "26"])
-
 
     def get_screenshot(self,target):
         dev_location = "/sdcard/screenshot.png";
@@ -58,10 +56,8 @@ class device:
         out = self.execute(["shell","rm %s" % dev_location]);
         self.conditional_print(out)
 
-
     def display_logcat(self):
         adb_dev_exec(self.dev,["logcat"], live_output=True);
-
 
     def get_installed_packages(self):
         out = self.execute(["shell","pm list packages"]).split('\n');
@@ -70,8 +66,10 @@ class device:
         out.remove('');
         return out;
 
-
     def launch_app(self,pkg):
+        # Before launching, unlock the device
+        self.unlock_device()
+
         launcher = ""
         pkg_desc = self.execute(["shell","pm dump %s" % pkg]).split('\n');
         for i in range(len(pkg_desc)):
@@ -85,29 +83,10 @@ class device:
         else:
             self.conditional_print("Failed to launch application, could not find intent");
 
-
     def stop_app(self, pkg):
         print(self.execute(["shell", "am", "force-stop", pkg]))
-
-        # processes = self.execute(["shell", "ps"])
-        #
-        # end = processes.find(pkg)
-        # start = 0
-        # while start >= 0:
-        #     new_start = processes.find("\n", start)
-        #     if new_start > end:
-        #         end = new_start
-        #         break
-        #     start = new_start + 1
-        #
-        # target_proc = processes[start:end]
-        # print(target_proc)
-        # target_proc = [e for e in target_proc.split(" ") if len(e) > 0]
-        #
-        # assert(len(target_proc) > 2)
-        #
-        # self.execute(["shell", "kill", target_proc[1]])
-
+        # Lock device afterwards
+        self.lock_device()
 
 def get_num_devices():
     return len(adb_get_devices());

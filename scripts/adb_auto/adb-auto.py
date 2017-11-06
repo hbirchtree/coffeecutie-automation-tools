@@ -10,6 +10,7 @@ if __name__ == "__main__":
                           description="Android automation tool")
 
     args.add_argument("command", choices=["install", "info", "start", "stop",
+                                          "lock", "unlock", "simulate",
                                           "list-devices", "screenshot"])
     args.add_argument("extra_args", nargs="*")
 
@@ -47,6 +48,10 @@ if __name__ == "__main__":
         device = adb.get_dev(dev_uuid)
         device.stop_app(activity_name)
 
+    def simulate_input(dev_uuid):
+        device = adb.get_dev(dev_uuid)
+        print(device.execute(["shell", "input"] + args.extra_args))
+
     if args.command == "list-devices":
         for uuid in adb.adb_get_devices():
             print(uuid)
@@ -82,5 +87,11 @@ if __name__ == "__main__":
                 stop_activity(uuid, args.extra_args[0])
         else:
             stop_activity(args.uuid, args.extra_args[0])
+    elif args.command == "simulate":
+        if args.uuid is None:
+            for uuid in adb.adb_get_devices():
+                simulate_input(uuid)
+        else:
+            simulate_input(args.uuid)
 
     exit(0)
