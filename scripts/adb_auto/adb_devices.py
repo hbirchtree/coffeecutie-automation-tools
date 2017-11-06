@@ -33,6 +33,22 @@ class device:
         return adb_dev_exec(self.dev,cmd);
 
 
+    def get_screen_state(self):
+        state = self.execute(["shell", "dumpsys", "usagestats"])
+
+        start = state.index("mScreenOn") + len("mScreenOn") + 1
+        end = state.index("\n", start)
+        state = state[start:end]
+        return state == "false"
+
+    def unlock_device(self):
+        self.execute(["shell", "input", "keyevent", "82"])
+
+
+    def lock_device(self):
+        self.execute(["shell", "input", "keyevent", "26"])
+
+
     def get_screenshot(self,target):
         dev_location = "/sdcard/screenshot.png";
         out = self.execute(["shell","screencap -p %s" % dev_location]);
@@ -70,12 +86,37 @@ class device:
             self.conditional_print("Failed to launch application, could not find intent");
 
 
+    def stop_app(self, pkg):
+        print(self.execute(["shell", "am", "force-stop", pkg]))
+
+        # processes = self.execute(["shell", "ps"])
+        #
+        # end = processes.find(pkg)
+        # start = 0
+        # while start >= 0:
+        #     new_start = processes.find("\n", start)
+        #     if new_start > end:
+        #         end = new_start
+        #         break
+        #     start = new_start + 1
+        #
+        # target_proc = processes[start:end]
+        # print(target_proc)
+        # target_proc = [e for e in target_proc.split(" ") if len(e) > 0]
+        #
+        # assert(len(target_proc) > 2)
+        #
+        # self.execute(["shell", "kill", target_proc[1]])
+
+
 def get_num_devices():
     return len(adb_get_devices());
 
 
-def get_dev(index=0):
+def get_dev(uuid):
     try:
-        return device(adb_get_devices()[index]);
+        if uuid not in adb_get_devices():
+            raise IndexError()
+        return device(uuid);
     except IndexError:
         return None
