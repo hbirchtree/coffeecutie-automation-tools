@@ -22,9 +22,16 @@ if __name__ == "__main__":
 
     def display_device(dev_uuid):
         device = adb.get_dev(dev_uuid)
+        abi_string = ""
+        for abi in device.abi_support:
+            abi_string += abi + ","
+
+        if len(abi_string) > 0:
+            abi_string = abi_string[:abi_string.rfind(",")]
+
         print(
             """uuid=%s;abi=%s;sdk=%s;sdk-rel=%s;board=%s;platform=%s;name=%s"""
-            % (device.dev, device.abi_support, device.sdk_ver, device.sdk_rel,
+            % (device.dev, abi_string, device.sdk_ver, device.sdk_rel,
                device.board, device.platform, device.name))
 
     def screenshot_device(dev_uuid, target):
