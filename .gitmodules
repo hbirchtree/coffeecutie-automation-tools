@@ -1,0 +1,3 @@
+[submodule "scripts/adb_auto"]
+	path = scripts/adb_auto
+	url = https://github.com/hbirchtree/adb-automator.git
