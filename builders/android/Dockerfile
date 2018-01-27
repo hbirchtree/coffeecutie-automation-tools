@@ -9,7 +9,7 @@ MAINTAINER H. Birch Tree
 
 ARG USERNAME="coffee"
 
-ENV ndkver="15c"
+ENV ndkver="14b"
 ENV sdkver="24.4.1"
 
 ENV ANDROID_SDK="/home/${USERNAME}/android-sdk-linux"
@@ -20,11 +20,15 @@ ENV ANDROID_HOME="/home/${USERNAME}/android-sdk-linux"
 RUN dpkg --add-architecture i386
 RUN apt-get -qy update && apt-get -qy install \
 	openjdk-8-jdk-headless \
-	mercurial git cmake swig openssl ninja-build make \
-	nano libc6:i386 libstdc++6:i386 wget \
-	ant imagemagick unzip \
-	libqt5network5 lsb-release xz-utils \
-	curl
+	git openssl ninja-build make \
+	libc6:i386 libstdc++6:i386 wget \
+	imagemagick unzip \
+	lsb-release xz-utils
+
+RUN wget https://cmake.org/files/v3.10/cmake-3.10.2-Linux-x86_64.sh\
+	 -O cmake.sh && \
+	chmod +x cmake.sh && \
+	./cmake.sh --prefix=/usr/local --skip-license --exclude-subdir
 
 # Create users for dev
 RUN useradd ${USERNAME} -m -u 1000
