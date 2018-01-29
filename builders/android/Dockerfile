@@ -9,8 +9,10 @@ MAINTAINER H. Birch Tree
 
 ARG USERNAME="coffee"
 
-ENV ndkver="16b"
-ENV sdkver="24.4.1"
+ENV CMAKE_VER="3.10"
+ENV CMAKE_RELVER="3.10.2"
+ENV ANDK_VER="16b"
+ENV ASDK_VER="24.4.1"
 
 ENV ANDROID_SDK="/home/${USERNAME}/android-sdk-linux"
 ENV ANDROID_NDK="/home/${USERNAME}/android-ndk-linux"
@@ -25,7 +27,7 @@ RUN apt-get -qy update && apt-get -qy install \
 	imagemagick unzip \
 	lsb-release xz-utils
 
-RUN wget https://cmake.org/files/v3.10/cmake-3.10.2-Linux-x86_64.sh\
+RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
 	 -O cmake.sh && \
 	chmod +x cmake.sh && \
 	./cmake.sh --prefix=/usr/local --skip-license --exclude-subdir
@@ -40,14 +42,14 @@ USER ${USERNAME}
 # Download SDK, NDK and fix the SDK
 # We remove the NDK platforms we do not intend to use
 RUN \
-	wget -q https://dl.google.com/android/repository/android-ndk-r${ndkver}-linux-x86_64.zip \
+	wget -q https://dl.google.com/android/repository/android-ndk-r${ANDK_VER}-linux-x86_64.zip \
 		-O android-ndk-linux-x86_64.zip && \
 	unzip android-ndk-linux-x86_64.zip && \
-	mv android-ndk-r${ndkver} android-ndk-linux && \
+	mv android-ndk-r${ANDK_VER} android-ndk-linux && \
 	rm android-ndk-linux-x86_64.zip && \
 	\
 	\
-	wget -q http://dl.google.com/android/android-sdk_r${sdkver}-linux.tgz \
+	wget -q http://dl.google.com/android/android-sdk_r${ASDK_VER}-linux.tgz \
 		-O android-sdk.tgz && \
 	tar xf android-sdk.tgz && \
 	/bin/bash -c "( sleep 5 && while [ 1 ]; do sleep 1; echo y; done ) |\
@@ -63,7 +65,7 @@ RUN \
 		${ANDROID_NDK}/platforms/android-17 \
 		${ANDROID_NDK}/platforms/android-18 \
 		${ANDROID_NDK}/platforms/android-22 \
-		${ANDROID_NDK}/platforms/android-23
+		${ANDROID_NDK}/platforms/android-23 || true
 
 # Install some script-sauce to create our dev environment
 WORKDIR /home/${USERNAME}
