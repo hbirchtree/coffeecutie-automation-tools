@@ -9,7 +9,7 @@ MAINTAINER H. Birch Tree
 
 ARG USERNAME="coffee"
 
-ENV ndkver="14b"
+ENV ndkver="16b"
 ENV sdkver="24.4.1"
 
 ENV ANDROID_SDK="/home/${USERNAME}/android-sdk-linux"
