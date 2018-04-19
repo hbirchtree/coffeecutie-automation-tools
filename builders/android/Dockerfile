@@ -54,7 +54,7 @@ RUN \
 	tar xf android-sdk.tgz && \
 	/bin/bash -c "( sleep 5 && while [ 1 ]; do sleep 1; echo y; done ) |\
 		 android-sdk-linux/tools/android update sdk -s -a -u \
-			--filter 'tools,build-tools-25.0.0,platform-tools,android-24'" && \
+			--filter 'tools,build-tools-26.0.2,platform-tools,android-24,android-26'" && \
 	rm android-sdk.tgz && \
 	rm -r \
 		${ANDROID_NDK}/platforms/android-12 \
