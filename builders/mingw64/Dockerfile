@@ -3,12 +3,11 @@
 #
 #
 
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 MAINTAINER H. Birch Tree
 
 RUN apt-get -qy update && apt-get -qy install \
         git nano wget \
-        mercurial \
         cmake ninja-build \
         mingw-w64
 
@@ -21,17 +20,7 @@ WORKDIR /home/coffee
 RUN mkdir -p project bridge build/bin build/libs build/out
 USER root
 
-# Check out source for SDL2
-RUN mkdir -p /dependencies/SDL/build
-RUN mkdir -p /dependencies/SDL/source
-RUN hg clone https://hg.libsdl.org/SDL /dependencies/SDL/source
-
-# Check out source for openal-soft
-RUN mkdir -p /dependencies/openal/build
-RUN mkdir -p /dependencies/openal/source
-RUN git clone https://github.com/kcat/openal-soft.git /dependencies/openal/source
-
-# Set environment variables for SDL2
+# Set environment variables for compiler toolchain
 ENV CC=x86_64-w64-mingw32-gcc
 ENV CXX=x86_64-w64-mingw32-g++
 ENV AS=x86_64-w64-mingw32-as
