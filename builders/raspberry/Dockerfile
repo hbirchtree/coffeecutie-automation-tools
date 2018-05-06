@@ -50,9 +50,7 @@ RUN useradd ${USER} -m -u ${USER_ID}
 
 WORKDIR /home/${USER}
 USER ${USER}
-RUN mkdir -p    ${PROJECT_VOLUME} \
-                bridge \
-                ${BUILD_VOLUME}/out
+RUN mkdir -p ${PROJECT_VOLUME} bridge ${BUILD_VOLUME}/out
 
 VOLUME ["${PROJECT_VOLUME}", "${BUILD_VOLUME}", "${BUILD_VOLUME}/out", "/home/${USER}/bridge", "${RASPBERRY_SDK_LOCATION}"]
 

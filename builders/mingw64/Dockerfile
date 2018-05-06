@@ -1,6 +1,5 @@
 #
-# An environment for compiling MinGW64 Windows builds
-#
+# Builds using GCC 7.x on Bionic
 #
 
 FROM ubuntu:bionic

@@ -12,11 +12,6 @@ ENV USER_ID 1000
 ENV PROJECT_VOLUME "/home/${USER}/project"
 ENV BUILD_VOLUME "/home/${USER}/build"
 
-ENV PRELOAD_SPEC none_docs-none-none
-
-ENV TOOLCHAIN_FILE ${PROJECT_VOLUME}/cmake/Toolchains/native-linux-generic.toolchain.cmake
-ENV PRELOAD_FILE ${PROJECT_VOLUME}/cmake/Preload/${PRELOAD_SPEC}.cmake
-
 RUN apt-get -qy update && apt-get -qy install \
         cmake build-essential \
         doxygen graphviz \
@@ -34,4 +29,3 @@ RUN mkdir -p ${PROJECT_VOLUME} ${BUILD_VOLUME} ${BUILD_VOLUME}/out
 WORKDIR ${BUILD_VOLUME}
 
 VOLUME ["${PROJECT_VOLUME}","${BUILD_VOLUME}","${BUILD_VOLUME}/out"]
-CMD ["/bin/bash","-c","cmake -C${PRELOAD_FILE} ${PROJECT_VOLUME} && cmake --build . --target install"]

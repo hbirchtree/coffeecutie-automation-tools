@@ -27,6 +27,7 @@ RUN apt-get -qy update && apt-get -qy install \
 	imagemagick unzip \
 	lsb-release xz-utils
 
+# Get a newer CMake version than Xenial has
 RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
 	 -O cmake.sh && \
 	chmod +x cmake.sh && \
@@ -47,14 +48,14 @@ RUN \
 	unzip android-ndk-linux-x86_64.zip && \
 	mv android-ndk-r${ANDK_VER} android-ndk-linux && \
 	rm android-ndk-linux-x86_64.zip && \
-	\
-	\
+    \
+    \
 	wget -q http://dl.google.com/android/android-sdk_r${ASDK_VER}-linux.tgz \
 		-O android-sdk.tgz && \
 	tar xf android-sdk.tgz && \
 	/bin/bash -c "( sleep 5 && while [ 1 ]; do sleep 1; echo y; done ) |\
 		 android-sdk-linux/tools/android update sdk -s -a -u \
-			--filter 'tools,build-tools-26.0.2,platform-tools,android-24,android-26'" && \
+            --filter 'tools,build-tools-26.0.2,platform-tools,android-19,android-21,android-24,android-27'" && \
 	rm android-sdk.tgz && \
 	rm -r \
 		${ANDROID_NDK}/platforms/android-12 \
@@ -65,7 +66,9 @@ RUN \
 		${ANDROID_NDK}/platforms/android-17 \
 		${ANDROID_NDK}/platforms/android-18 \
 		${ANDROID_NDK}/platforms/android-22 \
-		${ANDROID_NDK}/platforms/android-23 || true
+        ${ANDROID_NDK}/platforms/android-23 \
+        ${ANDROID_NDK}/platforms/android-25 \
+        ${ANDROID_NDK}/platforms/android-26 || true
 
 # Install some script-sauce to create our dev environment
 WORKDIR /home/${USERNAME}

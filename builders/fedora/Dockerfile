@@ -1,4 +1,4 @@
-FROM fedora:25
+FROM fedora:28
 MAINTAINER H. Birch Tree
 
 RUN dnf -qy update || true && dnf -qy install \
