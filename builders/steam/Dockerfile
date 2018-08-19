@@ -13,11 +13,6 @@ ENV USER_ID 1000
 ENV PROJECT_VOLUME "/home/${USER}/project"
 ENV BUILD_VOLUME "/home/${USER}/build"
 
-ENV PRELOAD_SPEC x86_64-linux-steam
-
-ENV TOOLCHAIN_FILE ${PROJECT_VOLUME}/cmake/Toolchains/native-linux-generic.toolchain.cmake
-ENV PRELOAD_FILE ${PROJECT_VOLUME}/cmake/Preload/${PRELOAD_SPEC}.cmake
-
 # We need newer CMake, 3.1+
 RUN apt-get -qy update && apt-get -qy install software-properties-common
 RUN add-apt-repository ppa:george-edison55/cmake-3.x
@@ -34,6 +29,7 @@ RUN rm /key.gpg
 
 RUN apt-get -qy update && apt-get -qy install \
         cmake ninja-build build-essential gdb \
+        clang-3.6 clang++-3.6 libc++-dev \
         steamrt-dev \
         libqt5network5 \
         wget git lsb-release \
@@ -50,4 +46,3 @@ RUN mkdir -p    ${PROJECT_VOLUME} \
 VOLUME ["${PROJECT_VOLUME}", "${BUILD_VOLUME}", "${BUILD_VOLUME}/out"]
 
 WORKDIR ${BUILD_VOLUME}
-CMD ["sh","-c","/usr/bin/cmake -C${PRELOAD_FILE} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} ${PROJECT_VOLUME} -GNinja && cmake --build . --target install"]
