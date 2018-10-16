@@ -3,11 +3,12 @@
 #
 
 ARG UBU_RELEASE=xenial
-ARG CLANG_VER=3.8
 ARG BASE_IMAGE=ubuntu
 
 FROM ${BASE_IMAGE}:${UBU_RELEASE}
 MAINTAINER H. Birch Tree
+
+ENV CLANG_VER 3.8
 
 ENV USER coffee
 ENV USER_ID 1000
@@ -30,9 +31,8 @@ ENV GDK_URL 7.5/Prod/gdk/gdk_linux_amd64_352_79_release.run
 # - libpcl-dev
 ENV EXTRA_PACKAGES ""
 
-RUN apt-get -qy update && apt-get -qy install software-properties-common
-
-RUN add-apt-repository ppa:alexlarsson/flatpak
+RUN apt-get -qy update && apt-get -qy install software-properties-common && \
+    add-apt-repository ppa:alexlarsson/flatpak
 
 RUN apt-get -qy update && apt-get -qy install \
     cmake ninja-build build-essential \
@@ -52,10 +52,10 @@ RUN apt-get -qy update && apt-get -qy install \
 # Download NVIDIA GDK, for GPU querying
 RUN wget -q \
     http://developer.download.nvidia.com/compute/cuda/${GDK_URL} \
-    -O nvidia-gdk.run
-RUN chmod +x nvidia-gdk.run
-RUN ./nvidia-gdk.run --silent
-RUN rm nvidia-gdk.run
+    -O nvidia-gdk.run && \
+    chmod +x nvidia-gdk.run && \
+    ./nvidia-gdk.run --silent && \
+    rm nvidia-gdk.run
 
 #Create user directory + group
 RUN groupadd buildusers -g ${USER_ID}
