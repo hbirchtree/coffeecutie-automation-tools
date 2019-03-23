@@ -7,7 +7,8 @@ RUN dnf -qy update || true && dnf -qy install \
     openssl-devel libunwind-devel \
     libXrender-devel \
     flatpak swig \
-    git
+    git \
+    python
 
 RUN useradd coffee
 USER coffee
