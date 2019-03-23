@@ -6,7 +6,8 @@ RUN dnf -qy update || true && dnf -qy install \
     openal-soft-devel SDL2-devel\
     openssl-devel libunwind-devel \
     libXrender-devel \
-    flatpak swig
+    flatpak swig \
+    git
 
 RUN useradd coffee
 USER coffee
