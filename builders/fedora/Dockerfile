@@ -8,7 +8,8 @@ RUN dnf -qy update || true && dnf -qy install \
     libXrender-devel \
     flatpak swig \
     git \
-    python
+    python \
+    make
 
 RUN useradd coffee
 USER coffee

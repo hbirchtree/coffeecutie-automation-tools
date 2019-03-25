@@ -25,7 +25,8 @@ RUN apt-get -qy update && apt-get -qy install \
 	git openssl ninja-build make \
 	libc6:i386 libstdc++6:i386 wget \
 	imagemagick unzip \
-	lsb-release xz-utils
+	lsb-release xz-utils \
+    mercurial
 
 # Get a newer CMake version than Xenial has
 RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
