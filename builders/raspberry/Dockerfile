@@ -10,6 +10,8 @@ ENV RASPBERRY_CROSSPATH /cross-rpi
 ENV USER coffee
 ENV USER_ID 1000
 
+ENV CMAKE_VER="3.15"
+ENV CMAKE_RELVER="3.15.0"
 ENV RASPBERRY_SDK_LOCATION "/raspi-sdk"
 ENV PROJECT_VOLUME "/home/${USER}/project"
 ENV BUILD_VOLUME "/home/${USER}/build"
@@ -22,13 +24,19 @@ ENV PRELOAD_FILE ${PROJECT_VOLUME}/cmake/Preload/raspberry.cmake
 RUN dpkg --add-architecture i386
 
 RUN apt-get -qy update && apt-get -qy install \
-        cmake ninja-build \
+        ninja-build \
         git swig3.0 \
         libstdc++6:i386 \
         libz1:i386 \
         libqt5network5 \
         wget lsb-release xz-utils \
-	curl
+        curl
+
+# Get a newer CMake version than Xenial has
+RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
+	 -O cmake.sh && \
+	chmod +x cmake.sh && \
+	./cmake.sh --prefix=/usr/local --skip-license --exclude-subdir
 
 # Set up toolchain files
 # We only fetch the relevant toolchain

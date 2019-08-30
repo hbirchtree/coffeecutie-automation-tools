@@ -9,9 +9,9 @@ MAINTAINER H. Birch Tree
 
 ARG USERNAME="coffee"
 
-ENV CMAKE_VER="3.10"
-ENV CMAKE_RELVER="3.10.2"
-ENV ANDK_VER="16b"
+ENV CMAKE_VER="3.15"
+ENV CMAKE_RELVER="3.15.0"
+ENV ANDK_VER="15c"
 ENV ASDK_VER="24.4.1"
 
 ENV ANDROID_SDK="/home/${USERNAME}/android-sdk-linux"
@@ -21,6 +21,7 @@ ENV ANDROID_HOME="/home/${USERNAME}/android-sdk-linux"
 # Install dependencies for Android SDK/NDK as well as build tools
 RUN dpkg --add-architecture i386
 RUN apt-get -qy update && apt-get -qy install \
+    build-essential \
 	openjdk-8-jdk-headless \
 	git openssl ninja-build make \
 	libc6:i386 libstdc++6:i386 wget \

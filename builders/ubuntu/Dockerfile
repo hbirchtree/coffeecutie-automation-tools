@@ -13,6 +13,8 @@ ENV CLANG_VER 3.8
 ENV USER coffee
 ENV USER_ID 1000
 
+ENV CMAKE_VER="3.15"
+ENV CMAKE_RELVER="3.15.0"
 ENV PROJECT_VOLUME "/home/${USER}/project"
 ENV BUILD_VOLUME "/home/${USER}/build"
 
@@ -35,19 +37,25 @@ RUN apt-get -qy update && apt-get -qy install software-properties-common && \
     add-apt-repository ppa:alexlarsson/flatpak
 
 RUN apt-get -qy update && apt-get -qy install \
-    cmake ninja-build build-essential \
+    ninja-build build-essential \
     clang-${CLANG_VER} \
     doxygen swig3.0 \
-    libsdl2-dev libopenal-dev libssl-dev libunwind-dev \
-    libavcodec-dev libavdevice-dev \
-    libavformat-dev libswresample-dev \
-    libswscale-dev \
+    libunwind-dev \
     libtiff5-dev \
-    libqt5network5 \
     wget git lsb-release \
     flatpak snapcraft ${EXTRA_PACKAGES} \
     curl lcov \
-    squashfs-tools
+    squashfs-tools \
+    libxext-dev \
+    && \
+    apt-get -qy build-dep \
+    libsdl2-dev libopenal-dev
+
+# Get a newer CMake version than Xenial has
+RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
+	 -O cmake.sh && \
+	chmod +x cmake.sh && \
+	./cmake.sh --prefix=/usr/local --skip-license --exclude-subdir
 
 # Download NVIDIA GDK, for GPU querying
 RUN wget -q \

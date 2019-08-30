@@ -38,6 +38,7 @@ RUN apt-get -qy update && apt-get -qy install \
     libavcodec-dev libavdevice-dev \
     libavformat-dev libswresample-dev \
     libswscale-dev \
+    libtiff5-dev \
     libqt5network5 \
     wget git lsb-release \
     flatpak snapcraft ${EXTRA_PACKAGES} \

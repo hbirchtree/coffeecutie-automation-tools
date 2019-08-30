@@ -10,6 +10,8 @@ MAINTAINER H. Birch Tree
 ENV USER coffee
 ENV USER_ID 1000
 
+ENV CMAKE_VER="3.15"
+ENV CMAKE_RELVER="3.15.0"
 ENV PROJECT_VOLUME "/home/${USER}/project"
 ENV BUILD_VOLUME "/home/${USER}/build"
 
@@ -28,12 +30,18 @@ RUN cat /key.gpg | apt-key add -
 RUN rm /key.gpg
 
 RUN apt-get -qy update && apt-get -qy install \
-        cmake ninja-build build-essential gdb \
+        ninja-build build-essential \
         clang-3.6 clang++-3.6 libc++-dev \
         steamrt-dev \
         libqt5network5 \
         wget git lsb-release \
-	curl
+	    curl
+
+# Get a newer CMake version than Xenial has
+RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
+	 -O cmake.sh && \
+	chmod +x cmake.sh && \
+	./cmake.sh --prefix=/usr/local --skip-license --exclude-subdir
 
 #Create user directory + group
 RUN groupadd buildusers -g ${USER_ID}

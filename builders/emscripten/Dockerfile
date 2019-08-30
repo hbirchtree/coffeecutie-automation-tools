@@ -5,16 +5,23 @@
 FROM ubuntu:xenial
 MAINTAINER H. Birch Tree
 
+ENV CMAKE_VER="3.15"
+ENV CMAKE_RELVER="3.15.0"
 ENV USNAME="coffee"
 ENV EMSDK_DIR="/home/coffee/emsdk_portable"
 
 # Installing some dependencies
 RUN apt-get -qy update && apt-get -qy install \
-    wget build-essential git \
-    cmake ninja-build \
+    wget build-essential git ninja-build \
     python2.7 nodejs \
     default-jre \
     curl
+
+# Get a newer CMake version than Xenial has
+RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
+	 -O cmake.sh && \
+	chmod +x cmake.sh && \
+	./cmake.sh --prefix=/usr/local --skip-license --exclude-subdir
 
 # Get the emsdk
 RUN ln -s /usr/bin/python2.7 /usr/bin/python
