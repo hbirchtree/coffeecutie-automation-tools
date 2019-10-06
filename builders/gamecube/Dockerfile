@@ -1,0 +1,33 @@
+FROM ubuntu:bionic
+
+RUN apt update && apt install -y build-essential git cmake ninja-build wget curl libgmp3-dev libmpfr-dev libmpc-dev file zlib1g-dev texinfo libfreeimage-dev mesa-common-dev
+
+RUN git clone https://github.com/devkitPro/buildscripts.git /buildscripts
+COPY config.sh /buildscripts/config.sh
+WORKDIR /buildscripts
+RUN ./build-devkit.sh
+
+RUN git clone https://github.com/devkitPro/devkitppc-rules.git /buildrules
+RUN cp /buildrules/*_rules /devkit/devkitPPC
+RUN cp /buildrules/*_tools /devkit/devkitPPC
+
+ENV DEVKITPPC=/devkit/devkitPPC
+ENV DEVKITPRO=/devkit/portlibs
+ENV PPCPORTLIBS_CUBE=/devkit/portlibs/cube-powerpc-eabi
+ENV PPCPORTLIBS_WII=/devkit/portlibs/wii-powerpc-eabi
+ENV PPCPORTLIBS_WIIU=/devkit/portlibs/wiiu-powerpc-eabi
+ENV PATH=$PATH:/devkit/devkitPPC/bin:/devkit/tools/bin
+
+RUN git clone https://github.com/devkitPro/libogc.git /libogc
+WORKDIR /libogc
+RUN make -j4
+RUN make install
+
+RUN bash -c 'mkdir -p /devkit/portlibs/{cube,wii,wiiu}-powerpc-eabi/{include,lib}'
+RUN ln -s /devkit/portlibs/libogc/include/* /devkit/portlibs/cube-powerpc-eabi/include \
+    && ln -s /devkit/portlibs/libogc/include/* /devkit/portlibs/wii-powerpc-eabi/include \
+    && ln -s /devkit/portlibs/libogc/include/* /devkit/portlibs/wiiu-powerpc-eabi/include \
+    && ln -s /devkit/portlibs/libogc/lib/cube/* /devkit/portlibs/cube-powerpc-eabi/lib
+
+WORKDIR /
+

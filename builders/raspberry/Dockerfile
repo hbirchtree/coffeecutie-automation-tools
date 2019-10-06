@@ -30,7 +30,7 @@ RUN apt-get -qy update && apt-get -qy install \
         libz1:i386 \
         libqt5network5 \
         wget lsb-release xz-utils \
-        curl
+        curl make
 
 # Get a newer CMake version than Xenial has
 RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
@@ -41,16 +41,31 @@ RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_6
 # Set up toolchain files
 # We only fetch the relevant toolchain
 WORKDIR ${RASPBERRY_CROSSPATH}
-RUN git init
-RUN git remote add -f origin https://github.com/raspberrypi/tools.git
-RUN git config core.sparseCheckout true
-RUN echo "arm-bcm2708/${RASPBERRY_TOOLCHAIN}/" >> .git/info/sparse-checkout
-RUN git pull origin master
-
+COPY gcc-arm-gnueabihf.tar.xz compiler.tar.xz
+RUN tar xvf compiler.tar.xz
 RUN mkdir -p /usr/local/bin
+RUN bash -c 'ln -s ${RASPBERRY_CROSSPATH}/gcc-arm*/bin/* /usr/local/bin/'
 
-RUN ln -s ${RASPBERRY_CROSSPATH}/arm-bcm2708/${RASPBERRY_TOOLCHAIN}/bin/* \
-          /usr/local/bin/
+# Old GCC 4.9
+#RUN git init
+#RUN git remote add -f origin https://github.com/raspberrypi/tools.git
+#RUN git config core.sparseCheckout true
+#RUN echo "arm-bcm2708/${RASPBERRY_TOOLCHAIN}/" >> .git/info/sparse-checkout
+#RUN git pull origin master
+
+#RUN mkdir -p /usr/local/bin
+
+#RUN ln -s ${RASPBERRY_CROSSPATH}/arm-bcm2708/${RASPBERRY_TOOLCHAIN}/bin/* \
+#          /usr/local/bin/
+
+# Download GLES/EGL/bcm_host files
+WORKDIR /pi-sysroot
+RUN wget https://github.com/raspberrypi/firmware/archive/master.tar.gz \
+    && tar xvf master.tar.gz \
+    && cp -r firmware-master/hardfp/opt/vc . \
+    && rm -r master.tar.gz firmware-master
+
+RUN ln -s /pi-sysroot/vc /opt/vc
 
 #Create user directory + group
 RUN groupadd buildusers -g ${USER_ID}
@@ -59,8 +74,3 @@ RUN useradd ${USER} -m -u ${USER_ID}
 WORKDIR /home/${USER}
 USER ${USER}
 RUN mkdir -p ${PROJECT_VOLUME} bridge ${BUILD_VOLUME}/out
-
-VOLUME ["${PROJECT_VOLUME}", "${BUILD_VOLUME}", "${BUILD_VOLUME}/out", "/home/${USER}/bridge", "${RASPBERRY_SDK_LOCATION}"]
-
-WORKDIR ${BUILD_VOLUME}
-CMD ["sh","-c","/usr/bin/cmake -C${PRELOAD_FILE} -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} -DRASPBERRY_SDK=${RASPBERRY_SDK_LOCATION} ${PROJECT_VOLUME} -GNinja && cmake --build . --target install"]

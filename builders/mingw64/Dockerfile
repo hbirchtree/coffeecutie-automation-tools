@@ -11,7 +11,7 @@ ENV CMAKE_RELVER="3.15.0"
 RUN apt-get -qy update && apt-get -qy install \
         git nano wget \
         ninja-build \
-        mingw-w64
+        mingw-w64 make
 
 # Get a newer CMake version than Xenial has
 RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
@@ -27,12 +27,6 @@ USER coffee
 WORKDIR /home/coffee
 RUN mkdir -p project bridge build/bin build/libs build/out
 USER root
-
-# Set environment variables for compiler toolchain
-ENV CC=x86_64-w64-mingw32-gcc
-ENV CXX=x86_64-w64-mingw32-g++
-ENV AS=x86_64-w64-mingw32-as
-ENV LD=x86_64-w64-mingw32-ld
 
 WORKDIR /home/coffee
 USER coffee

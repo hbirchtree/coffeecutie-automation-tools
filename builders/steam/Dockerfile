@@ -15,10 +15,6 @@ ENV CMAKE_RELVER="3.15.0"
 ENV PROJECT_VOLUME "/home/${USER}/project"
 ENV BUILD_VOLUME "/home/${USER}/build"
 
-# We need newer CMake, 3.1+
-RUN apt-get -qy update && apt-get -qy install software-properties-common
-RUN add-apt-repository ppa:george-edison55/cmake-3.x
-
 # Steam beta repository
 #RUN echo "deb http://repo.steampowered.com/steamrt/ scout_beta main" >> /etc/apt/sources.list
 # Steam non-beta repository
@@ -50,7 +46,5 @@ RUN useradd ${USER} -m -u ${USER_ID}
 USER ${USER}
 RUN mkdir -p    ${PROJECT_VOLUME} \
                 ${BUILD_VOLUME}/out
-
-VOLUME ["${PROJECT_VOLUME}", "${BUILD_VOLUME}", "${BUILD_VOLUME}/out"]
 
 WORKDIR ${BUILD_VOLUME}
