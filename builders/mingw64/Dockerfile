@@ -11,7 +11,8 @@ ENV CMAKE_RELVER="3.15.0"
 RUN apt-get -qy update && apt-get -qy install \
         git nano wget \
         ninja-build \
-        mingw-w64 make
+        mingw-w64 make \
+        build-essential
 
 # Get a newer CMake version than Xenial has
 RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\

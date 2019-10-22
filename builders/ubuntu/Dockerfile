@@ -1,20 +1,14 @@
 #
 # Compiling for Ubuntu LTS, can use arguments to compile for Bionic
 #
-
-ARG UBU_RELEASE=xenial
-ARG BASE_IMAGE=ubuntu
-
-FROM ${BASE_IMAGE}:${UBU_RELEASE}
+FROM hbirch/ubuntu-cmake:3.15
 MAINTAINER H. Birch Tree
 
-ENV CLANG_VER 3.8
+ENV CLANG_VER 8
 
 ENV USER coffee
 ENV USER_ID 1000
 
-ENV CMAKE_VER="3.15"
-ENV CMAKE_RELVER="3.15.0"
 ENV PROJECT_VOLUME "/home/${USER}/project"
 ENV BUILD_VOLUME "/home/${USER}/build"
 
@@ -43,19 +37,13 @@ RUN apt-get -qy update && apt-get -qy install \
     libunwind-dev \
     libtiff5-dev \
     wget git lsb-release \
-    flatpak snapcraft ${EXTRA_PACKAGES} \
+    flatpak snapcraft \
     curl lcov \
     squashfs-tools \
     libxext-dev \
     && \
     apt-get -qy build-dep \
     libsdl2-dev libopenal-dev
-
-# Get a newer CMake version than Xenial has
-RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
-	 -O cmake.sh && \
-	chmod +x cmake.sh && \
-	./cmake.sh --prefix=/usr/local --skip-license --exclude-subdir
 
 # Download NVIDIA GDK, for GPU querying
 RUN wget -q \
@@ -72,7 +60,5 @@ RUN useradd ${USER} -m -u ${USER_ID}
 WORKDIR /home/${USER}
 USER ${USER}
 RUN mkdir -p ${PROJECT_VOLUME} ${BUILD_VOLUME}/out
-
-VOLUME ["${PROJECT_VOLUME}", "${BUILD_VOLUME}", "${BUILD_VOLUME}/out"]
 
 WORKDIR ${BUILD_VOLUME}

@@ -30,7 +30,7 @@ RUN apt-get -qy update && apt-get -qy install \
         libz1:i386 \
         libqt5network5 \
         wget lsb-release xz-utils \
-        curl make
+        curl make build-essential
 
 # Get a newer CMake version than Xenial has
 RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\

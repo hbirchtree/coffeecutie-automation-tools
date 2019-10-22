@@ -2,12 +2,12 @@
 # Compiling for Ubuntu LTS, can use arguments to compile for Bionic
 #
 
-ARG UBU_RELEASE=xenial
+ARG UBU_RELEASE=bionic
 
 FROM i386/ubuntu:${UBU_RELEASE}
 MAINTAINER H. Birch Tree
 
-ENV CLANG_VER 3.8
+ENV CLANG_VER 8
 
 ENV USER coffee
 ENV USER_ID 1000
@@ -34,16 +34,13 @@ RUN apt-get -qy update && apt-get -qy install \
     cmake ninja-build build-essential \
     clang-${CLANG_VER} \
     doxygen swig3.0 \
-    libsdl2-dev libopenal-dev libssl-dev libunwind-dev \
-    libavcodec-dev libavdevice-dev \
-    libavformat-dev libswresample-dev \
-    libswscale-dev \
+    libunwind-dev \
     libtiff5-dev \
-    libqt5network5 \
     wget git lsb-release \
     flatpak snapcraft ${EXTRA_PACKAGES} \
     curl lcov \
-    squashfs-tools
+    squashfs-tools && \
+    apt-get -qy build-dep libsdl2-dev libopenal-dev libssl-dev
 
 # Download NVIDIA GDK, for GPU querying
 RUN wget -q \
