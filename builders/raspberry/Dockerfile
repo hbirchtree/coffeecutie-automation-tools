@@ -2,16 +2,13 @@
 # This Dockerfile is designed for cross-compiling to Raspberry Pi targets
 #
 
-FROM ubuntu:xenial
+FROM hbirch/ubuntu-cmake:3.16
 MAINTAINER H. Birch Tree
 
-ARG RASPBERRY_TOOLCHAIN=arm-rpi-4.9.3-linux-gnueabihf
 ENV RASPBERRY_CROSSPATH /cross-rpi
 ENV USER coffee
 ENV USER_ID 1000
 
-ENV CMAKE_VER="3.15"
-ENV CMAKE_RELVER="3.15.0"
 ENV RASPBERRY_SDK_LOCATION "/raspi-sdk"
 ENV PROJECT_VOLUME "/home/${USER}/project"
 ENV BUILD_VOLUME "/home/${USER}/build"
@@ -32,12 +29,6 @@ RUN apt-get -qy update && apt-get -qy install \
         wget lsb-release xz-utils \
         curl make build-essential
 
-# Get a newer CMake version than Xenial has
-RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
-	 -O cmake.sh && \
-	chmod +x cmake.sh && \
-	./cmake.sh --prefix=/usr/local --skip-license --exclude-subdir
-
 # Set up toolchain files
 # We only fetch the relevant toolchain
 WORKDIR ${RASPBERRY_CROSSPATH}
@@ -45,18 +36,6 @@ COPY gcc-arm-gnueabihf.tar.xz compiler.tar.xz
 RUN tar xvf compiler.tar.xz
 RUN mkdir -p /usr/local/bin
 RUN bash -c 'ln -s ${RASPBERRY_CROSSPATH}/gcc-arm*/bin/* /usr/local/bin/'
-
-# Old GCC 4.9
-#RUN git init
-#RUN git remote add -f origin https://github.com/raspberrypi/tools.git
-#RUN git config core.sparseCheckout true
-#RUN echo "arm-bcm2708/${RASPBERRY_TOOLCHAIN}/" >> .git/info/sparse-checkout
-#RUN git pull origin master
-
-#RUN mkdir -p /usr/local/bin
-
-#RUN ln -s ${RASPBERRY_CROSSPATH}/arm-bcm2708/${RASPBERRY_TOOLCHAIN}/bin/* \
-#          /usr/local/bin/
 
 # Download GLES/EGL/bcm_host files
 WORKDIR /pi-sysroot

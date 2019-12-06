@@ -4,14 +4,11 @@
 #
 
 # Stick with an LTS release, it has the appropriate CMake version
-FROM ubuntu:xenial
+FROM hbirch/ubuntu-cmake:3.16
 MAINTAINER H. Birch Tree
 
 ARG USERNAME="coffee"
-
-ENV CMAKE_VER="3.15"
-ENV CMAKE_RELVER="3.15.0"
-ENV ANDK_VER="15c"
+ARG ANDK_VER="15c"
 ENV ASDK_VER="24.4.1"
 
 ENV ANDROID_SDK="/home/${USERNAME}/android-sdk-linux"
@@ -28,12 +25,6 @@ RUN apt-get -qy update && apt-get -qy install \
 	imagemagick unzip \
 	lsb-release xz-utils \
     mercurial
-
-# Get a newer CMake version than Xenial has
-RUN wget https://cmake.org/files/v${CMAKE_VER}/cmake-${CMAKE_RELVER}-Linux-x86_64.sh\
-	 -O cmake.sh && \
-	chmod +x cmake.sh && \
-	./cmake.sh --prefix=/usr/local --skip-license --exclude-subdir
 
 # Create users for dev
 RUN useradd ${USERNAME} -m -u 1000
@@ -57,7 +48,7 @@ RUN \
 	tar xf android-sdk.tgz && \
 	/bin/bash -c "( sleep 5 && while [ 1 ]; do sleep 1; echo y; done ) |\
 		 android-sdk-linux/tools/android update sdk -s -a -u \
-            --filter 'tools,build-tools-26.0.2,build-tools-28.0.2,platform-tools,android-19,android-21,android-24,android-27,android-28'" && \
+            --filter 'tools,build-tools-26.0.2,build-tools-28.0.2,platform-tools,android-19,android-21,android-24,android-27,android-28,android-29'" && \
 	rm android-sdk.tgz && \
 	rm -r \
 		${ANDROID_NDK}/platforms/android-12 \

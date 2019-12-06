@@ -1,8 +1,8 @@
 FROM ubuntu:bionic
 MAINTAINER H. Birch Tree
 
-ARG CMAKE_VER="3.15"
-ARG CMAKE_RELVER="3.15.0"
+ARG CMAKE_VER="3.16"
+ARG CMAKE_RELVER="3.16.0"
 
 RUN apt-get -qy update && apt-get -qy install wget
 

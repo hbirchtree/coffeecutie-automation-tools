@@ -1,0 +1,27 @@
+FROM hbirch/ubuntu-cmake:3.16
+
+RUN apt update && \
+    apt install -y build-essential git ninja-build \
+            wget curl \
+            libgmp3-dev libmpfr-dev libmpc-dev \
+            file zlib1g-dev texinfo libfreeimage-dev \
+            mesa-common-dev
+
+# Get and run initial Devkit buildscripts
+RUN git clone https://github.com/devkitPro/buildscripts.git /buildscripts
+COPY config.arm-eabi.sh /buildscripts/config.sh
+WORKDIR /buildscripts
+RUN ./build-devkit.sh
+
+# Install buildrules for compiling dependencies
+RUN git clone https://github.com/devkitPro/devkitarm-rules.git /buildrules
+RUN cp /buildrules/*_rules /devkit/devkitARM
+RUN cp /buildrules/*_tools /devkit/devkitARM
+
+ENV DEVKITARM=/devkit/devkitARM
+ENV DEVKITPRO=/devkit/portlibs
+ENV PPCPORTLIBS_ARM=/devkit/portlibs/arm-eabi
+ENV PATH=$PATH:/devkit/devkitARM/bin:/devkit/tools/bin
+
+WORKDIR /
+

@@ -1,10 +1,11 @@
-FROM fedora:28
+FROM fedora:31
 MAINTAINER H. Birch Tree
 
 RUN dnf -qy update || true && dnf -y install \
     cmake ninja-build gcc-c++ \
     libunwind-devel \
     libXrender-devel \
+    tbb-devel \
     flatpak swig \
     git \
     python \

@@ -3,7 +3,7 @@
 # The listed dependencies might aid in finding dependencies for other distributions
 #
 
-FROM ubuntu:xenial
+FROM hbirch/ubuntu-cmake:3.16
 MAINTAINER H. Birch Tree
 
 ENV USER coffee
@@ -13,7 +13,7 @@ ENV PROJECT_VOLUME "/home/${USER}/project"
 ENV BUILD_VOLUME "/home/${USER}/build"
 
 RUN apt-get -qy update && apt-get -qy install \
-        cmake build-essential \
+        build-essential \
         doxygen graphviz \
         libqt5network5 \
         wget git lsb-release \
