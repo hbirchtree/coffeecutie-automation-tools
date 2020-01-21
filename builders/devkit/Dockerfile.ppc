@@ -1,4 +1,4 @@
-FROM hbirch/ubuntu-cmake:3.16
+FROM hbirch/ubuntu-cmake:latest
 
 RUN apt update && \
     apt install -y build-essential git ninja-build \

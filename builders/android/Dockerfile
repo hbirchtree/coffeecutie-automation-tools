@@ -4,7 +4,7 @@
 #
 
 # Stick with an LTS release, it has the appropriate CMake version
-FROM hbirch/ubuntu-cmake:3.16
+FROM hbirch/ubuntu-cmake:latest
 MAINTAINER H. Birch Tree
 
 ARG USERNAME="coffee"

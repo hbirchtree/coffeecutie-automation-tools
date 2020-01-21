@@ -2,7 +2,7 @@
 # This Dockerfile sets up an environment for building with emscripten
 #
 
-FROM hbirch/ubuntu-cmake:3.16
+FROM hbirch/ubuntu-cmake:latest
 MAINTAINER H. Birch Tree
 
 ENV USNAME="coffee"

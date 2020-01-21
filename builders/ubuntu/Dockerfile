@@ -1,7 +1,7 @@
 #
 # Compiling for Ubuntu LTS, can use arguments to compile for Bionic
 #
-FROM hbirch/ubuntu-cmake:3.15
+FROM hbirch/ubuntu-cmake:latest
 MAINTAINER H. Birch Tree
 
 ENV CLANG_VER 8

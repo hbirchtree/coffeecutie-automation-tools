@@ -2,7 +2,7 @@
 # This Dockerfile is designed for cross-compiling to Raspberry Pi targets
 #
 
-FROM hbirch/ubuntu-cmake:3.16
+FROM hbirch/ubuntu-cmake:latest
 MAINTAINER H. Birch Tree
 
 ENV RASPBERRY_CROSSPATH /cross-rpi

@@ -2,7 +2,7 @@
 # Builds using GCC 7.x on Bionic
 #
 
-FROM hbirch/ubuntu-cmake:3.16
+FROM hbirch/ubuntu-cmake:latest
 MAINTAINER H. Birch Tree
 
 RUN apt-get -qy update && apt-get -qy install \

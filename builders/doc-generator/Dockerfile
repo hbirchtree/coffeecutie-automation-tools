@@ -3,7 +3,7 @@
 # The listed dependencies might aid in finding dependencies for other distributions
 #
 
-FROM hbirch/ubuntu-cmake:3.16
+FROM hbirch/ubuntu-cmake:latest
 MAINTAINER H. Birch Tree
 
 ENV USER coffee

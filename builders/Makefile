@@ -1,3 +1,6 @@
+cmake.refresh:
+	docker build --no-cache -t hbirch/ubuntu-cmake cmake-latest
+
 %.build: %/Dockerfile
 	# Avoid cache to refresh images fully
 	docker build --no-cache -t hbirch/coffeecutie:$* $*
@@ -7,7 +10,7 @@
 
 %.update: %.build %.push
 
-cmake-images: cmake-latest.build ubuntu.build emscripten.build fedora.build raspberry.build doc-generator.build mingw64.build
+cmake-images: cmake.refresh ubuntu.build emscripten.build fedora.build raspberry.build doc-generator.build mingw64.build
 
 devkit.build.%: devkit/Dockerfile.% devkit/config.%.sh
 	docker build --no-cache -t hbirch/devkit:$* devkit -f devkit/Dockerfile.$*
@@ -25,8 +28,8 @@ android.tag:
 
 android-versions: android.r15c android.r20b android.tag
 
-all-build: cmake-images android-versions
+all-build: cmake-images android-versions devkit.build.ppc
 
-all-push: ubuntu.push emscripten.push fedora.push raspberry.push doc-generator.push android.push
+all-push: ubuntu.push emscripten.push fedora.push raspberry.push doc-generator.push android.push devkit.push.ppc
 
 all: all-build all-push
