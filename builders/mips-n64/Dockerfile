@@ -33,19 +33,23 @@ RUN \
     mv binutils-$BINUTILS_VER binutils && \
     mv newlib-$NEWLIB_VER newlib && \
     \
-    mkdir -p /mips64-elf/bin && \
-    \
-    PATH=$PATH:/mips64-elf/bin && \
+    mkdir -p /$GCC_TARGET/bin
+
+ARG GCC_TARGET=mips
+ARG GCC_ARCH=mips32r2
+ARG GCC_TUNE=vr4300
+
+RUN PATH=$PATH:/$GCC_TARGET/bin && \
     cd binutils_build && \
-    ../binutils/configure --prefix=/mips64-elf --target=mips64-elf --with-cpu=mips64vr4300 && \
+    ../binutils/configure --prefix=/$GCC_TARGET --target=$GCC_TARGET --with-cpu=$GCC_ARCH$GCC_TUNE && \
     make -j$(nproc) && \
     make -j$(nproc) install && \
     cd .. && \
     \
     cd gcc_build && \
     ../gcc/configure \
-                --prefix=/mips64-elf \
-                --target=mips64-elf --with-arch=vr4300 --with-tune=vr4300 \
+                --prefix=/$GCC_TARGET \
+                --target=$GCC_TARGET --with-arch=$GCC_TUNE --with-tune=$GCC_TUNE \
                 --enable-languages=c,c++,lto \
                 --enable-lto \
                 --with-newlib --disable-libssp --enable-multilib \
@@ -57,12 +61,12 @@ RUN \
     cd .. && \
     \
     cd newlib_build && \
-    PATH=$PATH:/mips64-elf/bin CFLAGS="-O2" CXXFLAGS="-O2" ../newlib/configure \
-                --prefix=/mips64-elf \
-                --target=mips64-elf --with-cpu=mips64vr4300 \
+    PATH=$PATH:/$GCC_TARGET/bin CFLAGS="-O2" CXXFLAGS="-O2" ../newlib/configure \
+                --prefix=/$GCC_TARGET \
+                --target=$GCC_TARGET --with-cpu=$GCC_ARCH$GCC_TUNE \
                 --disable-threads --disable-libssp && \
-    PATH=$PATH:/mips64-elf/bin make -j$(nproc) && \
-    PATH=$PATH:/mips64-elf/bin make -j$(nproc) install && \
+    PATH=$PATH:/$GCC_TARGET/bin make -j$(nproc) && \
+    PATH=$PATH:/$GCC_TARGET/bin make -j$(nproc) install && \
     cd .. && \
     \
     cd gcc_build && \
@@ -71,7 +75,7 @@ RUN \
     cd .. && \
     rm -r /build
 
-RUN bash -c 'ln -s /mips64-elf/bin/* /usr/bin/'
+RUN bash -c 'ln -s /$GCC_TARGET/bin/* /usr/bin/'
 
 ENV N64CHAIN_DIR /mips64-elf
 

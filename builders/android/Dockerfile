@@ -48,19 +48,17 @@ RUN \
 	tar xf android-sdk.tgz && \
 	/bin/bash -c "( sleep 5 && while [ 1 ]; do sleep 1; echo y; done ) |\
 		 android-sdk-linux/tools/android update sdk -s -a -u \
-            --filter 'tools,build-tools-26.0.2,build-tools-28.0.2,platform-tools,android-19,android-21,android-24,android-27,android-28,android-29'" && \
+            --filter 'tools,build-tools-26.0.2,build-tools-28.0.2,build-tools-28.0.3,build-tools-29.0.3,build-tools,platform-tools,android-19,android-21,android-23,android-24,android-25,android-26,android-27,android-28,android-29'" && \
 	rm android-sdk.tgz && \
 	rm -r \
-		${ANDROID_NDK}/platforms/android-12 \
-		${ANDROID_NDK}/platforms/android-13 \
-		${ANDROID_NDK}/platforms/android-14 \
-		${ANDROID_NDK}/platforms/android-15 \
-		${ANDROID_NDK}/platforms/android-16 \
-		${ANDROID_NDK}/platforms/android-17 \
-		${ANDROID_NDK}/platforms/android-18 \
-		${ANDROID_NDK}/platforms/android-22 \
-        ${ANDROID_NDK}/platforms/android-23 \
-        ${ANDROID_NDK}/platforms/android-25 \
+	    ${ANDROID_NDK}/platforms/android-12 \
+        ${ANDROID_NDK}/platforms/android-13 \
+        ${ANDROID_NDK}/platforms/android-14 \
+        ${ANDROID_NDK}/platforms/android-15 \
+        ${ANDROID_NDK}/platforms/android-16 \
+        ${ANDROID_NDK}/platforms/android-17 \
+        ${ANDROID_NDK}/platforms/android-18 \
+        ${ANDROID_NDK}/platforms/android-22 \
         ${ANDROID_NDK}/platforms/android-26 || true
 
 # Install some script-sauce to create our dev environment

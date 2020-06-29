@@ -1,11 +1,18 @@
-cmake.refresh:
+.PHONY: FORCE
+
+all: all-build all-push
+
+FORCE:
+	true
+
+cmake.refresh: FORCE
 	docker build --no-cache -t hbirch/ubuntu-cmake cmake-latest
 
-%.build: %/Dockerfile
+%.build: %/Dockerfile FORCE
 	# Avoid cache to refresh images fully
 	docker build --no-cache -t hbirch/coffeecutie:$* $*
 
-%.push:
+%.push: FORCE
 	docker push hbirch/coffeecutie:$*
 
 %.update: %.build %.push
@@ -32,4 +39,3 @@ all-build: cmake-images android-versions devkit.build.ppc
 
 all-push: ubuntu.push emscripten.push fedora.push raspberry.push doc-generator.push android.push devkit.push.ppc
 
-all: all-build all-push

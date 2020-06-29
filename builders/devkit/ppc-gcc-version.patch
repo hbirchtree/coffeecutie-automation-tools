@@ -1,0 +1,111 @@
+diff --git a/dkppc/patches/gcc-8.3.0.patch b/dkppc/patches/gcc-9.1.0.patch
+similarity index 94%
+rename from dkppc/patches/gcc-8.3.0.patch
+rename to dkppc/patches/gcc-9.1.0.patch
+index f02e38b..2e1e603 100644
+--- a/dkppc/patches/gcc-8.3.0.patch
++++ b/dkppc/patches/gcc-9.1.0.patch
+@@ -18,8 +18,8 @@ index 7af8e02..dc58cab 100644
+  	use_gcc_stdint=wrap
+  	;;
+  powerpc-*-eabi*)
+--	tm_file="${tm_file} dbxelf.h elfos.h usegas.h freebsd-spec.h newlib-stdint.h rs6000/sysv4.h rs6000/eabi.h"
+-+	tm_file="${tm_file} dbxelf.h elfos.h usegas.h freebsd-spec.h newlib-stdint.h rs6000/sysv4.h rs6000/eabi.h rs6000/750cl.h"
++-	tm_file="${tm_file} dbxelf.h elfos.h gnu-user.h usegas.h freebsd-spec.h newlib-stdint.h rs6000/sysv4.h rs6000/eabi.h"
+++	tm_file="${tm_file} dbxelf.h elfos.h gnu-user.h usegas.h freebsd-spec.h newlib-stdint.h rs6000/sysv4.h rs6000/eabi.h rs6000/750cl.h"
+  	extra_options="${extra_options} rs6000/sysv4.opt"
+  	tmake_file="rs6000/t-fprules rs6000/t-ppcgas rs6000/t-ppccomm"
+  	use_gcc_stdint=wrap
+@@ -57,37 +57,6 @@ index b83b304..b85359e 100644
+  
+  #ifndef CC1_CPU_SPEC
+  #ifdef HAVE_LOCAL_CPU_DETECT
+-diff --git a/gcc/config/rs6000/rs6000.md b/gcc/config/rs6000/rs6000.md
+-index 4d69c1d..af2d7b5 100644
+---- a/gcc/config/rs6000/rs6000.md
+-+++ b/gcc/config/rs6000/rs6000.md
+-@@ -5625,19 +5625,19 @@
+-     tmp = gen_reg_rtx (DImode);
+- 
+-   emit_insn (gen_fctiwz_<mode> (tmp, src));
+--  if (MEM_P (dest))
+-+  if (TARGET_POWERPC64 && (TARGET_MFPGPR || TARGET_DIRECT_MOVE))
+-     {
+--      dest = rs6000_address_for_fpconvert (dest);
+--      emit_insn (gen_stfiwx (dest, tmp));
+-+      dest = gen_lowpart (DImode, dest);
+-+      emit_move_insn (dest, tmp);
+-       DONE;
+-     }
+--  else if (TARGET_POWERPC64 && (TARGET_MFPGPR || TARGET_DIRECT_MOVE))
+-+   else if (MEM_P (dest) && MEM_ALIGN (dest) >= 32)
+-     {
+--      dest = gen_lowpart (DImode, dest);
+--      emit_move_insn (dest, tmp);
+-+      dest = rs6000_address_for_fpconvert (dest);
+-+      emit_insn (gen_stfiwx (dest, tmp));
+-       DONE;
+-     }
+--  else
+-+   else
+-     {
+-       rtx stack = rs6000_allocate_stack_temp (SImode, false, true);
+-       emit_insn (gen_stfiwx (stack, tmp));
+ diff --git a/gcc/config/rs6000/sysv4.h b/gcc/config/rs6000/sysv4.h
+ index bb19d0d..74d1e47 100644
+ --- a/gcc/config/rs6000/sysv4.h
+@@ -339,6 +308,41 @@ index 077e33f..b7be68b 100644
+  
+  #endif
+ +#endif
++diff --git a/gcc/config/rs6000/750cl.h b/gcc/config/rs6000/750cl.h
++new file mode 100644
++index 0000000..94d6ba9
++--- /dev/null
+++++ b/gcc/config/rs6000/750cl.h
+++/* Enable 750cl paired single support.
+++   Copyright (C) 2007-2018 Free Software Foundation, Inc.
+++   Contributed by Revital Eres (eres@il.ibm.com)
+++   This file is part of GCC.
+++
+++   GCC is free software; you can redistribute it and/or modify it
+++   under the terms of the GNU General Public License as published
+++   by the Free Software Foundation; either version 3, or (at your
+++   option) any later version.
+++
+++   GCC is distributed in the hope that it will be useful, but WITHOUT
+++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+++   License for more details.
+++
+++   Under Section 7 of GPL version 3, you are granted additional
+++   permissions described in the GCC Runtime Library Exception, version
+++   3.1, as published by the Free Software Foundation.
+++
+++   You should have received a copy of the GNU General Public License and
+++   a copy of the GCC Runtime Library Exception along with this program;
+++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+++   <http://www.gnu.org/licenses/>.  */
+++
+++#undef TARGET_PAIRED_FLOAT
+++#define TARGET_PAIRED_FLOAT rs6000_paired_float
+++
+++#undef ASM_CPU_SPEC 
+++#define ASM_CPU_SPEC "-m750cl"
+++
+ diff --git a/libgcc/config/rs6000/gthr-dkp.c b/libgcc/config/rs6000/gthr-dkp.c
+ new file mode 100644
+ index 0000000..94d6ba9
+diff --git a/select_toolchain.sh b/select_toolchain.sh
+index 16a6c45..7399284 100755
+--- a/select_toolchain.sh
++++ b/select_toolchain.sh
+@@ -40,7 +40,7 @@ case "$VERSION" in
+     toolchain=DEVKITARM
+   ;;
+   "2" )
+-    GCC_VER=8.3.0
++    GCC_VER=9.1.0
+     BINUTILS_VER=2.32
+     MN_BINUTILS_VER=2.17
+     NEWLIB_VER=3.1.0
