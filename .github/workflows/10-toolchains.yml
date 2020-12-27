@@ -42,7 +42,7 @@ jobs:
               uses: actions/upload-artifact@v2
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}
-                  path: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/compiler/${{ matrix.system.arch }}/*
+                  path: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/compiler/${{ matrix.system.arch }}
             - name: Build sysroot
               if: false
               working-directory: ${{ github.workspace }}/source/toolchains
