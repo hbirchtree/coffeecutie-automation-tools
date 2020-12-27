@@ -7,8 +7,8 @@ name: Build toolchains
 jobs:
     Ubuntu:
         runs-on: ubuntu-latest
-        variables:
-            ctng: '${{ github.workspace }}/crosstool-ng-master/ct-ng'
+        env:
+            CTNG: '${{ github.workspace }}/crosstool-ng-master/ct-ng'
         strategy:
             matrix:
                 system:
@@ -34,7 +34,7 @@ jobs:
             - name: Build toolchain
               working-directory: ${{ github.workspace }}/source/toolchains/${{ matrix.system }}-ct/compiler
               run: |
-                  ${{ ctng }}
+                  $CTNG
             - name: Build sysroot
               working-directory: ${{ github.workspace }}/source/toolchains
               run: |
