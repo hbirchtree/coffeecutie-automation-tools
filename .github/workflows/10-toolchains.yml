@@ -37,12 +37,12 @@ jobs:
             - name: Build toolchain
               working-directory: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/compiler
               run: |
-                  $CTNG build.4
+                  $CTNG build.4 -e CT_PREFIX=${{ github.workspace }}/build
             - name: Create toolchain artifact
               uses: actions/upload-artifact@v2
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}
-                  path: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/compiler/${{ matrix.system.arch }}
+                  path: ${{ github.workspace }}/build/${{ matrix.system.arch }}
             - name: Build sysroot
               if: false
               working-directory: ${{ github.workspace }}/source/toolchains
