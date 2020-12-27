@@ -20,7 +20,7 @@ jobs:
               with:
                   path: source
             - name: Download dependencies
-              run: sudo apt install build-essential flex bison
+              run: sudo apt install -y build-essential flex bison help2man libtool-bin
             - name: Download crosstool-ng
               run: |
                   wget https://github.com/crosstool-ng/crosstool-ng/archive/master.tar.gz
