@@ -1,0 +1,41 @@
+name: Build toolchains
+'on':
+    push:
+        branches:
+            - master
+
+jobs:
+    Ubuntu:
+        runs-on: ubuntu-latest
+        variables:
+            ctng: '${{ github.workspace }}/crosstool-ng-master/ct-ng'
+        strategy:
+            matrix:
+                system:
+                    - beaglebone
+                    - raspberry
+                    - ubuntu
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  path: source
+            - name: Download dependencies
+              run: apt install build-essential 
+            - name: Download crosstool-ng
+              run: |
+                  wget https://github.com/crosstool-ng/crosstool-ng/archive/master.tar.gz
+                  tar xvf master.tar.gz
+            - name: Install crosstool-ng
+              working-directory: ${{ github.workspace }}/crosstool-ng-master
+              run: |
+                  ./bootstrap
+                  ./configure --enable-local
+                  make -j4
+            - name: Build toolchain
+              working-directory: ${{ github.workspace }}/source/toolchains/${{ matrix.system }}-ct/compiler
+              run: |
+                  ${{ ctng }}
+            - name: Build sysroot
+              working-directory: ${{ github.workspace }}/source/toolchains
+              run: |
+                  make ${{ matrix.system }}.sysroot

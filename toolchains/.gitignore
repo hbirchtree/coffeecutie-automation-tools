@@ -1,0 +1,8 @@
+**/.build
+**/arm-*
+**/aarch-*
+**/x86*
+**/build.log
+**/.config.old
+**/buildroot-*
+*/sysroot
