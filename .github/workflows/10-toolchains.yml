@@ -16,7 +16,7 @@ jobs:
                       arch: arm-unknown-linux-gnueabihf
                     - name: raspberry
                       arch: arm-unknown-linux-gnueabihf
-                    - name: ubuntu
+                    - name: desktop
                       arch: x86_64-unknown-linux-gnu
         steps:
             - uses: actions/checkout@v2
