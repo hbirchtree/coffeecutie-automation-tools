@@ -3,6 +3,8 @@ name: Build toolchains
     push:
         branches:
             - master
+        tags:
+            - v*
 
 jobs:
     ReleaseCreate:
