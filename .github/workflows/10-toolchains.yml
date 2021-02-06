@@ -86,7 +86,7 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                 grep '^CT_GCC_VERSION\|^CT_BINUTILS_VERSION\|^CT_GLIBC_VERSION\|^CT_LINUX_VERSION\|^CT_STRACE_VERSION\|^CT_GDB_VERSION' ${{github.workspace}}/source/toolchains/${{matrix.system.name }}-ct/.config | grep -v '^#' > ${{matrix.system.name}}-${{matrix.system.arch}}.manifest
+                 grep '^CT_GCC_VERSION\|^CT_BINUTILS_VERSION\|^CT_GLIBC_VERSION\|^CT_LINUX_VERSION\|^CT_STRACE_VERSION\|^CT_GDB_VERSION' ${{github.workspace}}/source/toolchains/${{matrix.system.name}}-ct/compiler/.config | grep -v '^#' > ${{matrix.system.name}}-${{matrix.system.arch}}.manifest
                  gh release upload ${GITHUB_REF:10} ${{matrix.system.name}}-${{matrix.system.arch}}.manifest -R ${{github.repository}} --clobber
             - name: Build sysroot
               if: false
