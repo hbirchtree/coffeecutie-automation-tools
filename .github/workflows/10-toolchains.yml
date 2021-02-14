@@ -62,6 +62,7 @@ jobs:
               working-directory: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/compiler
               run: |
                   $CTNG build.4 -e CT_PREFIX=${{ github.workspace }}/build
+                  chmod -R +w ${{github.workspace}}/build/${{matrix.system.arch}}
             - name: Add Beaglebone Black libs
               if: matrix.system.name == 'beaglebone'
               run: |
