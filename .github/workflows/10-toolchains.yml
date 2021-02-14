@@ -62,6 +62,18 @@ jobs:
               working-directory: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/compiler
               run: |
                   $CTNG build.4 -e CT_PREFIX=${{ github.workspace }}/build
+            - name: Add Beaglebone Black libs
+              if: matrix.system.name == 'beaglebone'
+              run: |
+                  git clone https://git.ti.com/git/graphics/omap5-sgx-ddk-um-linux.git sgx
+                  cp -r sgx/targetfs/lib/* ${{ github.workspace }}/build/${{matrix.system.arch}}/${{matrix.system.arch}}/sysroot/usr/lib
+                  cp -r sgx/targetfs/include/* ${{ github.workspace }}/build/${{matrix.system.arch}}/${{matrix.system.arch}}/sysroot/usr/include
+            - name: Add Raspberry Pi VideoCore IV libs
+              if: matrix.system.name == 'raspberry'
+              run: |
+                  wget https://github.com/raspberrypi/firmware/archive/master.tar.gz
+                  tar xvf master.tar.gz
+                  cp -r firmware-master/hardfp/opt/vc ${{ github.workspace }}/build/${{ matrix.system.arch }}/${{ matrix.system.arch }}/sysroot
             - name: Zip up toolchain
               working-directory: ${{ github.workspace }}/build/${{ matrix.system.arch }}
               run: |
