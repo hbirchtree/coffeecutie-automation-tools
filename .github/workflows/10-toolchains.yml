@@ -67,14 +67,19 @@ jobs:
               if: matrix.system.name == 'beaglebone'
               run: |
                   git clone https://git.ti.com/git/graphics/omap5-sgx-ddk-um-linux.git sgx
-                  cp -r sgx/targetfs/lib/* ${{ github.workspace }}/build/${{matrix.system.arch}}/${{matrix.system.arch}}/sysroot/usr/lib
                   cp -r sgx/targetfs/include/* ${{ github.workspace }}/build/${{matrix.system.arch}}/${{matrix.system.arch}}/sysroot/usr/include
+                  cp sgx/targetfs/lib/lib* ${{ github.workspace }}/build/${{matrix.system.arch}}/${{matrix.system.arch}}/sysroot/usr/lib
+                  cp sgx/targetfs/lib/pkgconfig/* ${{ github.workspace }}/build/${{ matrix.system.arch }}/${{ matrix.system.arch }}/sysroot/usr/lib/pkgconfig
+                  cp -r sgx/targetfs/lib/gbm ${{ github.workspace }}/build/${{ matrix.system.arch }}/${{ matrix.system.arch }}/sysroot/usr/lib
             - name: Add Raspberry Pi VideoCore IV libs
               if: matrix.system.name == 'raspberry'
               run: |
                   wget https://github.com/raspberrypi/firmware/archive/master.tar.gz -O rpi-firmware.tar.gz
                   tar xvf rpi-firmware.tar.gz
-                  cp -r firmware-master/hardfp/opt/vc ${{ github.workspace }}/build/${{ matrix.system.arch }}/${{ matrix.system.arch }}/sysroot
+                  cp -r firmware-master/hardfp/opt/vc/include/* ${{ github.workspace }}/build/${{ matrix.system.arch }}/${{ matrix.system.arch }}/sysroot/usr/include
+                  cp firmware-master/hardfp/opt/vc/lib/lib* ${{ github.workspace }}/build/${{ matrix.system.arch }}/${{ matrix.system.arch }}/sysroot/usr/lib
+                  cp firmware-master/hardfp/opt/vc/lib/pkgconfig/* ${{ github.workspace }}/build/${{ matrix.system.arch }}/${{ matrix.system.arch }}/sysroot/usr/lib/pkgconfig
+                  cp -r firmware-master/hardfp/opt/vc/lib/plugins ${{ github.workspace }}/build/${{ matrix.system.arch }}/${{ matrix.system.arch }}/sysroot/usr/lib
             - name: Zip up toolchain
               working-directory: ${{ github.workspace }}/build/${{ matrix.system.arch }}
               run: |
