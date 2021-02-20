@@ -122,7 +122,6 @@ jobs:
             - name: Download dependencies
               run: sudo apt install -y build-essential flex bison help2man libtool-bin
             - name: Download compiler
-              if: matrix.system.build_sysroot
               uses: actions/download-artifact@v2
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}
