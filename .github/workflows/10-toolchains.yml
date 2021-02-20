@@ -114,15 +114,12 @@ jobs:
                 system:
                     - name: beaglebone
                       arch: arm-unknown-linux-gnueabihf
-                      build_sysroot: true
                       sysroot: wayland
         steps:
             - uses: actions/checkout@v2
-              if: matrix.system.build_sysroot
               with:
                   path: source
             - name: Download dependencies
-              if: matrix.system.build_sysroot
               run: sudo apt install -y build-essential flex bison help2man libtool-bin
             - name: Download compiler
               if: matrix.system.build_sysroot
@@ -130,8 +127,9 @@ jobs:
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}
                   path: ${{ github.workspace }}/source/toolchain/${{matrix.system.name}}-ct/compiler/${{ matrix.system.arch }}
+            - name: Fix compiler permissions
+              run: chmod -R a+x ${{ github.workspace }}/source/toolchain/${{matrix.system.name}}-ct/compiler/${{matrix.system.arch}}
             - name: Build sysroot
-              if: matrix.system.build_sysroot
               working-directory: ${{ github.workspace }}/source/toolchains
               run: >
                   make ${{ matrix.system.name }}.buildroot
