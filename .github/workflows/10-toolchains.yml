@@ -115,22 +115,17 @@ jobs:
                     - name: beaglebone
                       arch: arm-unknown-linux-gnueabihf
                       build_sysroot: true
-                      sysroot: [ wayland ]
-                    - name: raspberry
-                      arch: arm-unknown-linux-gnueabihf
-                      build_sysroot: false
-                      sysroot: [ x11, drm ]
-                    - name: desktop
-                      arch: x86_64-unknown-linux-gnu
-                      build_sysroot: false
-                      sysroot: [ x11, wayland, full ]
+                      sysroot: wayland
         steps:
             - uses: actions/checkout@v2
+              if: matrix.system.build_sysroot
               with:
                   path: source
             - name: Download dependencies
+              if: matrix.system.build_sysroot
               run: sudo apt install -y build-essential flex bison help2man libtool-bin
             - name: Download compiler
+              if: matrix.system.build_sysroot
               uses: actions/download-artifact@v2
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}
@@ -142,7 +137,6 @@ jobs:
                   make ${{ matrix.system.name }}.buildroot
                   -e BUILDROOT_FLAVOR=.${{matrix.system.sysroot}}
             - name: Upload sysroot
-              if: matrix.system.build_sysroot
               uses: actions/upload-artifact@v2
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}-${{ matrix.system.sysroot }}
