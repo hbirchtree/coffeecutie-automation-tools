@@ -1,7 +1,8 @@
 %.compiler:
 	cd $(PWD)/$*-ct/compiler && ct-ng build -j4
 
-BUILDROOT_VER := 2020.11
+BUILDROOT_VER    ?= 2020.11
+BUILDROOT_FLAVOR ?=
 
 %.buildroot:
 	cd $(PWD)/$*-ct && \
@@ -9,7 +10,7 @@ BUILDROOT_VER := 2020.11
 		tar zxf buildroot-$(BUILDROOT_VER).tar.gz && \
 		mv buildroot-$(BUILDROOT_VER) $(PWD)/$*-ct/sysroot && \
 		cd $(PWD)/$*-ct/sysroot && \
-		cp $(PWD)/$*-ct/sysroot.config $(PWD)/$*-ct/sysroot/.config && \
+		cp $(PWD)/$*-ct/sysroot$(BUILDROOT_FLAVOR).config $(PWD)/$*-ct/sysroot/.config && \
 		make
 
 DEBROOT_ARCH    :=
