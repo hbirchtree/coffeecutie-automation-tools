@@ -129,6 +129,9 @@ jobs:
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}
                   path: ${{ github.workspace }}/source/toolchains/${{matrix.system.name}}-ct/compiler/${{ matrix.system.arch }}
+            - name: Make toolchain executable
+              run: |
+                  chmod -R a+wx ${{ github.workspace }}/source/toolchains/${{matrix.system.name}}-ct/compiler/${{matrix.system.arch}}
             - name: Download buildroot
               uses: actions/checkout@v2
               with:
