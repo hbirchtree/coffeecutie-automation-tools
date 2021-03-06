@@ -62,7 +62,7 @@ jobs:
               working-directory: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/compiler
               run: |
                   $CTNG build.4 -e CT_PREFIX=${{ github.workspace }}/build
-                  chmod -R +w ${{github.workspace}}/build/${{matrix.system.arch}}
+                  chmod -R a+wx ${{github.workspace}}/build/${{matrix.system.arch}}
             - name: Add Beaglebone Black libs
               if: matrix.system.name == 'beaglebone'
               run: |
@@ -115,6 +115,9 @@ jobs:
                     - name: beaglebone
                       arch: arm-unknown-linux-gnueabihf
                       sysroot: wayland
+                    - name: desktop
+                      arch: x86_64-unknown-linux-gnu
+                      sysroot: multi
         steps:
             - uses: actions/checkout@v2
               with:
@@ -126,15 +129,38 @@ jobs:
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}
                   path: ${{ github.workspace }}/source/toolchain/${{matrix.system.name}}-ct/compiler/${{ matrix.system.arch }}
-            - name: Fix compiler permissions
-              run: chmod -R a+x ${{ github.workspace }}/source/toolchain/${{matrix.system.name}}-ct/compiler/${{matrix.system.arch}}
-            - name: Build sysroot
-              working-directory: ${{ github.workspace }}/source/toolchains
+            - name: Download buildroot
+              uses: actions/checkout@v2
+              with:
+                  path: source/toolchains/${{ matrix.system.name }}-ct/sysroot
+                  repository: buildroot/buildroot
+                  ref: '2020.11.3'
+            - name: Copy config
               run: >
-                  make ${{ matrix.system.name }}.buildroot
-                  -e BUILDROOT_FLAVOR=.${{matrix.system.sysroot}}
+                  cp
+                  ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/sysroot.${{ matrix.system.sysroot }}.config
+                  ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/sysroot/.config
+            - name: Build sysroot
+              working-directory: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/sysroot
+              run: |
+                  ls -l ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/compiler/${{ matrix.system.arch }}
+                  make sdk
             - name: Upload sysroot
               uses: actions/upload-artifact@v2
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}-${{ matrix.system.sysroot }}
                   path: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/sysroot/output/host
+            - name: Zip up sysroot
+              working-directory: ${{ github.workspace }}/source/toolchains/${{ matrix.system.name }}-ct/sysroot/output/host
+              run: |
+                  tar Jcf ${{ github.workspace }}/${{ matrix.system.name }}-${{ matrix.system.arch }}_${{ matrix.system.sysroot }}.tar.xz *
+            - name: Upload to release
+              if: startsWith(github.ref, 'refs/tags/')
+              working-directory: ${{ github.workspace }}/source
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: >
+                  gh release upload ${GITHUB_REF:10}
+                  ${{ matrix.system.name }}-${{ matrix.system.arch }}_${{ matrix.system.sysroot }}.tar.xz
+                  -R ${{ github.repository }}
+                  --clobber
