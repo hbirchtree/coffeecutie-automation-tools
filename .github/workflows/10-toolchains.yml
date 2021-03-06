@@ -128,7 +128,7 @@ jobs:
               uses: actions/download-artifact@v2
               with:
                   name: ${{ matrix.system.name }}-${{ matrix.system.arch }}
-                  path: ${{ github.workspace }}/source/toolchain/${{matrix.system.name}}-ct/compiler/${{ matrix.system.arch }}
+                  path: ${{ github.workspace }}/source/toolchains/${{matrix.system.name}}-ct/compiler/${{ matrix.system.arch }}
             - name: Download buildroot
               uses: actions/checkout@v2
               with:
