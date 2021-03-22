@@ -165,11 +165,10 @@ jobs:
                   tar Jcf ${{ github.workspace }}/${{ matrix.system.name }}-${{ matrix.system.arch }}_${{ matrix.system.sysroot }}.tar.xz *
             - name: Upload to release
               if: startsWith(github.ref, 'refs/tags/')
-              working-directory: ${{ github.workspace }}/source
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: >
                   gh release upload ${GITHUB_REF:10}
-                  ${{ matrix.system.name }}-${{ matrix.system.arch }}_${{ matrix.system.sysroot }}.tar.xz
+                  ${{ github.workspace }}/${{ matrix.system.name }}-${{ matrix.system.arch }}_${{ matrix.system.sysroot }}.tar.xz
                   -R ${{ github.repository }}
                   --clobber
