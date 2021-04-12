@@ -51,7 +51,7 @@ jobs:
               run: sudo apt install -y build-essential flex bison help2man libtool-bin
             - name: Download crosstool-ng
               run: |
-                  wget https://github.com/crosstool-ng/crosstool-ng/archive/master.tar.gz
+                  wget https://github.com/crosstool-ng/crosstool-ng/archive/refs/tags/crosstool-ng-1.24.0.tar.gz
                   tar xvf master.tar.gz
             - name: Install crosstool-ng
               working-directory: ${{ github.workspace }}/crosstool-ng-master
