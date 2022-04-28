@@ -63,7 +63,7 @@ jobs:
                   make -j4
             - name: Build toolchain
               working-directory: ${{ github.workspace }}/source/toolchains
-              run: make ${{ matrix.system.name }}.${{ matrix.system.arch }}
+              run: make ${{ matrix.system.name }}-${{ matrix.system.arch }}.build
                 #- name: Add Beaglebone Black libs
                 #  if: matrix.system.name == 'beaglebone'
                 #  run: |
