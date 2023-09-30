@@ -19,6 +19,8 @@ GDB_VERSION ?= 12.1
 		cp $*-ct/sysroot.$(BUILDROOT_FLAVOR).config $*-ct/sysroot-$(BUILDROOT_FLAVOR)/.config
 
 %-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed: $(PWD)/%-ct/sysroot-$(BUILDROOT_FLAVOR) %-ct/sysroot.$(BUILDROOT_FLAVOR).config
+	mkdir -p $*-ct/sysroot-$(BUILDROOT_FLAVOR)/output/host
+	cp -r $*-ct/compiler/$(ARCHITECTURE) $*-ct/sysroot-$(BUILDROOT_FLAVOR)/output/host/compiler
 	cd $(PWD)/$*-ct/sysroot-$(BUILDROOT_FLAVOR) && make prepare-sdk
 	touch $(PWD)/$*-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed
 	@echo Finished compiler+sysroot bundle
@@ -54,6 +56,17 @@ GDB_VERSION ?= 12.1
 		ln -s $(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR).tar.xz $(PWD)/$*-ct/$(BUILDROOT_FLAVOR)-compiler-bundle.tar.xz
 	@echo Finished compiler+sysroot bundle
 
+%-ct/.$(BUILDROOT_FLAVOR)-target-bundle: %-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed
+	cd $(PWD)/$*-ct/sysroot-$(BUILDROOT_FLAVOR)/output/target && \
+		tar Jcf $(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR)_target.tar.xz -- \
+			usr/lib \
+			usr/share \
+			lib \
+	   	&& \
+		cd ../../../ && \
+		touch .$(BUILDROOT_FLAVOR)-target-bundle
+	@echo Finished compiler+sysroot bundle
+
 %-ct.clean:
 	rm -f \
 		$(PWD)/$*-ct/compiler-bin \
@@ -63,9 +76,13 @@ GDB_VERSION ?= 12.1
 
 RELEASE :=
 
+release:
+	gh release create $(RELEASE)
+
 %.upload-release:
-	gh release upload "$(RELEASE)" \
+	gh release upload "$(RELEASE)" --clobber \
 		$(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR).tar.xz \
+		$(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR)_target.tar.xz \
 		$(PWD)/$*-ct/$*-$(ARCHITECTURE).manifest
 
 desktop-x86_64-buildroot-linux-gnu.build:
@@ -75,7 +92,8 @@ desktop-x86_64-buildroot-linux-gnu.build:
 		-e BUILDROOT_VER=2022.11 \
 		desktop-ct/compiler-bin \
 		desktop-ct/compiler.manifest \
-		desktop-ct/multi-compiler-bundle.tar.xz
+		desktop-ct/multi-compiler-bundle.tar.xz \
+		desktop-ct/.multi-target-bundle
 	@echo Finished target
 
 beaglebone-ct/omap5-sgx-ddk-um-linux:
@@ -96,7 +114,8 @@ beaglebone-arm-buildroot-linux-gnueabihf.clean:
 		beaglebone-ct/*_ti-sgx.tar.xz \
 		beaglebone-ct/.sysroot-ti-sgx-completed \
 		beaglebone-ct/compiler-bin \
-		beaglebone-ct/compiler.manifest
+		beaglebone-ct/compiler.manifest \
+		beaglebone-ct/.ti-sgx-target-bundle
 	rm -rf \
 		beaglebone-ct/omap5-sgx-ddk-um-linux
 		beaglebone-ct/sysroot-ti-sgx \
@@ -111,10 +130,11 @@ beaglebone-arm-buildroot-linux-gnueabihf.build:
 		beaglebone-ct/compiler-bin \
 		beaglebone-ct/compiler.manifest \
 		beaglebone-ct/.sysroot-ti-sgx-completed \
-		beaglebone-ct/.gdb-python-completed \
 		beaglebone-ct.install-sgx \
-		beaglebone-ct/ti-sgx-compiler-bundle.tar.xz
+		beaglebone-ct/ti-sgx-compiler-bundle.tar.xz \
+		beaglebone-ct/.ti-sgx-target-bundle
 	@echo Finished target
+		#beaglebone-ct/.gdb-python-completed \
 
 generic-arm-buildroot-linux-gnueabihf-wayland.build:
 	make -f $(MAKEFILE_LIST) \
@@ -124,8 +144,9 @@ generic-arm-buildroot-linux-gnueabihf-wayland.build:
 		arm-wayland-ct/compiler-bin \
 		arm-wayland-ct/compiler.manifest \
 		arm-wayland-ct/wayland-compiler-bundle.tar.xz \
-		arm-wayland-ct/.gdb-python-completed
+		arm-wayland-ct/.wayland-target-bundle
 	@echo Finished target
+		#arm-wayland-ct/.gdb-python-completed
 
 
 raspberry-ct/rpi-firmware:
@@ -151,6 +172,7 @@ raspberry-arm-buildroot-linux-gnueabihf.build:
 		raspberry-ct/compiler.manifest \
 		raspberry-ct/.sysroot-vc-completed \
 		raspberry-ct.install-vc \
-		raspberry-ct/vc-compiler-bundle.tar.xz
+		raspberry-ct/vc-compiler-bundle.tar.xz \
+		raspberry-ct/.vc-target-bundle
 	@echo Finished target
 
