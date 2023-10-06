@@ -3,27 +3,93 @@ BUILDROOT_FLAVOR ?=
 ARCHITECTURE ?=
 GDB_VERSION ?= 12.1
 
-%-ct/compiler-bin:
-	cd $(PWD)/$*-ct/compiler && CT_PREFIX=$(PWD)/$*-ct/compiler ct-ng build -j4
-	ln -s $(PWD)/$*-ct/compiler/$(ARCHITECTURE) $(PWD)/$*-ct/compiler-bin
+.PHONY:
 
-%-ct/compiler.manifest:
-	cd $(PWD)/$*-ct && grep '^CT_GCC_VERSION\|^CT_BINUTILS_VERSION\|^CT_GLIBC_VERSION\|^CT_LINUX_VERSION\|^CT_STRACE_VERSION\|^CT_GDB_VERSION' compiler/.config | grep -v '^#' > $*-$(ARCHITECTURE).manifest
-	ln -s $*-$(ARCHITECTURE).manifest $(PWD)/$*-ct/compiler.manifest
+.PRECIOUS: %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler
 
-%-ct/sysroot-$(BUILDROOT_FLAVOR):
+%-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE): %-ct/compiler-$(ARCHITECTURE)/.config
+	cd $(PWD)/$*-ct/compiler-$(ARCHITECTURE) && CT_PREFIX=$(PWD)/$*-ct/compiler-$(ARCHITECTURE) ct-ng build -j4
+
+%-ct/$(ARCHITECTURE).manifest: %-ct/compiler-$(ARCHITECTURE)/.config
+	cd $(PWD)/$*-ct && \
+		grep '^CT_GCC_VERSION\|^CT_BINUTILS_VERSION\|^CT_GLIBC_VERSION\|^CT_LINUX_VERSION\|^CT_STRACE_VERSION\|^CT_GDB_VERSION' \
+		compiler-$(ARCHITECTURE)/.config | \
+			grep -v '^#' > $(ARCHITECTURE).manifest
+
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR):
 	cd $*-ct && \
 		wget https://buildroot.org/downloads/buildroot-$(BUILDROOT_VER).tar.gz && \
     	tar zxf buildroot-$(BUILDROOT_VER).tar.gz && \
-    	mv buildroot-$(BUILDROOT_VER) sysroot-$(BUILDROOT_FLAVOR) && \
-		cp $*-ct/sysroot.$(BUILDROOT_FLAVOR).config $*-ct/sysroot-$(BUILDROOT_FLAVOR)/.config
+		rm buildroot-$(BUILDROOT_VER).tar.gz && \
+    	mv buildroot-$(BUILDROOT_VER) sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) && \
+		cp sysroot.$(BUILDROOT_FLAVOR).config sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/.config
 
-%-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed: $(PWD)/%-ct/sysroot-$(BUILDROOT_FLAVOR) %-ct/sysroot.$(BUILDROOT_FLAVOR).config
-	mkdir -p $*-ct/sysroot-$(BUILDROOT_FLAVOR)/output/host
-	cp -r $*-ct/compiler/$(ARCHITECTURE) $*-ct/sysroot-$(BUILDROOT_FLAVOR)/output/host/compiler
-	cd $(PWD)/$*-ct/sysroot-$(BUILDROOT_FLAVOR) && make prepare-sdk
-	touch $(PWD)/$*-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler:
+	mkdir -p $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host
+	cp -r --no-preserve=ownership \
+		$*-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) \
+		$*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler
+	chmod -R +w $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler
+
+%-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed: %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) %-ct/sysroot.$(BUILDROOT_FLAVOR).config %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler
+	cd $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) && make prepare-sdk
+	touch $*-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
 	@echo Finished compiler+sysroot bundle
+
+%-ct/.$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-compiler-bundle: %-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
+	cd $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host && \
+		env XZ_DEFAULT="-T0" tar Jcf $(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR).tar.xz -- *
+	touch $*-ct/.$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-compiler-bundle
+	@echo Finished compiler+sysroot bundle
+
+%-ct/.$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-target-bundle: %-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
+	cd $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/target && \
+		env XZ_DEFAULT="-T0" tar Jcf $(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR)_target.tar.xz -- \
+			usr/lib \
+			usr/share \
+			lib
+	touch $*-ct/.$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-target-bundle
+	@echo Finished compiler+sysroot bundle
+
+%-ct.clean:
+	rm -f \
+		$(PWD)/$*-ct/$(ARCHITECTURE).manifest \
+		$(PWD)/$*-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed \
+		$(PWD)/$*-ct/$(BUILDROOT_FLAVOR)-compiler-bundle.tar.xz
+		#$(PWD)/$*-ct/compiler-bin \
+
+# Source platform directory + flavor to copy
+# Architecture is assumed to be the same because... Duh
+SOURCE_PLATFORM :=
+SOURCE_FLAVOR :=
+
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host: $(SOURCE_PLATFORM)-ct/.sysroot-$(ARCHITECTURE)-$(SOURCE_FLAVOR)-completed
+	mkdir -p $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output
+	cp -r --no-preserve=ownership \
+		$(SOURCE_PLATFORM)-ct/sysroot-$(ARCHITECTURE)-$(SOURCE_FLAVOR)/output/host \
+		$*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/
+	chmod -R +w $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host
+	cp $(SOURCE_PLATFORM)-ct/$(ARCHITECTURE).manifest $*-ct/$(ARCHITECTURE).manifest
+	touch $*-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
+
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/target: $(SOURCE_PLATFORM)-ct/.sysroot-$(ARCHITECTURE)-$(SOURCE_FLAVOR)-completed
+	mkdir -p $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output
+	cp -r --no-preserve=ownership \
+		$(SOURCE_PLATFORM)-ct/sysroot-$(ARCHITECTURE)-$(SOURCE_FLAVOR)/output/target \
+		$*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/
+	chmod -R +w $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/target
+	touch $*-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
+
+RELEASE :=
+
+release: .PHONY
+	gh release create $(RELEASE)
+
+%.upload-release:
+	gh release upload "$(RELEASE)" --clobber \
+		$(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR).tar.xz \
+		$(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR)_target.tar.xz \
+		$(PWD)/$*-ct/$*-$(ARCHITECTURE).manifest
 
 %-ct/gdb-src:
 	wget https://ftp.gnu.org/gnu/gdb/gdb-$(GDB_VERSION).tar.xz -O $(PWD)/$*-ct/gdb.tar.xz
@@ -50,50 +116,15 @@ GDB_VERSION ?= 12.1
 		make install
 	@echo '-- gdb and gdbserver built'
 
-%-ct/$(BUILDROOT_FLAVOR)-compiler-bundle.tar.xz: %-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed
-	cd $(PWD)/$*-ct/sysroot-$(BUILDROOT_FLAVOR)/output/host && \
-		tar Jcf $(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR).tar.xz -- * && \
-		ln -s $(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR).tar.xz $(PWD)/$*-ct/$(BUILDROOT_FLAVOR)-compiler-bundle.tar.xz
-	@echo Finished compiler+sysroot bundle
-
-%-ct/.$(BUILDROOT_FLAVOR)-target-bundle: %-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed
-	cd $(PWD)/$*-ct/sysroot-$(BUILDROOT_FLAVOR)/output/target && \
-		tar Jcf $(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR)_target.tar.xz -- \
-			usr/lib \
-			usr/share \
-			lib \
-	   	&& \
-		cd ../../../ && \
-		touch .$(BUILDROOT_FLAVOR)-target-bundle
-	@echo Finished compiler+sysroot bundle
-
-%-ct.clean:
-	rm -f \
-		$(PWD)/$*-ct/compiler-bin \
-		$(PWD)/$*-ct/compiler.manifest \
-		$(PWD)/$*-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed \
-		$(PWD)/$*-ct/$(BUILDROOT_FLAVOR)-compiler-bundle.tar.xz
-
-RELEASE :=
-
-release:
-	gh release create $(RELEASE)
-
-%.upload-release:
-	gh release upload "$(RELEASE)" --clobber \
-		$(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR).tar.xz \
-		$(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR)_target.tar.xz \
-		$(PWD)/$*-ct/$*-$(ARCHITECTURE).manifest
-
 desktop-x86_64-buildroot-linux-gnu.build:
 	make -f $(MAKEFILE_LIST) \
 		-e ARCHITECTURE=x86_64-buildroot-linux-gnu \
 		-e BUILDROOT_FLAVOR=multi \
 		-e BUILDROOT_VER=2022.11 \
-		desktop-ct/compiler-bin \
-		desktop-ct/compiler.manifest \
-		desktop-ct/multi-compiler-bundle.tar.xz \
-		desktop-ct/.multi-target-bundle
+		desktop-ct/compiler-x86_64-buildroot-linux-gnu/x86_64-buildroot-linux-gnu \
+		desktop-ct/x86_64-buildroot-linux-gnu.manifest \
+		desktop-ct/.x86_64-buildroot-linux-gnu-multi-compiler-bundle \
+		desktop-ct/.x86_64-buildroot-linux-gnu-multi-target-bundle
 	@echo Finished target
 
 beaglebone-ct/omap5-sgx-ddk-um-linux:
@@ -101,60 +132,44 @@ beaglebone-ct/omap5-sgx-ddk-um-linux:
 	git -C beaglebone-ct/omap5-sgx-ddk-um-linux checkout origin/ti-img-sgx/1.14.3699939
 
 SGX_SOURCE_DIR := beaglebone-ct/omap5-sgx-ddk-um-linux/targetfs/ti335x
-SGX_DEST_DIR   := beaglebone-ct/sysroot-$(BUILDROOT_FLAVOR)/output/host/arm-buildroot-linux-gnueabihf/sysroot/usr
+SGX_DEST_DIR   := beaglebone-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/arm-buildroot-linux-gnueabihf/sysroot/usr
 
 beaglebone-ct.install-sgx: beaglebone-ct/omap5-sgx-ddk-um-linux
 	cp -r $(SGX_SOURCE_DIR)/include/*    $(SGX_DEST_DIR)/include/
 	cp    $(SGX_SOURCE_DIR)/lib/lib*.so* $(SGX_DEST_DIR)/lib/
 	#cp -r $(SGX_SOURCE_DIR)/lib/gbm      $(SGX_DEST_DIR)/lib/
 
-beaglebone-arm-buildroot-linux-gnueabihf.clean:
-	rm -f \
-		beaglebone-ct/ti-sgx-compiler-bundle.tar.xz \
-		beaglebone-ct/*_ti-sgx.tar.xz \
-		beaglebone-ct/.sysroot-ti-sgx-completed \
-		beaglebone-ct/compiler-bin \
-		beaglebone-ct/compiler.manifest \
-		beaglebone-ct/.ti-sgx-target-bundle
-	rm -rf \
-		beaglebone-ct/omap5-sgx-ddk-um-linux
-		beaglebone-ct/sysroot-ti-sgx \
-		beaglebone-ct/compiler/.build \
-		beaglebone-ct/compiler/arm-buildroot-linux-gnueabihf
-
 beaglebone-arm-buildroot-linux-gnueabihf.build:
 	make -f $(MAKEFILE_LIST) \
 		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=ti-sgx \
-		-e BUILDROOT_VER=2022.11 \
-		beaglebone-ct/compiler-bin \
-		beaglebone-ct/compiler.manifest \
-		beaglebone-ct/.sysroot-ti-sgx-completed \
+		-e BUILDROOT_VER=2023.08.1 \
+		-e SOURCE_PLATFORM=desktop \
+		-e SOURCE_FLAVOR=arm-wayland \
+		beaglebone-ct/sysroot-arm-buildroot-linux-gnueabihf-ti-sgx/output/host \
+		beaglebone-ct/sysroot-arm-buildroot-linux-gnueabihf-ti-sgx/output/target \
 		beaglebone-ct.install-sgx \
-		beaglebone-ct/ti-sgx-compiler-bundle.tar.xz \
-		beaglebone-ct/.ti-sgx-target-bundle
+		beaglebone-ct/.arm-buildroot-linux-gnueabihf-ti-sgx-compiler-bundle \
+		beaglebone-ct/.arm-buildroot-linux-gnueabihf-ti-sgx-target-bundle
 	@echo Finished target
-		#beaglebone-ct/.gdb-python-completed \
 
-generic-arm-buildroot-linux-gnueabihf-wayland.build:
+desktop-arm-buildroot-linux-gnueabihf-wayland.build:
 	make -f $(MAKEFILE_LIST) \
 		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
-		-e BUILDROOT_FLAVOR=wayland \
-		-e BUILDROOT_VER=2022.11 \
-		arm-wayland-ct/compiler-bin \
-		arm-wayland-ct/compiler.manifest \
-		arm-wayland-ct/wayland-compiler-bundle.tar.xz \
-		arm-wayland-ct/.wayland-target-bundle
+		-e BUILDROOT_FLAVOR=arm-wayland \
+		-e BUILDROOT_VER=2023.08.1 \
+		desktop-ct/compiler-arm-buildroot-linux-gnueabihf/arm-buildroot-linux-gnueabihf \
+		desktop-ct/arm-buildroot-linux-gnueabihf.manifest \
+		desktop-ct/.arm-buildroot-linux-gnueabihf-arm-wayland-compiler-bundle \
+		desktop-ct/.arm-buildroot-linux-gnueabihf-arm-wayland-target-bundle
 	@echo Finished target
-		#arm-wayland-ct/.gdb-python-completed
-
 
 raspberry-ct/rpi-firmware:
 	git clone https://github.com/raspberrypi/rpi-firmware.git raspberry-ct/rpi-firmware --branch stable --depth 1
 
 VC_SOURCE_DIR := raspberry-ct/rpi-firmware/vc
-VC_DEST_DIR   := raspberry-ct/sysroot-$(BUILDROOT_FLAVOR)/output/host/arm-buildroot-linux-gnueabihf/sysroot/usr
-VC_TARGET_DEST_DIR   := raspberry-ct/sysroot-$(BUILDROOT_FLAVOR)/output/target/usr
+VC_DEST_DIR   := raspberry-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/$(ARCHITECTURE)/sysroot/usr
+VC_TARGET_DEST_DIR   := raspberry-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/target/usr
 
 raspberry-ct.install-vc: raspberry-ct/rpi-firmware
 	cp -r $(VC_SOURCE_DIR)/sdk/opt/vc/include/*          $(VC_DEST_DIR)/include
@@ -167,12 +182,19 @@ raspberry-arm-buildroot-linux-gnueabihf.build:
 	make -f $(MAKEFILE_LIST) \
 		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=vc \
-		-e BUILDROOT_VER=2022.11 \
-		raspberry-ct/compiler-bin \
-		raspberry-ct/compiler.manifest \
-		raspberry-ct/.sysroot-vc-completed \
+		-e BUILDROOT_VER=2023.08.1 \
+		-e SOURCE_PLATFORM=desktop \
+		-e SOURCE_FLAVOR=arm-wayland \
+		raspberry-ct/sysroot-arm-buildroot-linux-gnueabihf-vc/output/host \
+		raspberry-ct/sysroot-arm-buildroot-linux-gnueabihf-vc/output/target \
 		raspberry-ct.install-vc \
-		raspberry-ct/vc-compiler-bundle.tar.xz \
-		raspberry-ct/.vc-target-bundle
+		raspberry-ct/.arm-buildroot-linux-gnueabihf-vc-compiler-bundle \
+		raspberry-ct/.arm-buildroot-linux-gnueabihf-vc-target-bundle
 	@echo Finished target
 
+
+meta.json:
+	./generate_mega_manifest.py > meta.json
+
+all.json: meta.json
+	jq .outputs meta.json > all.json
