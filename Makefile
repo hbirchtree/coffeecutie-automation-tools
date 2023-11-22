@@ -3,7 +3,7 @@ BUILDROOT_FLAVOR ?=
 ARCHITECTURE ?=
 GDB_VERSION ?= 12.1
 
-.PHONY:
+.PHONY: meta.json
 
 .PRECIOUS: %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler
 
@@ -35,6 +35,9 @@ GDB_VERSION ?= 12.1
 	cd $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) && make prepare-sdk
 	touch $*-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
 	@echo Finished compiler+sysroot bundle
+
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/$(ARCHITECTURE):
+	mv $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/$(BUILDROOT_RENAME_FROM) $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/$(ARCHITECTURE)
 
 %-ct/.$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-compiler-bundle: %-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
 	cd $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host && \
@@ -158,10 +161,28 @@ desktop-arm-buildroot-linux-gnueabihf-wayland.build:
 		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=arm-wayland \
 		-e BUILDROOT_VER=2023.08.1 \
-		desktop-ct/compiler-arm-buildroot-linux-gnueabihf/arm-buildroot-linux-gnueabihf \
 		desktop-ct/arm-buildroot-linux-gnueabihf.manifest \
 		desktop-ct/.arm-buildroot-linux-gnueabihf-arm-wayland-compiler-bundle \
 		desktop-ct/.arm-buildroot-linux-gnueabihf-arm-wayland-target-bundle
+	@echo Finished target
+
+desktop-armv6-buildroot-linux-gnueabihf-wayland.build:
+	make -f $(MAKEFILE_LIST) \
+		-e ARCHITECTURE=armv6-buildroot-linux-gnueabihf \
+		-e BUILDROOT_FLAVOR=arm-wayland \
+		-e BUILDROOT_VER=2023.08.1 \
+		desktop-ct/armv6-buildroot-linux-gnueabihf.manifest \
+		desktop-ct/.sysroot-armv6-buildroot-linux-gnueabihf-arm-wayland-completed
+	@echo Finished target
+
+desktop-aarch64-buildroot-linux-gnu-multi.build:
+	make -f $(MAKEFILE_LIST) \
+		-e ARCHITECTURE=aarch64-buildroot-linux-gnu \
+		-e BUILDROOT_FLAVOR=aarch64-multi \
+		-e BUILDROOT_VER=2023.08.1 \
+		desktop-ct/aarch64-buildroot-linux-gnu.manifest \
+		desktop-ct/.aarch64-buildroot-linux-gnu-aarch64-multi-compiler-bundle \
+		desktop-ct/.aarch64-buildroot-linux-gnu-aarch64-multi-target-bundle
 	@echo Finished target
 
 raspberry-ct/rpi-firmware:
@@ -178,23 +199,23 @@ raspberry-ct.install-vc: raspberry-ct/rpi-firmware
 	cp    $(VC_SOURCE_DIR)/hardfp/opt/vc/lib/pkgconfig/* $(VC_DEST_DIR)/lib/pkgconfig
 	cp    $(VC_SOURCE_DIR)/hardfp/opt/vc/lib/*.so*       $(VC_TARGET_DEST_DIR)/lib
 
-raspberry-arm-buildroot-linux-gnueabihf.build:
+raspberry-armv6-buildroot-linux-gnueabihf.build:
 	make -f $(MAKEFILE_LIST) \
-		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
+		-e ARCHITECTURE=armv6-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=vc \
 		-e BUILDROOT_VER=2023.08.1 \
+		-e BUILDROOT_RENAME_FROM=arm-buildroot-linux-gnueabihf \
 		-e SOURCE_PLATFORM=desktop \
 		-e SOURCE_FLAVOR=arm-wayland \
-		raspberry-ct/sysroot-arm-buildroot-linux-gnueabihf-vc/output/host \
-		raspberry-ct/sysroot-arm-buildroot-linux-gnueabihf-vc/output/target \
+		raspberry-ct/sysroot-armv6-buildroot-linux-gnueabihf-vc/output/host \
+		raspberry-ct/sysroot-armv6-buildroot-linux-gnueabihf-vc/output/host/armv6-buildroot-linux-gnueabihf \
+		raspberry-ct/sysroot-armv6-buildroot-linux-gnueabihf-vc/output/target \
 		raspberry-ct.install-vc \
-		raspberry-ct/.arm-buildroot-linux-gnueabihf-vc-compiler-bundle \
-		raspberry-ct/.arm-buildroot-linux-gnueabihf-vc-target-bundle
+		raspberry-ct/.armv6-buildroot-linux-gnueabihf-vc-compiler-bundle \
+		raspberry-ct/.armv6-buildroot-linux-gnueabihf-vc-target-bundle
 	@echo Finished target
 
 
 meta.json:
-	./generate_mega_manifest.py > meta.json
+	./generate_mega_manifest.py | jq > meta.json
 
-all.json: meta.json
-	jq .outputs meta.json > all.json

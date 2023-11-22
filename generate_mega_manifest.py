@@ -67,14 +67,18 @@ def assemble_manifest(root_dir):
                 sysroot = None
             if '_target.' in file:
                 manifest['mapping'][file] = f'{toolchain}_{manifest["sysroot"]}_target.{ext}'
+                manifest['targetfs'] = f'{toolchain}_{manifest["sysroot"]}_target.{ext}'
             elif file.endswith('.manifest'):
                 manifest['mapping'][file] = f'{toolchain}.{ext}'
             elif sysroot is not None:
                 manifest['mapping'][file] = f'{toolchain}_{sysroot}.{ext}'
+                manifest['compiler'] = f'{toolchain}_{sysroot}.{ext}'
             elif 'sysroot' in manifest:
                 manifest['mapping'][file] = f'{toolchain}_{manifest["sysroot"]}.{ext}'
+                manifest['compiler'] = f'{toolchain}_{manifest["sysroot"]}.{ext}'
             elif sysroot is None:
                 manifest['mapping'][file] = f'{toolchain}_bare.{ext}'
+                manifest['compiler'] = f'{toolchain}_bare.{ext}'
         manifest['toolchain'] = toolchain
     out = {
         'sources': manifests,
