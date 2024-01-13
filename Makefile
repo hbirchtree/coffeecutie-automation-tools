@@ -5,7 +5,7 @@ GDB_VERSION ?= 12.1
 
 .PHONY: meta.json
 
-.PRECIOUS: %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler
+.PRECIOUS: %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler %-ct/gdb-src
 
 %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE): %-ct/compiler-$(ARCHITECTURE)/.config
 	cd $(PWD)/$*-ct/compiler-$(ARCHITECTURE) && CT_PREFIX=$(PWD)/$*-ct/compiler-$(ARCHITECTURE) ct-ng build -j4
@@ -99,21 +99,21 @@ release: .PHONY
 	cd $(PWD)/$*-ct && tar xf $(PWD)/$*-ct/gdb.tar.xz
 	mv $(PWD)/$*-ct/gdb-$(GDB_VERSION) $(PWD)/$*-ct/gdb-src
 
-%-ct/.gdb-python-completed: %-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed %-ct/gdb-src
+%-ct/.gdb-python-completed: %-ct/gdb-src
 	cd $(PWD)/$*-ct/gdb-src && \
 		PATH=$(PWD)/$*-ct/sysroot-$(BUILDROOT_FLAVOR)/output/host/bin:$(PATH) && \
 		./configure \
-			--target=arm-buildroot-linux-gnueabihf \
-			--program-prefix=arm-buildroot-linux-gnueabihf- \
-			--prefix=$(PWD)/$*-ct/host-gdb \
+			--target=$(ARCHITECTIRE) \
+			--program-prefix=$(ARCHITECTURE)- \
+			--prefix=$(PWD)/$*-ct/host-gdb-$(ARCHITECTURE) \
 			--with-python && \
 		make -j`nproc` && \
 		make install
 	cd $(PWD)/$*-ct/gdb-src/gdbserver && \
 		./configure \
-			--host=arm-buildroot-linux-gnueabihf \
-			--target=arm-buildroot-linux-gnueabihf \
-			--prefix=$(PWD)/$*-ct/host-gdb/gdbserver \
+			--host=$(ARCHITECTURE) \
+			--target=$(ARCHITECTURE) \
+			--prefix=$(PWD)/$*-ct/host-gdb-$(ARCHITECTURE)/gdbserver \
 			--with-python && \
 		make -j`nproc` && \
 		make install
