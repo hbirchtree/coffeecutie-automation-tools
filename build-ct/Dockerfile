@@ -8,7 +8,7 @@ RUN { echo 'tzdata tzdata/Areas select Etc'; echo 'tzdata tzdata/Zones/Etc selec
 RUN apt update && apt install -y \
     build-essential gcc g++ gperf bison flex texinfo help2man make libncurses5-dev \
     python3-dev autoconf automake libtool libtool-bin gawk wget bzip2 xz-utils unzip \
-    patch libstdc++6 rsync git meson ninja-build \
+    patch libstdc++6 rsync git meson ninja-build jq \
     \
     bc cpio && \
     apt clean && \

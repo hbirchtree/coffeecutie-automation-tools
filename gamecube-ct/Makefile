@@ -18,7 +18,7 @@ build: source
 	cd source && BUILD_DKPRO_INSTALLDIR=$(PWD)/build ./build-devkit.sh
 
 gamecube-powerpc-eabi.manifest: #source
-	echo "CT_GCC_VERSION=13.1.0\nCT_BINUTILS_VERSION=2.40.0\nCT_NEWLIB_VERSION=4.3.0\n" > $(PWD)/gamecube-powerpc-eabi.manifest
+	echo 'CT_GCC_VERSION="13.1.0"\nCT_BINUTILS_VERSION="2.40.0"\nCT_NEWLIB_VERSION="4.3.0"\n' > $(PWD)/gamecube-powerpc-eabi.manifest
 
 gamecube-powerpc-eabi_compiler.tar.xz: #build
 	cd $(PWD)/build/devkitPPC && tar Jcf $(PWD)/gamecube-powerpc-eabi_compiler.tar.xz -- *

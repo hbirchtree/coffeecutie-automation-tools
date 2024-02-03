@@ -1,0 +1,136 @@
+BUILDROOT_VER    ?= 2022.02.7
+BUILDROOT_FLAVOR ?=
+ARCHITECTURE ?=
+GDB_VERSION ?= 12.1
+
+.PHONY: meta.json
+
+.PRECIOUS: %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler %-ct/gdb-src
+
+%-ct/$(ARCHITECTURE).manifest: %-ct/compiler-$(ARCHITECTURE)/.config
+	cd $(PWD)/$*-ct && \
+		grep '^CT_GCC_VERSION\|^CT_BINUTILS_VERSION\|^CT_GLIBC_VERSION\|^CT_LINUX_VERSION\|^CT_STRACE_VERSION\|^CT_GDB_VERSION' \
+		compiler-$(ARCHITECTURE)/.config | \
+			grep -v '^#' > $(ARCHITECTURE).manifest
+
+%-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE): %-ct/compiler-$(ARCHITECTURE)/.config %-ct/$(ARCHITECTURE).manifest
+	cd $(PWD)/$*-ct/compiler-$(ARCHITECTURE) && CT_PREFIX=$(PWD)/$*-ct/compiler-$(ARCHITECTURE) ct-ng build -j4
+
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR):
+	cd $*-ct && \
+		wget https://buildroot.org/downloads/buildroot-$(BUILDROOT_VER).tar.gz && \
+    	tar zxf buildroot-$(BUILDROOT_VER).tar.gz && \
+		rm buildroot-$(BUILDROOT_VER).tar.gz && \
+    	mv buildroot-$(BUILDROOT_VER) sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) && \
+		cp sysroot.$(BUILDROOT_FLAVOR).config sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/.config
+
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler:
+	mkdir -p $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host
+	cp -r --no-preserve=ownership \
+		$*-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) \
+		$*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler
+	chmod -R +w $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler
+
+%-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed: \
+		%-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) \
+		%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) \
+		%-ct/sysroot.$(BUILDROOT_FLAVOR).config \
+		%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/compiler
+	cd $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR) && make prepare-sdk
+	touch $*-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
+	@echo Finished compiler+sysroot bundle
+
+%-ct/.$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-compiler-bundle:
+	cd $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host && \
+		tar -c -I 'xz -9 -T0' -f $(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR).tar.xz -- *
+	touch $*-ct/.$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-compiler-bundle
+	@echo Finished compiler+sysroot bundle
+
+%-ct/.$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-target-bundle:
+	cd $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/target && \
+		tar -c -I 'xz -9 -T0' -f $(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR)_target.tar.xz -- \
+			usr/lib \
+			usr/share \
+			lib
+	touch $*-ct/.$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-target-bundle
+	@echo Finished compiler+sysroot bundle
+
+%-ct.clean:
+	rm -f \
+		$(PWD)/$*-ct/$(ARCHITECTURE).manifest \
+		$(PWD)/$*-ct/.sysroot-$(BUILDROOT_FLAVOR)-completed \
+		$(PWD)/$*-ct/$(BUILDROOT_FLAVOR)-compiler-bundle.tar.xz
+		#$(PWD)/$*-ct/compiler-bin \
+
+#
+# Source platform directory + flavor to copy
+# Architecture is assumed to be the same because... Duh
+#
+
+SOURCE_PLATFORM :=
+SOURCE_FLAVOR :=
+
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host: $(SOURCE_PLATFORM)-ct/sysroot-$(ARCHITECTURE)-$(SOURCE_FLAVOR)/output/host
+	mkdir -p $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output
+	cp -r --no-preserve=ownership \
+		$(SOURCE_PLATFORM)-ct/sysroot-$(ARCHITECTURE)-$(SOURCE_FLAVOR)/output/host \
+		$*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/
+	chmod -R +w $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host
+	cp $(SOURCE_PLATFORM)-ct/$(ARCHITECTURE).manifest $*-ct/$(ARCHITECTURE).manifest
+	touch $*-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
+
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/target: $(SOURCE_PLATFORM)-ct/sysroot-$(ARCHITECTURE)-$(SOURCE_FLAVOR)/output/target
+	mkdir -p $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output
+	cp -r --no-preserve=ownership \
+		$(SOURCE_PLATFORM)-ct/sysroot-$(ARCHITECTURE)-$(SOURCE_FLAVOR)/output/target \
+		$*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/
+	chmod -R +w $*-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/target
+	touch $*-ct/.sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)-completed
+
+#
+# Libraries for the TI AM335x SoC
+# Mostly for the BeagleBone Black
+#
+	
+beaglebone-ct/omap5-sgx-ddk-um-linux:
+	git clone https://git.ti.com/git/graphics/omap5-sgx-ddk-um-linux.git beaglebone-ct/omap5-sgx-ddk-um-linux
+	git -C beaglebone-ct/omap5-sgx-ddk-um-linux checkout origin/ti-img-sgx/1.14.3699939
+
+SGX_SOURCE_DIR := beaglebone-ct/omap5-sgx-ddk-um-linux/targetfs/ti335x
+SGX_DEST_DIR   := beaglebone-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/arm-buildroot-linux-gnueabihf/sysroot/usr
+
+beaglebone-ct.install-sgx: beaglebone-ct/omap5-sgx-ddk-um-linux
+	cp -r $(SGX_SOURCE_DIR)/include/*    $(SGX_DEST_DIR)/include/
+	cp    $(SGX_SOURCE_DIR)/lib/lib*.so* $(SGX_DEST_DIR)/lib/
+	#cp -r $(SGX_SOURCE_DIR)/lib/gbm      $(SGX_DEST_DIR)/lib/
+
+#
+# Raspberry VideoCore/DisplayManX libraries
+# ARM 32-bit only!
+#
+
+raspberry-ct/rpi-firmware:
+	git clone https://github.com/raspberrypi/rpi-firmware.git raspberry-ct/rpi-firmware --branch stable --depth 1
+
+VC_SOURCE_DIR := raspberry-ct/rpi-firmware/vc
+VC_DEST_DIR   := raspberry-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/$(ARCHITECTURE)/sysroot/usr
+VC_TARGET_DEST_DIR   := raspberry-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/target/usr
+
+raspberry-ct.install-vc: raspberry-ct/rpi-firmware
+	cp -r $(VC_SOURCE_DIR)/sdk/opt/vc/include/*          $(VC_DEST_DIR)/include
+	cp    $(VC_SOURCE_DIR)/hardfp/opt/vc/lib/*.a         $(VC_DEST_DIR)/lib
+	cp    $(VC_SOURCE_DIR)/hardfp/opt/vc/lib/*.so*       $(VC_DEST_DIR)/lib
+	cp    $(VC_SOURCE_DIR)/hardfp/opt/vc/lib/pkgconfig/* $(VC_DEST_DIR)/lib/pkgconfig
+	cp    $(VC_SOURCE_DIR)/hardfp/opt/vc/lib/*.so*       $(VC_TARGET_DEST_DIR)/lib
+
+RELEASE :=
+
+release: .PHONY
+	gh release create $(RELEASE)
+
+%.upload-release:
+	gh release upload "$(RELEASE)" --clobber \
+		$(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR).tar.xz \
+		$(PWD)/$*-ct/$*-$(ARCHITECTURE)_$(BUILDROOT_FLAVOR)_target.tar.xz \
+		$(PWD)/$*-ct/$*-$(ARCHITECTURE).manifest
+
