@@ -123,6 +123,25 @@ raspberry-ct.install-vc: raspberry-ct/rpi-firmware
 	cp    $(VC_SOURCE_DIR)/hardfp/opt/vc/lib/pkgconfig/* $(VC_DEST_DIR)/lib/pkgconfig
 	cp    $(VC_SOURCE_DIR)/hardfp/opt/vc/lib/*.so*       $(VC_TARGET_DEST_DIR)/lib
 
+#
+# Building new tools against old glibc version
+#
+BUILDROOT_TOOLS_VER := 2023.11.1
+tools-ct.build:
+	cd tools-ct && \
+		wget https://buildroot.org/downloads/buildroot-$(BUILDROOT_TOOLS_VER).tar.xz && \
+		tar xf buildroot-$(BUILDROOT_TOOLS_VER).tar.xz && \
+		rm buildroot-$(BUILDROOT_TOOLS_VER).tar.xz && \
+		mv buildroot-$(BUILDROOT_TOOLS_VER) sysroot && \
+		cp .config sysroot/.config
+
+tools-ct.clean:
+	rm -f \
+		tools-ct/buildroot-$(BUILDROOT_TOOLS_VER).tar.xz
+	rm -r \
+		tools-ct/buildroot-$(BUILDROOT_TOOLS_VER) \
+		tools-ct/sysroot
+
 RELEASE :=
 
 release: .PHONY
