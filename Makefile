@@ -43,9 +43,6 @@ desktop-aarch64-buildroot-linux-gnu-multi.build:
 		desktop-ct/.aarch64-buildroot-linux-gnu-aarch64-multi-target-bundle
 	@echo Finished target
 
-desktop-x86_64-w64-mingw32.build:
-	# This would be nice to have...
-	
 #
 # Derived targets; add some extra libraries to an existing sysroot
 #
@@ -88,6 +85,11 @@ raspberry-armv6-buildroot-linux-gnueabihf.build:
 		raspberry-ct/.armv6-buildroot-linux-gnueabihf-vc-compiler-bundle \
 		raspberry-ct/.armv6-buildroot-linux-gnueabihf-vc-target-bundle
 	@echo Finished target
+
+desktop-x86_64-w64-mingw32.build:
+	windows-ct/build-mingw64.sh
+	cd windows-ct/mingw-w64 && \
+		tar -c -I 'xz -9 -T0' -f ../windows-x86_64-w64-mingw32.tar.xz *
 
 #
 # The big stuff

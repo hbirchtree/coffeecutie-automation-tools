@@ -1,0 +1,5 @@
+src/
+mingw-w64-*/
+build/
+*.manifest
+*.tar.xz

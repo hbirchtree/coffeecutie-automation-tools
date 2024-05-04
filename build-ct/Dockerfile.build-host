@@ -1,0 +1,18 @@
+FROM ubuntu:jammy
+ 
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN true
+RUN { echo 'tzdata tzdata/Areas select Etc'; echo 'tzdata tzdata/Zones/Etc select UTC'; } | debconf-set-selections
+
+RUN apt update && apt install -y \
+    build-essential mingw-w64-tools mingw-w64 git curl zip unzip tar wget nasm python3 python3-yaml ninja-build && \
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg && \
+    echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ jammy main' | tee /etc/apt/sources.list.d/kitware.list && \
+    apt clean && \
+    rm -r /var/cache/apt
+
+ARG BUILDER_UID=1000
+ARG BUILDER_GID=1000
+RUN groupadd -g $BUILDER_GID builder
+RUN useradd -d /home/builder -m -g $BUILDER_GID -u $BUILDER_UID -s /bin/bash builder
+

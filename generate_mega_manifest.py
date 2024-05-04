@@ -23,13 +23,20 @@ def manifest_to_path(source):
         manifest = [line for line in manifest if line != '']
         manifest = [line.replace('"', '').split('=') for line in manifest]
         manifest = {prop[0]: prop[1] for prop in manifest}
+        versions = {
+            'gcc': manifest['CT_GCC_VERSION'],
+        }
         if 'CT_GLIBC_VERSION' in manifest:
             dist_name = f'{platform}+{architecture}+gcc{manifest["CT_GCC_VERSION"]}-glibc{manifest["CT_GLIBC_VERSION"]}'
+            versions['glibc'] = manifest['CT_GLIBC_VERSION']
         elif 'CT_NEWLIB_VERSION' in manifest:
             dist_name = f'{platform}+{architecture}+gcc{manifest["CT_GCC_VERSION"]}-newlib{manifest["CT_NEWLIB_VERSION"]}'
+            versions['newlib'] = manifest['CT_NEWLIB_VERSION']
         else:
             dist_name = f'{platform}+{architecture}+gcc{manifest["CT_GCC_VERSION"]}'
-        return dist_name, [source] + related_files
+        if 'CT_MINGW_VERSION' in manifest:
+            versions['mingw'] = manifest['CT_MINGW_VERSION']
+        return dist_name, [source] + related_files, versions
 
 
 def assemble_manifest(root_dir):
@@ -42,7 +49,8 @@ def assemble_manifest(root_dir):
             "architecture": manifest[0].split('+')[1],
             "toolchain": manifest[0],
             "manifest": manifest[1][0],
-            "files": manifest[1][1:]
+            "files": manifest[1][1:],
+            "versions": manifest[2],
         } for manifest in manifests]
     for manifest in manifests:
         manifest['mapping'] = {}
