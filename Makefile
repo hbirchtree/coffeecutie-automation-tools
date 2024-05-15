@@ -92,16 +92,31 @@ desktop-x86_64-w64-mingw32.build:
 		tar -c -I 'xz -9 -T0' -f ../windows-x86_64-w64-mingw32.tar.xz *
 
 #
+# Docker build environment
+# For better ABI compat with different build hosts
+#
+
+build-env:
+	docker build build-ct/ -f build-ct/Dockerfile -t crosstool-env:1.26.0
+	docker run --rm -ti -v $(PWD):/src crosstool-env:1.26.0
+
+#
 # The big stuff
 #
+
 
 clean-all:
 	rm \
 		*-ct/*.tar.xz \
 		*-ct/*.manifest \
-		*-ct/.sysroot-* \
 		*-ct/.*-compiler-bundle \
-		*-ct/.*-target-bundle
+		*-ct/.sysroot-* \
+		*-ct/.*-target-bundle \
+		|| true
+	rm -rf \
+		*-ct/compiler-*/.build \
+		*-ct/compiler-*/{x86,arm,aarch64}* \
+		*-ct/sysroot-*
 
 meta.json:
 	./generate_mega_manifest.py | jq > meta.json
