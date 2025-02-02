@@ -123,6 +123,10 @@ clean-all:
 		*-ct/compiler-*/.build \
 		*-ct/compiler-*/{x86,arm,aarch64}* \
 		*-ct/sysroot-*
+	rm -rf \
+		windows-ct/build \
+		windows-ct/mingw-w64-x86_64 \
+		windows-ct/mingw-w64-i686
 
 meta.json:
 	./generate_mega_manifest.py | jq > meta.json
