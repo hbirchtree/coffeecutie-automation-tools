@@ -1,6 +1,8 @@
 
 .PHONY: meta.json
 
+BASELINE_BUILDROOT := 2025.08
+
 #
 # Complete targets
 #
@@ -9,7 +11,7 @@ desktop-x86_64-buildroot-linux-gnu.build:
 	make -f Makefile.common \
 		-e ARCHITECTURE=x86_64-buildroot-linux-gnu \
 		-e BUILDROOT_FLAVOR=multi \
-		-e BUILDROOT_VER=2024.02.2 \
+		-e BUILDROOT_VER=$(BASELINE_BUILDROOT) \
 		desktop-ct/x86_64-buildroot-linux-gnu.manifest \
 		desktop-ct/.sysroot-x86_64-buildroot-linux-gnu-multi-completed \
 		desktop-ct/.x86_64-buildroot-linux-gnu-multi-compiler-bundle \
@@ -20,7 +22,7 @@ desktop-arm-buildroot-linux-gnueabihf-wayland.build:
 	make -f Makefile.common \
 		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=arm-wayland \
-		-e BUILDROOT_VER=2023.08.1 \
+		-e BUILDROOT_VER=$(BASELINE_BUILDROOT) \
 		desktop-ct/arm-buildroot-linux-gnueabihf.manifest \
 		desktop-ct/.sysroot-arm-buildroot-linux-gnueabihf-arm-wayland-completed \
 		desktop-ct/.arm-buildroot-linux-gnueabihf-arm-wayland-compiler-bundle \
@@ -31,7 +33,7 @@ desktop-armv6-buildroot-linux-gnueabihf-wayland.build:
 	make -f Makefile.common \
 		-e ARCHITECTURE=armv6-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=armv6-wayland \
-		-e BUILDROOT_VER=2023.08.1 \
+		-e BUILDROOT_VER=$(BASELINE_BUILDROOT) \
 		desktop-ct/armv6-buildroot-linux-gnueabihf.manifest \
 		desktop-ct/.sysroot-armv6-buildroot-linux-gnueabihf-armv6-wayland-completed \
 		desktop-ct/.armv6-buildroot-linux-gnueabihf-armv6-wayland-compiler-bundle \
@@ -42,7 +44,7 @@ desktop-aarch64-buildroot-linux-gnu-multi.build:
 	make -f Makefile.common \
 		-e ARCHITECTURE=aarch64-buildroot-linux-gnu \
 		-e BUILDROOT_FLAVOR=aarch64-multi \
-		-e BUILDROOT_VER=2023.08.1 \
+		-e BUILDROOT_VER=$(BASELINE_BUILDROOT) \
 		desktop-ct/aarch64-buildroot-linux-gnu.manifest \
 		desktop-ct/.sysroot-aarch64-buildroot-linux-gnu-aarch64-multi-completed \
 		desktop-ct/.aarch64-buildroot-linux-gnu-aarch64-multi-compiler-bundle \
@@ -57,12 +59,12 @@ beaglebone-arm-buildroot-linux-gnueabihf.build:
 	make -f Makefile.common \
 		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=arm-wayland \
-		-e BUILDROOT_VER=2023.08.1 \
+		-e BUILDROOT_VER=$(BASELINE_BUILDROOT) \
 		desktop-ct/.sysroot-arm-buildroot-linux-gnueabihf-arm-wayland-completed
 	make -f Makefile.common \
 		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=ti-sgx \
-		-e BUILDROOT_VER=2023.08.1 \
+		-e BUILDROOT_VER=$(BASELINE_BUILDROOT) \
 		-e SOURCE_PLATFORM=desktop \
 		-e SOURCE_FLAVOR=arm-wayland \
 		beaglebone-ct/sysroot-arm-buildroot-linux-gnueabihf-ti-sgx/output/host \
