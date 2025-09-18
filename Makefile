@@ -102,9 +102,10 @@ desktop-x86_64-w64-mingw32.build:
 # For better ABI compat with different build hosts
 #
 
+CTNG_VERSION := 1.28.0
 build-env:
-	docker build build-ct/ -f build-ct/Dockerfile -t crosstool-env:1.26.0
-	docker run --rm -ti -v $(PWD):/src crosstool-env:1.26.0
+	docker build build-ct/ -f build-ct/Dockerfile --build-arg CTNG_VERSION=$(CTNG_VERSION) -t crosstool-env:$(CTNG_VERSION)
+	docker run --rm -ti -v $(PWD):/src crosstool-env:$(CTNG_VERSION)
 
 #
 # The big stuff

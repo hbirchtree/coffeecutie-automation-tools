@@ -14,8 +14,8 @@ RUN apt update && apt install -y \
     apt clean && \
     rm -r /var/cache/apt
 
-ENV CTNG_VERSION=1.26.0
-ENV CTNG_SOURCE=https://github.com/crosstool-ng/crosstool-ng/archive/refs/tags/crosstool-ng-$CTNG_VERSION.tar.gz
+ARG CTNG_VERSION=1.26.0
+ENV CTNG_SOURCE=https://github.com/crosstool-ng/crosstool-ng/archive/refs/tags/crosstool-ng-${CTNG_VERSION}.tar.gz
 
 RUN \
     mkdir /ctng && cd /ctng && wget $CTNG_SOURCE -O src.tar.gz && \
