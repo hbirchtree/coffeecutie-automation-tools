@@ -13,6 +13,9 @@ RUN apt update && apt install -y \
     bc cpio && \
     apt clean && \
     rm -r /var/cache/apt
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - > /usr/share/keyrings/kitware-archive-keyring.gpg
+RUN echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main' > /etc/apt/sources.list.d/kitware.list
+RUN apt update && apt install cmake=3.31.8-0kitware1ubuntu20.04.1 cmake-data=3.31.8-0kitware1ubuntu20.04.1 && rm -r /var/cache/apt
 
 ARG CTNG_VERSION=1.26.0
 ENV CTNG_SOURCE=https://github.com/crosstool-ng/crosstool-ng/archive/refs/tags/crosstool-ng-${CTNG_VERSION}.tar.gz

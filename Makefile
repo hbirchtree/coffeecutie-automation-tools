@@ -60,6 +60,7 @@ beaglebone-arm-buildroot-linux-gnueabihf.build:
 		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=arm-wayland \
 		-e BUILDROOT_VER=$(BASELINE_BUILDROOT) \
+		desktop-ct/arm-buildroot-linux-gnueabihf.manifest \
 		desktop-ct/.sysroot-arm-buildroot-linux-gnueabihf-arm-wayland-completed
 	make -f Makefile.common \
 		-e ARCHITECTURE=arm-buildroot-linux-gnueabihf \
@@ -140,6 +141,7 @@ all:
 		desktop-aarch64-buildroot-linux-gnu-multi.build \
 		desktop-arm-buildroot-linux-gnueabihf-wayland.build \
 		desktop-x86_64-buildroot-linux-gnu.build \
+		desktop-x86_64-w64-mingw32.build \
 		beaglebone-arm-buildroot-linux-gnueabihf.build \
 		raspberry-armv6-buildroot-linux-gnueabihf.build
 	make meta.json
