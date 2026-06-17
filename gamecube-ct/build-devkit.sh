@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #---------------------------------------------------------------------------------
-#	devkitARM release 61
-#	devkitPPC release 43
-#	devkitA64 release 22
+#	devkitARM release 66
+#	devkitPPC release 47
+#	devkitA64 release 28
 #---------------------------------------------------------------------------------
 
 if [ 0 -eq 1 ] ; then
@@ -27,14 +27,26 @@ echo
 
 
 
-DKARM_RULES_VER=1.3.0
-DKARM_CRTLS_VER=1.2.1
+DKARM_RULES_VER=1.6.1
+DKARM_CRTLS_VER=1.2.7
 
-DKPPC_RULES_VER=1.1.2
+DKPPC_RULES_VER=1.2.1
 
-DKA64_RULES_VER=1.0.1
+DKA64_RULES_VER=1.1.1
 
 OSXMIN=${OSXMIN:-10.9}
+
+#---------------------------------------------------------------------------------
+# find proper patch
+#---------------------------------------------------------------------------------
+if [ -z "$PATCH" -a -x "$(which gpatch)" ]; then PATCH=$(which gpatch); fi
+if [ -z "$PATCH" -a -x "$(which patch)" ]; then PATCH=$(which patch); fi
+if [ -z "$PATCH" ]; then
+  echo no patch found
+  exit 1
+fi
+echo use $PATCH as patch
+export PATCH
 
 #---------------------------------------------------------------------------------
 function extract_and_patch {
@@ -46,7 +58,7 @@ function extract_and_patch {
 	fi
 	if [[ ! -f patched-$1-$2 && -f $patchdir/$1-$2.patch ]]; then
 		echo "patching $1-$2"
-		patch -p1 -d $1-$2 -i $patchdir/$1-$2.patch || { echo "Error patching $1"; exit 1; }
+		$PATCH -p1 -d $1-$2 -i $patchdir/$1-$2.patch || { echo "Error patching $1"; exit 1; }
 		touch patched-$1-$2
 	fi
 }
@@ -72,20 +84,18 @@ fi
 . ./select_toolchain.sh
 
 #---------------------------------------------------------------------------------
-# Get preferred installation directory and set paths to the sources
+# Legacy versions of these scripts allowed the selection of a prefix which is
+# no longer supported. Since adopting pacman and providing precompiled binaries
+# of "portlibs" everything we distribute is intended to work within opt/devkitpro
+#
+# Rather than attempting to repackage our work for exotic linux distributions it
+# would be much better for everyone concerned if efforts were made to provide
+# pacman and whatever support is necessary to allow the binaries we distribute to
+# work as expected.
+#
+# See https://github.com/devkitPro/pacman and https://devkitpro.org/wiki/devkitPro_pacman
 #---------------------------------------------------------------------------------
-
-if [ ! -z "$BUILD_DKPRO_INSTALLDIR" ] ; then
-	INSTALLDIR="$BUILD_DKPRO_INSTALLDIR"
-else
-	echo
-	echo "Please enter the directory where you would like '$package' to be installed:"
-	echo "for mingw/msys you must use <drive>:/<install path> or you will have include path problems"
-	echo "this is the top level directory for devkitpro, i.e. e:/devkitPro"
-
-	read -e INSTALLDIR
-	echo
-fi
+INSTALLDIR=${INSTALLDIR:-/opt/devkitpro}
 
 [ ! -z "$INSTALLDIR" ] && mkdir -p $INSTALLDIR && touch $INSTALLDIR/nonexistantfile && rm $INSTALLDIR/nonexistantfile || exit 1;
 
@@ -102,9 +112,9 @@ fi
 #---------------------------------------------------------------------------------
 # find proper make
 #---------------------------------------------------------------------------------
-if [ -z "$MAKE" -a -x "$(which gnumake)" ]; then MAKE="$(which gnumake) -j8"; fi
-if [ -z "$MAKE" -a -x "$(which gmake)" ]; then MAKE="$(which gmake) -j8"; fi
-if [ -z "$MAKE" -a -x "$(which make)" ]; then MAKE="$(which make) -j8"; fi
+if [ -z "$MAKE" -a -x "$(which gnumake)" ]; then MAKE=$(which gnumake); fi
+if [ -z "$MAKE" -a -x "$(which gmake)" ]; then MAKE=$(which gmake); fi
+if [ -z "$MAKE" -a -x "$(which make)" ]; then MAKE=$(which make); fi
 if [ -z "$MAKE" ]; then
   echo no make found
   exit 1
@@ -173,61 +183,51 @@ fi
 patchdir=$(pwd)/$basedir/patches
 scriptdir=$(pwd)/$basedir/scripts
 
-#archives="binutils-${BINUTILS_VER}.tar.xz gcc-${GCC_VER}.tar.xz newlib-${NEWLIB_VER}.tar.gz"
-#
-#if [ $VERSION -eq 2 ]; then
-#	archives="binutils-${MN_BINUTILS_VER}.tar.bz2 $archives"
-#fi
-#
-#if [ "$BUILD_DKPRO_SKIP_CRTLS" != "1" ]; then
-#	if [ $VERSION -eq 1 ]; then
-#		archives="devkitarm-rules-$DKARM_RULES_VER.tar.gz devkitarm-crtls-$DKARM_CRTLS_VER.tar.gz $archives"
-#	fi
-#
-#	if [ $VERSION -eq 2 ]; then
-#		archives="devkitppc-rules-$DKPPC_RULES_VER.tar.gz $archives"
-#	fi
-#
-#	if [ $VERSION -eq 3 ]; then
-#		archives="devkita64-rules-$DKA64_RULES_VER.tar.gz $archives"
-#	fi
-#fi
-#
-#if [ ! -z "$BUILD_DKPRO_SRCDIR" ] ; then
-#	SRCDIR="$BUILD_DKPRO_SRCDIR"
-#else
-#	SRCDIR=`pwd`
-#fi
-#
-#cd "$SRCDIR"
-#for archive in $archives
-#do
-#	echo $archive
-#	if [ ! -f $archive ]; then
-#		$FETCH https://downloads.devkitpro.org/$archive || { echo "Error: Failed to download $archive"; exit 1; }
-#	fi
-#done
+# archives="binutils-${BINUTILS_VER}.tar.xz gcc-${GCC_VER}.tar.xz newlib-${NEWLIB_VER}.tar.gz"
+# 
+# if [ $VERSION -eq 2 ]; then
+# 	archives="binutils-${MN_BINUTILS_VER}.tar.bz2 $archives"
+# fi
+# 
+# if [ "$BUILD_DKPRO_SKIP_CRTLS" != "1" ]; then
+# 	if [ $VERSION -eq 1 ]; then
+# 		archives="devkitarm-rules-$DKARM_RULES_VER.tar.gz devkitarm-crtls-$DKARM_CRTLS_VER.tar.gz $archives"
+# 	fi
+# 
+# 	if [ $VERSION -eq 2 ]; then
+# 		archives="devkitppc-rules-$DKPPC_RULES_VER.tar.gz $archives"
+# 	fi
+# 
+# 	if [ $VERSION -eq 3 ]; then
+# 		archives="devkita64-rules-$DKA64_RULES_VER.tar.gz $archives"
+# 	fi
+# fi
 
-SRCDIR=$PWD
-archives=(
-    https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VER}.tar.xz
-    https://ftp.gnu.org/gnu/binutils/binutils-${MN_BINUTILS_VER}.tar.bz2
-    https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VER}/gcc-${GCC_VER}.tar.xz
-    ftp://sourceware.org/pub/newlib/newlib-${NEWLIB_VER}.tar.gz
-    )
-for archive in ${archives[@]}; do
-    echo $archive
-    [ -f ${archive##*/} ] && continue
-    wget $archive || exit 1
-done
+if [ ! -z "$BUILD_DKPRO_SRCDIR" ] ; then
+	SRCDIR="$BUILD_DKPRO_SRCDIR"
+else
+	SRCDIR=`pwd`
+fi
+
+cd "$SRCDIR"
+# for archive in $archives
+# do
+# 	echo $archive
+# 	if [ ! -f $archive ]; then
+# 		$FETCH https://downloads.devkitpro.org/$archive || { echo "Error: Failed to download $archive"; exit 1; }
+# 	fi
+# done
 
 cd $BUILDSCRIPTDIR
 mkdir -p $BUILDDIR
 cd $BUILDDIR
 
 extract_and_patch binutils $BINUTILS_VER xz
-extract_and_patch gcc $GCC_VER xz
-extract_and_patch newlib $NEWLIB_VER gz
+extract_and_patch gcc devkitPPC_r47 gz
+extract_and_patch newlib devkitPPC_r47 gz
+
+mv gcc-devkitPPC_r47/ gcc-$GCC_VER/
+mv newlib-devkitPPC_r47/ gcc-$NEWLIB_VER
 
 if [ $VERSION -eq 2 ]; then extract_and_patch binutils $MN_BINUTILS_VER bz2; fi
 

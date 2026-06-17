@@ -7,18 +7,22 @@ RELEASE :=
 source.tar.gz:
 	wget https://github.com/devkitPro/buildscripts/archive/$(SOURCE_SHA).tar.gz -O source.tar.gz
 
-source: source.tar.gz
+source: source.tar.gz devkitppc-rules-1.2.1.tar.gz config.sh build-devkit.sh
 	tar xf source.tar.gz
 	mv buildscripts-$(SOURCE_SHA) source
 	cp build-devkit.sh source/
 	cp config.sh source/
-	cp devkitppc-rules-1.1.2.tar.gz source/
+	cp devkitppc-rules-1.2.1.tar.gz source/
+	wget https://sourceware.org/pub/binutils/releases/binutils-2.24.tar.bz2 -nc -O source/binutils-2.24.tar.bz2
+	wget https://sourceware.org/pub/binutils/releases/binutils-2.44.tar.xz -nc -O source/binutils-2.44.tar.xz
+	wget https://github.com/devkitPro/gcc/archive/refs/heads/devkitPPC_r47.tar.gz -nc -O source/gcc-devkitPPC_r47.tar.gz
+	wget https://github.com/devkitPro/newlib/archive/refs/heads/devkitPPC_r47.tar.gz -nc -O source/newlib-devkitPPC_r47.tar.gz
 
 build: source
-	cd source && BUILD_DKPRO_INSTALLDIR=$(PWD)/build ./build-devkit.sh
+	cd source && INSTALLDIR=$(PWD)/build ./build-devkit.sh
 
 gamecube-powerpc-eabi.manifest: #source
-	echo 'CT_GCC_VERSION="15.1.0"\nCT_BINUTILS_VERSION="2.40.0"\nCT_NEWLIB_VERSION="4.5.0"\n' > $(PWD)/gamecube-powerpc-eabi.manifest
+	echo 'CT_GCC_VERSION="15.1.0"\nCT_BINUTILS_VERSION="2.44"\nCT_MN_BINUTILS_VERSION="2.44"\nCT_NEWLIB_VERSION="4.5.0"\n' > $(PWD)/gamecube-powerpc-eabi.manifest
 
 gamecube-powerpc-eabi_compiler.tar.xz: #build
 	cd $(PWD)/build/devkitPPC && tar Jcf $(PWD)/gamecube-powerpc-eabi_compiler.tar.xz -- *
