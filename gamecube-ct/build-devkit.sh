@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #---------------------------------------------------------------------------------
-#	devkitARM release 66
-#	devkitPPC release 47
-#	devkitA64 release 28
+#	devkitARM release 67
+#	devkitPPC release 49.1
+#	devkitA64 release 29
 #---------------------------------------------------------------------------------
 
 if [ 0 -eq 1 ] ; then
@@ -31,6 +31,7 @@ DKARM_RULES_VER=1.6.1
 DKARM_CRTLS_VER=1.2.7
 
 DKPPC_RULES_VER=1.2.1
+DKPPC_CRTLS_VER=2.1.0
 
 DKA64_RULES_VER=1.1.1
 
@@ -53,12 +54,12 @@ function extract_and_patch {
 #---------------------------------------------------------------------------------
 	if [ ! -f extracted-$1-$2 ]; then
 		echo "extracting $1-$2"
-		tar -xf "$SRCDIR/$1-$2.tar.$3" || { echo "Error extracting "$1; exit 1; }
+		tar -xf "$SRCDIR/$1-$2.tar.$4" || { echo "Error extracting "$1; exit 1; }
 		touch extracted-$1-$2
 	fi
-	if [[ ! -f patched-$1-$2 && -f $patchdir/$1-$2.patch ]]; then
+	if [[ ! -f patched-$1-$2 && -f $patchdir/$1-$2-$3.patch ]]; then
 		echo "patching $1-$2"
-		$PATCH -p1 -d $1-$2 -i $patchdir/$1-$2.patch || { echo "Error patching $1"; exit 1; }
+		$PATCH -p1 -d $1-$2 -i $patchdir/$1-$2-$3.patch || { echo "Error patching $1"; exit 1; }
 		touch patched-$1-$2
 	fi
 }
@@ -99,10 +100,10 @@ INSTALLDIR=${INSTALLDIR:-/opt/devkitpro}
 
 [ ! -z "$INSTALLDIR" ] && mkdir -p $INSTALLDIR && touch $INSTALLDIR/nonexistantfile && rm $INSTALLDIR/nonexistantfile || exit 1;
 
-if test "`curl -V`"; then
+if test "`wget -V`"; then
+	FETCH='wget -U "dkp-buildscript"'
+elif test "`curl -V`"; then
 	FETCH="curl -f -L -O"
-elif test "`wget -V`"; then
-	FETCH=wget
 else
 	echo "ERROR: Please make sure you have wget or curl installed."
 	exit 1
@@ -131,6 +132,7 @@ if [ ! -z $CROSSBUILD ]; then
 	CROSS_GCC_PARAMS="--with-gmp=$CROSSPATH --with-mpfr=$CROSSPATH --with-mpc=$CROSSPATH --with-isl=$CROSSPATH --with-zstd=$CROSSPATH"
 else
 	prefix=$INSTALLDIR/$package
+	CROSS_PARAMS="$CROSS_PARAMS --host=`./config.guess`"
 fi
 
 #---------------------------------------------------------------------------------
@@ -183,25 +185,6 @@ fi
 patchdir=$(pwd)/$basedir/patches
 scriptdir=$(pwd)/$basedir/scripts
 
-# archives="binutils-${BINUTILS_VER}.tar.xz gcc-${GCC_VER}.tar.xz newlib-${NEWLIB_VER}.tar.gz"
-# 
-# if [ $VERSION -eq 2 ]; then
-# 	archives="binutils-${MN_BINUTILS_VER}.tar.bz2 $archives"
-# fi
-# 
-# if [ "$BUILD_DKPRO_SKIP_CRTLS" != "1" ]; then
-# 	if [ $VERSION -eq 1 ]; then
-# 		archives="devkitarm-rules-$DKARM_RULES_VER.tar.gz devkitarm-crtls-$DKARM_CRTLS_VER.tar.gz $archives"
-# 	fi
-# 
-# 	if [ $VERSION -eq 2 ]; then
-# 		archives="devkitppc-rules-$DKPPC_RULES_VER.tar.gz $archives"
-# 	fi
-# 
-# 	if [ $VERSION -eq 3 ]; then
-# 		archives="devkita64-rules-$DKA64_RULES_VER.tar.gz $archives"
-# 	fi
-# fi
 
 if [ ! -z "$BUILD_DKPRO_SRCDIR" ] ; then
 	SRCDIR="$BUILD_DKPRO_SRCDIR"
@@ -210,35 +193,44 @@ else
 fi
 
 cd "$SRCDIR"
-# for archive in $archives
-# do
-# 	echo $archive
-# 	if [ ! -f $archive ]; then
-# 		$FETCH https://downloads.devkitpro.org/$archive || { echo "Error: Failed to download $archive"; exit 1; }
-# 	fi
-# done
+for archive in $archives
+do
+	echo $archive
+	if [ ! -f $archive ]; then
+		$FETCH https://downloads.devkitpro.org/$archive || { echo "Error: Failed to download $archive"; exit 1; }
+	fi
+done
 
 cd $BUILDSCRIPTDIR
 mkdir -p $BUILDDIR
 cd $BUILDDIR
 
-extract_and_patch binutils $BINUTILS_VER xz
-extract_and_patch gcc devkitPPC_r47 gz
-extract_and_patch newlib devkitPPC_r47 gz
+extract_and_patch binutils $BINUTILS_VER $BINUTILS_PKGREL xz
 
-mv gcc-devkitPPC_r47/ gcc-$GCC_VER/
-mv newlib-devkitPPC_r47/ gcc-$NEWLIB_VER
+extract_and_patch gcc $GCC_VER $GCC_PKGREL xz
+if [ "$GCC_DOWNLOAD_PREREQS" != "0" ] && [ ! -f downloaded_prereqs ]; then
+  cd gcc-${GCC_VER}
+  ./contrib/download_prerequisites && touch downloaded_prereqs
+  cd ..
+fi
+
+extract_and_patch newlib $NEWLIB_VER $NEWLIB_PKGREL gz
 
 if [ $VERSION -eq 2 ]; then extract_and_patch binutils $MN_BINUTILS_VER bz2; fi
 
 #---------------------------------------------------------------------------------
 # Build and install devkit components
 #---------------------------------------------------------------------------------
-if [ -f $scriptdir/build-gcc.sh ]; then . $scriptdir/build-gcc.sh || { echo "Error building toolchain"; exit 1; }; cd $BUILDSCRIPTDIR; fi
+. ${BUILDSCRIPTDIR}/build-binutils.sh || { echo "Error building binutils"; exit 1; };
+if [ $VERSION -eq 2 ]; then . ${BUILDSCRIPTDIR}/build-mn10200-binutils.sh || { echo "Error building mn10200 binutils"; exit 1; }; fi
+
+. ${BUILDSCRIPTDIR}/build-gcc-stage1.sh || { echo "Error building gcc stage1"; exit 1; };
+. ${BUILDSCRIPTDIR}/build-newlib.sh || { echo "Error building newlib"; exit 1; };
+. ${BUILDSCRIPTDIR}/build-gcc-stage2.sh || { echo "Error building gcc stage2"; exit 1; };
 
 
-if [ "$BUILD_DKPRO_SKIP_CRTLS" != "1" ] && [ -f $scriptdir/build-crtls.sh ]; then
-  . $scriptdir/build-crtls.sh || { echo "Error building crtls & rules"; exit 1; }; cd $BUILDSCRIPTDIR;
+if [ "$BUILD_DKPRO_SKIP_CRTLS" != "1" ]; then
+  . ${BUILDSCRIPTDIR}/build-crtls.sh || { echo "Error building crtls & rules"; exit 1; };
 fi
 
 cd $BUILDSCRIPTDIR
