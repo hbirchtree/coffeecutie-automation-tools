@@ -21,7 +21,7 @@ GDB_VERSION ?= 12.1
 %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE): %-ct/compiler-$(ARCHITECTURE)/.config %-ct/$(ARCHITECTURE).manifest
 	cd $(PWD)/$*-ct/compiler-$(ARCHITECTURE) && CT_PREFIX=$(PWD)/$*-ct/compiler-$(ARCHITECTURE) ct-ng build -j4
 
-%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR): %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE)
+%-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR): %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) %-ct/sysroot.$(BUILDROOT_FLAVOR).config
 	cd $*-ct && \
 		wget https://buildroot.org/downloads/buildroot-$(BUILDROOT_VER).tar.gz && \
     	tar zxf buildroot-$(BUILDROOT_VER).tar.gz && \

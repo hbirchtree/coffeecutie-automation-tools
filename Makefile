@@ -79,15 +79,15 @@ raspberry-armv6-buildroot-linux-gnueabihf.build:
 	make -f Makefile.common \
 		-e ARCHITECTURE=armv6-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=armv6-wayland \
-		-e BUILDROOT_VER=2023.08.1 \
+		-e BUILDROOT_VER=$(BASELINE_BUILDROOT) \
 		desktop-ct/.sysroot-armv6-buildroot-linux-gnueabihf-armv6-wayland-completed
 	make -f Makefile.common \
 		-e ARCHITECTURE=armv6-buildroot-linux-gnueabihf \
 		-e BUILDROOT_FLAVOR=vc \
-		-e BUILDROOT_VER=2023.08.1 \
+		-e BUILDROOT_VER=$(BASELINE_BUILDROOT) \
 		-e BUILDROOT_RENAME_FROM=armv6-buildroot-linux-gnueabihf \
 		-e SOURCE_PLATFORM=desktop \
-		-e SOURCE_FLAVOR=arm-wayland \
+		-e SOURCE_FLAVOR=armv6-wayland \
 		raspberry-ct/sysroot-armv6-buildroot-linux-gnueabihf-vc/output/host \
 		raspberry-ct/sysroot-armv6-buildroot-linux-gnueabihf-vc/output/target \
 		raspberry-ct.install-vc \
