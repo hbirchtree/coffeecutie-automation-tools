@@ -149,6 +149,7 @@ popd # build dir
 
 pushd mingw-w64-$ARCH
 tar -c -I 'xz -9 -T0' -f ../windows-$ARCH-w64-mingw32_posix.tar.xz *
+find -name '*.dll' | xargs tar -c -I 'xz -9 -T0' -f ../windows-$ARCH-w64-mingw32_posix_target.tar.xz
 popd
 
 echo "CT_BINUTILS_VERSION=\"$BINUTILS_VER\"

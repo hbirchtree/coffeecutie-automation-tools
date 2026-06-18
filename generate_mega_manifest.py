@@ -34,7 +34,10 @@ def manifest_to_path(source):
             versions['newlib'] = manifest['CT_NEWLIB_VERSION']
         else:
             dist_name = f'{platform}+{architecture}+gcc{manifest["CT_GCC_VERSION"]}'
-        if 'CT_MINGW_VERSION' in manifest:
+        if 'CT_LINUX_VERSION' in manifest:
+            dist_name = f'{dist_name}-linux{manifest["CT_LINUX_VERSION"]}'
+            versions['linux'] = manifest['CT_LINUX_VERSION']
+        elif 'CT_MINGW_VERSION' in manifest:
             versions['mingw'] = manifest['CT_MINGW_VERSION']
         return dist_name, [source] + related_files, versions
 
