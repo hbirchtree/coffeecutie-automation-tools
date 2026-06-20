@@ -207,7 +207,7 @@ cd $BUILDDIR
 
 extract_and_patch binutils $BINUTILS_VER $BINUTILS_PKGREL xz
 
-extract_and_patch gcc $GCC_VER $GCC_PKGREL xz
+extract_and_patch gcc $GCC_VER $GCC_PKGREL gz
 if [ "$GCC_DOWNLOAD_PREREQS" != "0" ] && [ ! -f downloaded_prereqs ]; then
   cd gcc-${GCC_VER}
   ./contrib/download_prerequisites && touch downloaded_prereqs
@@ -216,7 +216,7 @@ fi
 
 extract_and_patch newlib $NEWLIB_VER $NEWLIB_PKGREL gz
 
-if [ $VERSION -eq 2 ]; then extract_and_patch binutils $MN_BINUTILS_VER bz2; fi
+if [ $VERSION -eq 2 ]; then extract_and_patch binutils $MN_BINUTILS_VER "" bz2; fi
 
 #---------------------------------------------------------------------------------
 # Build and install devkit components
