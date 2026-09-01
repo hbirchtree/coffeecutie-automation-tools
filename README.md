@@ -2,9 +2,10 @@
 
 ## Creating a release
 
-In order to create a release, one must build all applicable targets using the root `Makefile`, ensure compilers and sysroots are built. Commonly done by:
+In order to create a release, one must build all applicable targets using the root `Makefile`, ensure compilers and sysroots are built. This should be done using the build environment in Docker, invoked using `make build-env` which will build and start the build environment with the source directory mapped in. Once this is running:
 
     make desktop-x86_64-buildroot-linux-gnu.build
+    make <other toolchains...>
 
 If any errors happen during building a toolchain, that must be fixed. It should be possible to build the compiler and sysroot from a clean slate.
 
