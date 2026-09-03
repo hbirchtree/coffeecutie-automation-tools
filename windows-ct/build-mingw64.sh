@@ -2,9 +2,9 @@
 
 set -e
 
-BINUTILS_VER=2.45
-GCC_VER=15.2.0
-MINGW_VER=13.0.0
+BINUTILS_VER=2.47
+GCC_VER=16.2.0
+MINGW_VER=14.0.0
 
 cd $(dirname $0)
 
