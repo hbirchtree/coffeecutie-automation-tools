@@ -1,7 +1,7 @@
 
 .PHONY: meta.json
 
-BASELINE_BUILDROOT := 2025.08
+BASELINE_BUILDROOT := 2026.08-rc3
 
 #
 # Complete targets
@@ -114,6 +114,25 @@ build-env:
 # The big stuff
 #
 
+clean-desktop:
+	rm \
+		desktop-ct/*.tar.xz \
+		desktop-ct/*.manifest \
+		desktop-ct/.*-compiler-bundle \
+		desktop-ct/.sysroot-* \
+		desktop-ct/.*-target-bundle \
+		|| true
+	rm -rf \
+		desktop-ct/compiler-*/.build \
+		desktop-ct/compiler-*/a.out \
+		desktop-ct/compiler-*/build.log \
+		desktop-ct/compiler-*/include \
+		desktop-ct/compiler-*/main.cpp \
+		desktop-ct/compiler-aarch64-buildroot-linux-gnu/aarch64-buildroot-linux-gnu \
+		desktop-ct/compiler-arm-buildroot-linux-gnueabi/arm-buildroot-linux-gnueabi \
+		desktop-ct/compiler-arm-buildroot-linux-gnueabihf/arm-buildroot-linux-gnueabihf \
+		desktop-ct/compiler-x86_64-buildroot-linux-gnu/x86_64-buildroot-linux-gnu \
+		desktop-ct/sysroot-*
 
 clean-all:
 	rm \
@@ -125,10 +144,15 @@ clean-all:
 		|| true
 	rm -rf \
 		*-ct/compiler-*/.build \
+		*-ct/compiler-*/a.out \
+		*-ct/compiler-*/build.log \
+		*-ct/compiler-*/include \
+		*-ct/compiler-*/main.cpp \
 		*-ct/compiler-*/{x86,arm,aarch64}* \
 		*-ct/sysroot-*
 	rm -rf \
 		windows-ct/build \
+		windows-ct/src \
 		windows-ct/mingw-w64-x86_64 \
 		windows-ct/mingw-w64-i686
 

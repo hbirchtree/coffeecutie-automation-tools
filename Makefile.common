@@ -19,7 +19,7 @@ GDB_VERSION ?= 12.1
 			grep -v '^#' > $(ARCHITECTURE).manifest
 
 %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE): %-ct/compiler-$(ARCHITECTURE)/.config %-ct/$(ARCHITECTURE).manifest
-	cd $(PWD)/$*-ct/compiler-$(ARCHITECTURE) && CT_PREFIX=$(PWD)/$*-ct/compiler-$(ARCHITECTURE) ct-ng build -j4
+	cd $(PWD)/$*-ct/compiler-$(ARCHITECTURE) && CT_PREFIX=$(PWD)/$*-ct/compiler-$(ARCHITECTURE) ct-ng build -j8
 
 %-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR): %-ct/compiler-$(ARCHITECTURE)/$(ARCHITECTURE) %-ct/sysroot.$(BUILDROOT_FLAVOR).config
 	cd $*-ct && \
