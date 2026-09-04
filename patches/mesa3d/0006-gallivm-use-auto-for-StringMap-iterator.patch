@@ -1,0 +1,28 @@
+From: Havard Bjerke <haavabj@gmail.com>
+Subject: [PATCH] gallivm: use auto for the getHostCPUFeatures StringMap iterator
+
+LLVM 22 reworked StringMap's iterators: the concrete class is now
+StringMapIterBase<ValueTy, bool> and llvm::StringMapIterator no longer
+exists, so the hardcoded llvm::StringMapIterator<bool> fails to compile:
+
+  error: 'StringMapIterator' is not a member of 'llvm'; did you mean
+  'StringMapKeyIterator'?
+
+Only the DETECT_ARCH_ARM path uses this loop, so the breakage is limited
+to 32-bit Arm targets. Use auto so the code builds against both the old
+and the new StringMap API.
+
+Upstream: not submitted
+Signed-off-by: Havard Bjerke <haavabj@gmail.com>
+
+--- a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
++++ b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+@@ -331,7 +331,7 @@
+       llvm::sys::getHostCPUFeatures(features);
+    #endif
+ 
+-   for (llvm::StringMapIterator<bool> f = features.begin();
++   for (auto f = features.begin();
+         f != features.end();
+         ++f) {
+       MAttrs.push_back(((*f).second ? "+" : "-") + (*f).first().str());
