@@ -103,10 +103,12 @@ beaglebone-ct/omap5-sgx-ddk-um-linux:
 
 SGX_SOURCE_DIR := beaglebone-ct/omap5-sgx-ddk-um-linux/targetfs/ti335x
 SGX_DEST_DIR   := beaglebone-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/host/arm-buildroot-linux-gnueabihf/sysroot/usr
+SGX_TARGET_DEST_DIR := beaglebone-ct/sysroot-$(ARCHITECTURE)-$(BUILDROOT_FLAVOR)/output/target/usr
 
 beaglebone-ct.install-sgx: beaglebone-ct/omap5-sgx-ddk-um-linux
 	cp -r $(SGX_SOURCE_DIR)/include/*    $(SGX_DEST_DIR)/include/
 	cp    $(SGX_SOURCE_DIR)/lib/lib*.so* $(SGX_DEST_DIR)/lib/
+	cp    $(SGX_SOURCE_DIR)/lib/lib*.so* $(SGX_TARGET_DEST_DIR)/lib/
 	#cp -r $(SGX_SOURCE_DIR)/lib/gbm      $(SGX_DEST_DIR)/lib/
 
 #
