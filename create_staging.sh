@@ -24,11 +24,17 @@ for TARGET in $TARGETS; do
     ARCH=$(jq -r '.sources[] | select(.name=="'$TARGET'") | .architecture' meta.json)
     PLATFORM=$(jq -r '.sources[] | select(.name=="'$TARGET'") | .platform' meta.json)
     MANIFEST=$(cat $(jq -r '.sources[] | select(.name=="'$TARGET'") | .manifest' meta.json))
-    COMPILER_VERSION=$(echo "$MANIFEST" | grep CT_GCC_VERSION | cut -d'"' -f2)
+    if echo "$MANIFEST" | grep -q CT_LLVM_VERSION; then
+        COMPILER_NAME=LLVM
+        COMPILER_VERSION=$(echo "$MANIFEST" | grep CT_LLVM_VERSION | cut -d'"' -f2)
+    else
+        COMPILER_NAME=GCC
+        COMPILER_VERSION=$(echo "$MANIFEST" | grep CT_GCC_VERSION | cut -d'"' -f2)
+    fi
     GLIBC_VERSION=$(echo "$MANIFEST" | grep 'CT_GLIBC_VERSION\|CT_NEWLIB_VERSION' | cut -d'"' -f2)
     BINUTILS_VERSION=$(echo "$MANIFEST" | grep CT_BINUTILS_VERSION | cut -d'"' -f2)
     echo " - ${PLATFORM} ${ARCH}
-   - GCC version: ${COMPILER_VERSION}
+   - ${COMPILER_NAME} version: ${COMPILER_VERSION}
    - libc version: ${GLIBC_VERSION}
    - binutils version: ${BINUTILS_VERSION}" >> $STAGING_DIR/release-notes.md
 done

@@ -22,3 +22,7 @@
 !gamecube-ct/*.tar.gz
 */*.tar.xz
 /toolchains
+clang-ct/build
+clang-ct/downloads
+clang-ct/src
+clang-ct/toolchain

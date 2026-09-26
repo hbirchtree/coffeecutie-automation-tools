@@ -23,17 +23,24 @@ def manifest_to_path(source):
         manifest = [line for line in manifest if line != '']
         manifest = [line.replace('"', '').split('=') for line in manifest]
         manifest = {prop[0]: prop[1] for prop in manifest}
-        versions = {
-            'gcc': manifest['CT_GCC_VERSION'],
-        }
+        if 'CT_LLVM_VERSION' in manifest:
+            compiler = f'llvm{manifest["CT_LLVM_VERSION"]}'
+            versions = {
+                'llvm': manifest['CT_LLVM_VERSION'],
+            }
+        else:
+            compiler = f'gcc{manifest["CT_GCC_VERSION"]}'
+            versions = {
+                'gcc': manifest['CT_GCC_VERSION'],
+            }
         if 'CT_GLIBC_VERSION' in manifest:
-            dist_name = f'{platform}+{architecture}+gcc{manifest["CT_GCC_VERSION"]}-glibc{manifest["CT_GLIBC_VERSION"]}'
+            dist_name = f'{platform}+{architecture}+{compiler}-glibc{manifest["CT_GLIBC_VERSION"]}'
             versions['glibc'] = manifest['CT_GLIBC_VERSION']
         elif 'CT_NEWLIB_VERSION' in manifest:
-            dist_name = f'{platform}+{architecture}+gcc{manifest["CT_GCC_VERSION"]}-newlib{manifest["CT_NEWLIB_VERSION"]}'
+            dist_name = f'{platform}+{architecture}+{compiler}-newlib{manifest["CT_NEWLIB_VERSION"]}'
             versions['newlib'] = manifest['CT_NEWLIB_VERSION']
         else:
-            dist_name = f'{platform}+{architecture}+gcc{manifest["CT_GCC_VERSION"]}'
+            dist_name = f'{platform}+{architecture}+{compiler}'
         if 'CT_LINUX_VERSION' in manifest:
             dist_name = f'{dist_name}-linux{manifest["CT_LINUX_VERSION"]}'
             versions['linux'] = manifest['CT_LINUX_VERSION']

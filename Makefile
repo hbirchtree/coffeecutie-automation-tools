@@ -95,6 +95,9 @@ raspberry-armv6-buildroot-linux-gnueabihf.build:
 		raspberry-ct/.armv6-buildroot-linux-gnueabihf-vc-target-bundle
 	@echo Finished target
 
+clang-ct.build:
+	make -C clang-ct
+
 desktop-x86_64-w64-mingw32.build:
 	windows-ct/build-mingw64.sh
 	cd windows-ct/mingw-w64 && \
